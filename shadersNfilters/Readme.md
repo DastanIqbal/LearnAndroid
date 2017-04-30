@@ -2,7 +2,7 @@
 
 ## Tutorial Adopted from [ChiukiChan blog](http://chiuki.github.io/android-shaders-filters/#)
 
-###Covered
+### Covered
 * BitmapShader
 * LinearGradient
 * RainbowTextView
