@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context="com.dastanapps.learnandroid.shader.LinearGradientA">
+
+        <TextView
+            android:id="@+id/tv_fromxml"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/linear_gradient"
+            android:padding="16dp"
+            android:text="From XML"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_fromxml"
+            android:padding="16dp"
+            android:text="From Java RainbowTV TileMode Mirror"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:tilemode="mirror" />
+
+        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_fromxml"
+            android:padding="16dp"
+            android:text="From Java RainbowTV TileMode Clamp"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:tilemode="clamp" />
+
+        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_fromxml"
+            android:padding="16dp"
+            android:text="From Java RainbowTV TileMode Repeat"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            app:tilemode="repeat" />
+    </LinearLayout>
+</layout>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+
+    <color name="rainbow_violet">#640f64</color>
+    <color name="rainbow_indigo">#4B0082</color>
+    <color name="rainbow_blue">#0000ff</color>
+    <color name="rainbow_green">#00ff00</color>
+    <color name="rainbow_yellow">#ffff00</color>
+    <color name="rainbow_red">#ff0000</color>
+</resources>

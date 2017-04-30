@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RainbowTextView">
+        <attr name="tilemode" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="BitmapShaderTextView">
+        <attr name="bmptilemode" format="string" />
+    </declare-styleable>
+</resources>

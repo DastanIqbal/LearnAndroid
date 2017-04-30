@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">LearnAndroid</string>
+    <string-array name="menu_opts">
+        <item>Linear Gradient</item>
+        <item>Bitmap Shader</item>
+        <item>PeekThrough ImageView</item>
+        <item>Tutorial 4</item>
+    </string-array>
+</resources>
