@@ -1,16 +1,16 @@
-package com.dastanapps.learnandroid.shader;
+package com.dastanapps.learnandroid.filters;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.dastanapps.learnandroid.R;
 
-public class PeekThroughImageViewA extends AppCompatActivity {
+public class FourColorImageViewA extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_peak_through_image_view);
+        setContentView(R.layout.activity_four_color_image_view);
         if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

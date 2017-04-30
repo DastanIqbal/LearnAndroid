@@ -3,7 +3,17 @@
     <string-array name="menu_opts">
         <item>Linear Gradient</item>
         <item>Bitmap Shader</item>
-        <item>PeekThrough ImageView</item>
-        <item>Tutorial 4</item>
+        <item>Peek Through ImageView</item>
+        <item>Color Filter</item>
+        <item>Four Color ImageView</item>
+    </string-array>
+
+    <string-array name="filters">
+        <item>GrayScale</item>
+        <item>Sepia</item>
+        <item>Binary</item>
+        <item>Invert</item>
+        <item>Alpha Blue</item>
+        <item>Alpha Pink</item>
     </string-array>
 </resources>

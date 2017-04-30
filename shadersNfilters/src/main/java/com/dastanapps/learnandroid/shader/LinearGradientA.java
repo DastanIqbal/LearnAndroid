@@ -16,5 +16,6 @@ public class LinearGradientA extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activityLinearGradientBinding = DataBindingUtil.setContentView(this, R.layout.activity_linear_gradient);
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

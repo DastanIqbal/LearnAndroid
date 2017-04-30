@@ -15,5 +15,6 @@ public class BitmapShaderA extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activityBitmapShaderBinding = DataBindingUtil.setContentView(this, R.layout.activity_bitmap_shader);
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 }

@@ -19,7 +19,7 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+        <com.dastanapps.learnandroid.cv.RainbowTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tv_fromxml"
@@ -29,7 +29,7 @@
             android:textStyle="bold"
             app:tilemode="mirror" />
 
-        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+        <com.dastanapps.learnandroid.cv.RainbowTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tv_fromxml"
@@ -39,7 +39,7 @@
             android:textStyle="bold"
             app:tilemode="clamp" />
 
-        <com.dastanapps.learnandroid.shader.cv.RainbowTextView
+        <com.dastanapps.learnandroid.cv.RainbowTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tv_fromxml"

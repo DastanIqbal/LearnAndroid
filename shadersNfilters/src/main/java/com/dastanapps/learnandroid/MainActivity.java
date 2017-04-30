@@ -9,6 +9,8 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 
 import com.dastanapps.learnandroid.databinding.ActivityMainBinding;
+import com.dastanapps.learnandroid.filters.ColorMatrixA;
+import com.dastanapps.learnandroid.filters.FourColorImageViewA;
 import com.dastanapps.learnandroid.shader.BitmapShaderA;
 import com.dastanapps.learnandroid.shader.LinearGradientA;
 import com.dastanapps.learnandroid.shader.PeekThroughImageViewA;
@@ -21,8 +23,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
-        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ArrayAdapter<String> menuAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
                 getResources().getStringArray(R.array.menu_opts));
@@ -42,6 +42,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 break;
             case 2:
                 startActivity(PeekThroughImageViewA.class);
+                break;
+            case 3:
+                startActivity(ColorMatrixA.class);
+                break;
+            case 4:
+                startActivity(FourColorImageViewA.class);
                 break;
         }
     }

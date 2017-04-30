@@ -18,7 +18,9 @@
         </activity>
         <activity android:name=".shader.LinearGradientA" />
         <activity android:name=".shader.BitmapShaderA" />
-        <activity android:name=".shader.PeekThroughImageViewA"></activity>
+        <activity android:name=".shader.PeekThroughImageViewA" />
+        <activity android:name=".filters.ColorMatrixA" />
+        <activity android:name=".filters.FourColorImageViewA"></activity>
     </application>
 
 </manifest>

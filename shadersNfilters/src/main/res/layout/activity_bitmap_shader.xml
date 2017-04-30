@@ -24,7 +24,7 @@
             android:layout_gravity="center"
             android:src="@drawable/bitmap_shader" />
 
-        <com.dastanapps.learnandroid.shader.cv.BitmapShaderTextView
+        <com.dastanapps.learnandroid.cv.BitmapShaderTextView
             android:id="@+id/tv_mirror"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
             android:textStyle="bold"
             app:bmptilemode="mirror" />
 
-        <com.dastanapps.learnandroid.shader.cv.BitmapShaderTextView
+        <com.dastanapps.learnandroid.cv.BitmapShaderTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"
@@ -43,7 +43,7 @@
             android:textStyle="bold"
             app:bmptilemode="clamp" />
 
-        <com.dastanapps.learnandroid.shader.cv.BitmapShaderTextView
+        <com.dastanapps.learnandroid.cv.BitmapShaderTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="16dp"

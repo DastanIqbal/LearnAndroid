@@ -1,4 +1,4 @@
-package com.dastanapps.learnandroid.shader.cv;
+package com.dastanapps.learnandroid.cv;
 
 import android.content.Context;
 import android.graphics.Bitmap;
