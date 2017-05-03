@@ -31,12 +31,18 @@ public class ContrastEffect implements ShaderInterface {
 
         String shader = "#extension GL_OES_EGL_image_external : require\n"
                 + "precision mediump float;\n"
+
+                + "varying vec2 vTextureCoord;\n"
                 + "uniform samplerExternalOES sTexture;\n"
-                + " float contrast;\n" + "varying vec2 vTextureCoord;\n"
-                + "void main() {\n" + "  contrast =" + contrast + ";\n"
+                + " float contrast;\n"
+
+                + "void main() {\n"
+                + "  contrast =" + contrast + ";\n"
                 + "  vec4 color = texture2D(sTexture, vTextureCoord);\n"
-                + "  color -= 0.5;\n" + "  color *= contrast;\n"
-                + "  color += 0.5;\n" + "  gl_FragColor = color;\n" + "}\n";
+                + "  color -= 0.5;\n"
+                + "  color *= contrast;\n"
+                + "  color += 0.5;\n"
+                + "  gl_FragColor = color;\n" + "}\n";
         return shader;
 
     }

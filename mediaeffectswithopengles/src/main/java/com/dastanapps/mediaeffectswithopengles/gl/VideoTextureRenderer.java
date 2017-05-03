@@ -33,9 +33,25 @@ public class VideoTextureRenderer extends TextureSurfaceRenderer implements Surf
                     "uniform samplerExternalOES texture;" +
                     "varying vec2 v_TexCoordinate;" +
                     "void main () {" +
-                     "    vec4 color = texture2D(texture, v_TexCoordinate);" +
-                     "    gl_FragColor = color;" +
+                    "    vec4 color = texture2D(texture, v_TexCoordinate);" +
+                    "    gl_FragColor = (color-1);" +
                     "}";
+
+    /*private static final String fragmentShaderCode =
+            "#extension GL_OES_EGL_image_external : require\n"
+                    + "precision mediump float;\n"
+
+                    + "varying vec2 v_TexCoordinate;\n"
+                    + "uniform samplerExternalOES texture;\n"
+                    + "float contrast;\n"
+
+                    + "void main() {\n"
+                    + "  contrast =" + 100 + ";\n"
+                    + "  vec4 color = texture2D(sTexture, vTextureCoord);\n"
+                    + "  color -= 0.5;\n"
+                    + "  color *= contrast;\n"
+                    + "  color += 0.5;\n"
+                    + "  gl_FragColor = color;\n" + "}\n";*/
 
    /* private static final String fragmentShaderCode =
             "#extension GL_OES_EGL_image_external : require\n" +
@@ -49,7 +65,6 @@ public class VideoTextureRenderer extends TextureSurfaceRenderer implements Surf
                     "    vec2 samplePos = v_TexCoordinate - mod(v_TexCoordinate, sampleDivisor) + 0.5 * sampleDivisor;" +
                     "    gl_FragColor = texture2D(texture, samplePos);" +
                     "}";*/
-
 
 
     private static float squareSize = 1.0f;
@@ -90,7 +105,7 @@ public class VideoTextureRenderer extends TextureSurfaceRenderer implements Surf
         super(texture, width, height);
         this.ctx = context;
         videoTextureTransform = new float[16];
-        mEffectContext = EffectContext.createWithCurrentGlContext();
+//        mEffectContext = EffectContext.createWithCurrentGlContext();
     }
 
     private void loadShaders() {
@@ -154,6 +169,15 @@ public class VideoTextureRenderer extends TextureSurfaceRenderer implements Surf
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textures[0]);
         checkGlError("Texture bind");
 
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
         videoTexture = new SurfaceTexture(textures[0]);
         videoTexture.setOnFrameAvailableListener(this);
     }
@@ -205,7 +229,7 @@ public class VideoTextureRenderer extends TextureSurfaceRenderer implements Surf
     }
 
     private void applyEffects() {
-        if(mEffectContext!=null) {
+        if (mEffectContext != null) {
             EffectFactory effectFactory = mEffectContext.getFactory();
             if (mEffect != null) {
                 mEffect.release();

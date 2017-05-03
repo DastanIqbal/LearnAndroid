@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.dastanapps.mediaeffectswithopengles.R;
-import com.dastanapps.mediaeffectswithopengles.effects.DocumentaryEffect;
+import com.dastanapps.mediaeffectswithopengles.effects.GammaEffect;
 import com.dastanapps.mediaeffectswithopengles.gl.VideoSurfaceView;
 
 
@@ -50,7 +50,7 @@ public class GLSurfaceViewPlayerActivity extends Activity {
         setContentView(R.layout.activity_sampleplayer);
         mVideoView = (VideoSurfaceView) findViewById(R.id.mVideoSurfaceView);
         mVideoView.init(mMediaPlayer,
-                new DocumentaryEffect());
+                new GammaEffect(0.2f));
 //      If you want to change effect then just call mVideoView.init() again
 //      and then call mVideoView.onResume()
     }

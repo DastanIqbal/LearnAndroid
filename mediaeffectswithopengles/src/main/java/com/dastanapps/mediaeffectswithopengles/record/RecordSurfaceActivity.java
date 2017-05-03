@@ -11,7 +11,7 @@ import android.view.Surface;
 import android.view.TextureView;
 
 import com.dastanapps.mediaeffectswithopengles.R;
-import com.dastanapps.mediaeffectswithopengles.gl.VideoTextureRenderer;
+import com.dastanapps.mediaeffectswithopengles.gl.VideoSurfaceTextureRenderer;
 
 import java.io.IOException;
 
@@ -24,7 +24,7 @@ public class RecordSurfaceActivity extends Activity implements TextureView.Surfa
 
     private TextureView surface;
     private MediaPlayer player;
-    private VideoTextureRenderer renderer;
+    private VideoSurfaceTextureRenderer renderer;
 
     private int surfaceWidth;
     private int surfaceHeight;
@@ -55,7 +55,7 @@ public class RecordSurfaceActivity extends Activity implements TextureView.Surfa
     }
 
     private void startPlaying() {
-        renderer = new VideoTextureRenderer(this, surface.getSurfaceTexture(), surfaceWidth, surfaceHeight);
+        renderer = new VideoSurfaceTextureRenderer(this, surface.getSurfaceTexture(), surfaceWidth, surfaceHeight);
         player = new MediaPlayer();
 
         try {
