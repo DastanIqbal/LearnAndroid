@@ -7,8 +7,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import com.dastanapps.mediaeffectswithopengles.databinding.ActivityMainBinding;
+import com.dastanapps.mediaeffectswithopengles.record.GLSurfaceViewPlayerActivity;
+import com.dastanapps.mediaeffectswithopengles.record.RecordGLwithoutRenderOnScreen;
+import com.dastanapps.mediaeffectswithopengles.record.RecordSurfaceActivity;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
@@ -32,6 +36,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case 0:
                 RecordGLwithoutRenderOnScreen recordGLwithoutRenderOnScreen = new RecordGLwithoutRenderOnScreen();
                 recordGLwithoutRenderOnScreen.recordOpenGLVideo();
+                Toast.makeText(this, "Search test.currentDate.mp4 file in File Storage", Toast.LENGTH_SHORT).show();
+                break;
+            case 1:
+                startActivity(RecordSurfaceActivity.class);
+                break;
+            case 2:
+                startActivity(GLSurfaceViewPlayerActivity.class);
                 break;
         }
     }
