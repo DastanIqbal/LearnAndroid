@@ -1,1 +1,1 @@
-include ':shadersNfilters'
+include ':shadersNfilters', ':mediaeffectswithopengles'

@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">MediaEffectsWithOpenGLES</string>
+    <string-array name="menu_opts">
+        <item>RecordOpenGLwithoutRenderOnScreen</item>
+        <item>Bitmap Shader</item>
+        <item>Peek Through ImageView</item>
+        <item>Color Filter</item>
+        <item>Four Color ImageView</item>
+    </string-array>
+</resources>
