@@ -4,15 +4,18 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLUtils;
 import android.util.Log;
 
-import javax.microedition.khronos.egl.*;
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
 
 /**
  * Renderer which initializes OpenGL 2.0 context on a passed surface and starts a rendering thread
- *
+ * <p>
  * This class has to be subclassed to be used properly
  */
-public abstract class TextureSurfaceRenderer implements Runnable
-{
+public abstract class TextureSurfaceRenderer implements Runnable {
     private static final int EGL_OPENGL_ES2_BIT = 4;
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final String LOG_TAG = "SurfaceTest.GL";
@@ -33,11 +36,10 @@ public abstract class TextureSurfaceRenderer implements Runnable
 
     /**
      * @param texture Surface texture on which to render. This has to be called AFTER the texture became available
-     * @param width Width of the passed surface
-     * @param height Height of the passed surface
+     * @param width   Width of the passed surface
+     * @param height  Height of the passed surface
      */
-    public TextureSurfaceRenderer(SurfaceTexture texture, int width, int height)
-    {
+    public TextureSurfaceRenderer(SurfaceTexture texture, int width, int height) {
         this.texture = texture;
         this.width = width;
         this.height = height;
@@ -47,31 +49,24 @@ public abstract class TextureSurfaceRenderer implements Runnable
     }
 
     @Override
-    public void run()
-    {
+    public void run() {
         initGL();
         initGLComponents();
         Log.d(LOG_TAG, "OpenGL init OK.");
 
-        while (running)
-        {
+        while (running) {
             long loopStart = System.currentTimeMillis();
             pingFps();
 
-            if (draw())
-            {
+            if (draw()) {
                 egl.eglSwapBuffers(eglDisplay, eglSurface);
             }
 
             long waitDelta = 16 - (System.currentTimeMillis() - loopStart);    // Targeting 60 fps, no need for faster
-            if (waitDelta > 0)
-            {
-                try
-                {
+            if (waitDelta > 0) {
+                try {
                     Thread.sleep(waitDelta);
-                }
-                catch (InterruptedException e)
-                {
+                } catch (InterruptedException e) {
                     continue;
                 }
             }
@@ -92,19 +87,19 @@ public abstract class TextureSurfaceRenderer implements Runnable
      * Subclass this and initialize shaders / textures / other GL related components here.
      */
     protected abstract void initGLComponents();
+
     protected abstract void deinitGLComponents();
 
     private long lastFpsOutput = 0;
     private int frames;
-    private void pingFps()
-    {
+
+    private void pingFps() {
         if (lastFpsOutput == 0)
             lastFpsOutput = System.currentTimeMillis();
 
-        frames ++;
+        frames++;
 
-        if (System.currentTimeMillis() - lastFpsOutput > 1000)
-        {
+        if (System.currentTimeMillis() - lastFpsOutput > 1000) {
             Log.d(LOG_TAG, "FPS: " + frames);
             lastFpsOutput = System.currentTimeMillis();
             frames = 0;
@@ -115,14 +110,12 @@ public abstract class TextureSurfaceRenderer implements Runnable
     /**
      * Call when activity pauses. This stops the rendering thread and deinitializes OpenGL.
      */
-    public void onPause()
-    {
+    public void onPause() {
         running = false;
     }
 
 
-    private void initGL()
-    {
+    private void initGL() {
         egl = (EGL10) EGLContext.getEGL();
         eglDisplay = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
 
@@ -133,20 +126,18 @@ public abstract class TextureSurfaceRenderer implements Runnable
         eglContext = createContext(egl, eglDisplay, eglConfig);
 
         eglSurface = egl.eglCreateWindowSurface(eglDisplay, eglConfig, texture, null);
+       // eglSurface = egl.eglCreatePbufferSurface(eglDisplay, eglConfig, null);
 
-        if (eglSurface == null || eglSurface == EGL10.EGL_NO_SURFACE)
-        {
+        if (eglSurface == null || eglSurface == EGL10.EGL_NO_SURFACE) {
             throw new RuntimeException("GL Error: " + GLUtils.getEGLErrorString(egl.eglGetError()));
         }
 
-        if (!egl.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
-        {
+        if (!egl.eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext)) {
             throw new RuntimeException("GL Make current error: " + GLUtils.getEGLErrorString(egl.eglGetError()));
         }
     }
 
-    private void deinitGL()
-    {
+    private void deinitGL() {
         egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
         egl.eglDestroySurface(eglDisplay, eglSurface);
         egl.eglDestroyContext(eglDisplay, eglContext);
@@ -154,33 +145,27 @@ public abstract class TextureSurfaceRenderer implements Runnable
         Log.d(LOG_TAG, "OpenGL deinit OK.");
     }
 
-    private EGLContext createContext(EGL10 egl, EGLDisplay eglDisplay, EGLConfig eglConfig)
-    {
-        int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
+    private EGLContext createContext(EGL10 egl, EGLDisplay eglDisplay, EGLConfig eglConfig) {
+        int[] attribList = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
         return egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
     }
 
-    private EGLConfig chooseEglConfig()
-    {
+    private EGLConfig chooseEglConfig() {
         int[] configsCount = new int[1];
         EGLConfig[] configs = new EGLConfig[1];
         int[] configSpec = getConfig();
 
-        if (!egl.eglChooseConfig(eglDisplay, configSpec, configs, 1, configsCount))
-        {
+        if (!egl.eglChooseConfig(eglDisplay, configSpec, configs, 1, configsCount)) {
             throw new IllegalArgumentException("Failed to choose config: " + GLUtils.getEGLErrorString(egl.eglGetError()));
-        }
-        else if (configsCount[0] > 0)
-        {
+        } else if (configsCount[0] > 0) {
             return configs[0];
         }
 
         return null;
     }
 
-    private int[] getConfig()
-    {
-        return new int[] {
+    private int[] getConfig() {
+        return new int[]{
                 EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
                 EGL10.EGL_RED_SIZE, 8,
                 EGL10.EGL_GREEN_SIZE, 8,
@@ -193,8 +178,7 @@ public abstract class TextureSurfaceRenderer implements Runnable
     }
 
     @Override
-    protected void finalize() throws Throwable
-    {
+    protected void finalize() throws Throwable {
         super.finalize();
         running = false;
     }

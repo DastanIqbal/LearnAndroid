@@ -56,12 +56,19 @@ public class RecordSurfaceActivity extends Activity implements TextureView.Surfa
 
     private void startPlaying() {
         renderer = new VideoSurfaceTextureRenderer(this, surface.getSurfaceTexture(), surfaceWidth, surfaceHeight);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         player = new MediaPlayer();
 
         try {
             AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
             player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            player.setSurface(new Surface(renderer.getVideoTexture()));
+            Surface surfac=new Surface(renderer.getVideoTexture());
+            renderer.setSurface(surfac);
+            player.setSurface(surfac);
             player.setLooping(true);
             player.prepare();
             renderer.setVideoSize(player.getVideoWidth(), player.getVideoHeight());
@@ -71,6 +78,7 @@ public class RecordSurfaceActivity extends Activity implements TextureView.Surfa
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     adjustAspectRatio(surface, player.getVideoWidth(), player.getVideoHeight());
+                    renderer.recordOpenGLVideo();
                 }
             });
 

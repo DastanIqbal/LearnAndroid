@@ -51,7 +51,7 @@ public class RecordGLwithoutRenderOnScreen {
     private static final String MIME_TYPE = "video/avc";    // H.264 Advanced Video Coding
     private static final int FRAME_RATE = 15;               // 15fps
     private static final int IFRAME_INTERVAL = 10;          // 10 seconds between I-frames
-    private static final int NUM_FRAMES = 2*60;               // two minutes of video
+    private static final int NUM_FRAMES = 2 * 60;               // two minutes of video
 
     // RGB color values for generated frames
     private static final int TEST_R0 = 0;
@@ -76,7 +76,6 @@ public class RecordGLwithoutRenderOnScreen {
 
     // allocate one of these up front so we don't need to do it every time
     private MediaCodec.BufferInfo mBufferInfo;
-
 
     /**
      * Tests encoding of AVC video from a Surface.  The output is saved as an MP4 file.
@@ -112,11 +111,12 @@ public class RecordGLwithoutRenderOnScreen {
             drainEncoder(true);
         } finally {
             // release encoder, muxer, and input Surface
-            releaseEncoder();
+            //releaseEncoder();
         }
         // To test the result, open the file with MediaExtractor, and get the format.  Pass
         // that into the MediaCodec decoder configuration, along with a SurfaceTexture surface,
         // and examine the output with glReadPixels.
+
     }
 
     /**
@@ -307,11 +307,12 @@ public class RecordGLwithoutRenderOnScreen {
         GLES20.glClearColor(TEST_R0 / 255.0f, TEST_G0 / 255.0f, TEST_B0 / 255.0f, 1.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-        GLES20.glScissor(startX, startY, mWidth / 4, mHeight / 2);
-        GLES20.glClearColor(TEST_R1 / 255.0f, TEST_G1 / 255.0f, TEST_B1 / 255.0f, 1.0f);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+        //  GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
+        //    GLES20.glScissor(startX, startY, mWidth / 4, mHeight / 2);
+        //    GLES20.glClearColor(TEST_R1 / 255.0f, TEST_G1 / 255.0f, TEST_B1 / 255.0f, 1.0f);
+        //    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+
+        //GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
     }
 
     /**
