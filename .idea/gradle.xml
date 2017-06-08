@@ -8,9 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/mediaeffectswithopengles" />
-            <option value="$PROJECT_DIR$/shadersNfilters" />
-            <option value="$PROJECT_DIR$/tutsopengles" />
+            <option value="$PROJECT_DIR$/retrosquashgame" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
