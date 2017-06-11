@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
 import android.view.SurfaceView
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     var screenWidth: Int = 640
@@ -17,6 +18,11 @@ class MainActivity : AppCompatActivity() {
     //ball attributes
     var ballWidth: Int = 30
     var ballPos: Point = Point()
+
+    var ballIsMovingRight: Boolean = false
+    var ballIsMovingLeft: Boolean = false
+    var ballIsMovingUp: Boolean = false
+    var ballIsMovingDown: Boolean = false
 
     //racket attributes
     var racketWidth: Int = 20
@@ -53,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         racketWidth = screenWidth / 8
         racketHeight = 10
         racketPos.x = screenWidth / 2
-        racketPos.y = screenHeight - screenHeight / 8
+        racketPos.y = screenHeight - screenHeight / 5
 
         lives = 3
     }
@@ -61,9 +67,32 @@ class MainActivity : AppCompatActivity() {
     inner class SquashCourtView(context: Context) : SurfaceView(context), Runnable {
         var paint: Paint = Paint()
         var thread: Thread? = null
-
         @Volatile
         var playingSquash: Boolean = false
+
+        init {
+            ballIsMovingDown = true
+            handleBallDirection()
+        }
+
+        private fun handleBallDirection() {
+            val randomNumber: Random = Random()
+            val ballDirection: Int = randomNumber.nextInt(3)
+            when (ballDirection) {
+                0 -> {
+                    ballIsMovingLeft = true
+                    ballIsMovingRight = false
+                }
+                1 -> {
+                    ballIsMovingLeft = false
+                    ballIsMovingRight = true
+                }
+                2 -> {
+                    ballIsMovingLeft = false
+                    ballIsMovingRight = false
+                }
+            }
+        }
 
         override fun run() {
             while (playingSquash) {
@@ -74,6 +103,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         private fun updateCourt() {
+            //Move Racket
             if (racketIsMovingLeft &&
                     racketPos.x > racketWidth / 2) {
                 racketPos.x -= 10
@@ -82,12 +112,69 @@ class MainActivity : AppCompatActivity() {
                     racketPos.x < (screenWidth - racketWidth / 2)) {
                 racketPos.x += 10
             }
+
+            //Detect Collision
+            //Right
+            if (ballPos.x + ballWidth > screenWidth) {
+                ballIsMovingLeft = true
+                ballIsMovingRight = false
+            }
+            //Left
+            if (ballPos.x < 0) {
+                ballIsMovingLeft = false
+                ballIsMovingRight = true
+            }
+            //Top
+            if (ballPos.y <= 0) {
+                ballIsMovingDown = true
+                ballIsMovingUp = false
+                ballPos.y = 1
+            }
+            //Bottom
+            if (ballPos.y > screenHeight - ballWidth) {
+                lives -= 1
+                if (lives == 0) {
+                    lives = 3
+                    score = 0
+                }
+                ballPos.y = 1 + ballWidth
+                val randomNumber: Random = Random()
+                val startX: Int = randomNumber.nextInt(screenWidth - ballWidth) + 1
+                ballPos.x = startX + ballWidth
+                handleBallDirection()
+            }
+
+            //Handle ballDirection
+            if (ballIsMovingDown) ballPos.y += 6
+            if (ballIsMovingUp) ballPos.y -= 10
+            if (ballIsMovingLeft) ballPos.x -= 12
+            if (ballIsMovingRight) ballPos.x += 12
+
+            //Detect Racket Collision
+            if (ballPos.y + ballWidth >= (racketPos.y - racketHeight / 2)
+                    && ballPos.y - ballWidth <= (racketPos.y + racketHeight / 2)) {
+                val halfRacket: Int = racketWidth / 2
+                if (ballPos.x + ballWidth > (racketPos.x - halfRacket) &&
+                        ballPos.x - ballWidth < (racketPos.x + halfRacket)) {
+                    score++
+                    ballIsMovingUp = true
+                    ballIsMovingDown = false
+                    if (ballPos.x > racketPos.x) {
+                        ballIsMovingRight = true
+                        ballIsMovingLeft = false
+                    } else {
+                        ballIsMovingLeft = true
+                        ballIsMovingRight = false
+                    }
+                }
+            }
+
         }
 
         private fun drawCourt() {
             if (holder.surface.isValid) {
                 canvas = holder.lockCanvas()
-                canvas?.drawColor(Color.RED)
+                canvas?.drawColor(Color.BLACK)
                 paint.color = Color.argb(255, 255, 255, 255)
                 paint.textSize = 45f
                 canvas?.drawText("Score: $score Lives:$lives fps:$fps", 20f, 40f, paint)
