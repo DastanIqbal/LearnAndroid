@@ -1,15 +1,19 @@
 package com.dastanapps.retrosquashgame
 
 import android.content.Context
+import android.content.res.AssetFileDescriptor
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Point
+import android.media.AudioManager
+import android.media.SoundPool
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MotionEvent
 import android.view.SurfaceView
 import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
     var screenWidth: Int = 640
@@ -41,6 +45,14 @@ class MainActivity : AppCompatActivity() {
     var canvas: Canvas? = null
     var sqashcourtview: SquashCourtView? = null
 
+    //Sound
+    //initialize sound variables
+    private var soundPool: SoundPool? = null
+    var sample1 = -1
+    var sample2 = -1
+    var sample3 = -1
+    var sample4 = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sqashcourtview = SquashCourtView(this)
@@ -62,6 +74,24 @@ class MainActivity : AppCompatActivity() {
         racketPos.y = screenHeight - screenHeight / 5
 
         lives = 3
+
+        //Sound code
+        soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
+        var descriptor: AssetFileDescriptor = assets.openFd("sample1.ogg")
+
+        //create our three fx in memory ready for use
+        sample1 = soundPool!!.load(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length, 0)
+
+        descriptor = assets.openFd("sample2.ogg")
+        sample2 = soundPool!!.load(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length, 0)
+
+
+        descriptor = assets.openFd("sample3.ogg")
+        sample3 = soundPool!!.load(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length, 0)
+
+        descriptor = assets.openFd("sample4.ogg")
+        sample4 = soundPool!!.load(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length, 0)
+
     }
 
     inner class SquashCourtView(context: Context) : SurfaceView(context), Runnable {
@@ -118,24 +148,31 @@ class MainActivity : AppCompatActivity() {
             if (ballPos.x + ballWidth > screenWidth) {
                 ballIsMovingLeft = true
                 ballIsMovingRight = false
+                soundPool?.play(sample1,1f,1f,0,0,1f)
             }
+
             //Left
             if (ballPos.x < 0) {
                 ballIsMovingLeft = false
                 ballIsMovingRight = true
+                soundPool?.play(sample1,1f,1f,0,0,1f)
             }
+
             //Top
             if (ballPos.y <= 0) {
                 ballIsMovingDown = true
                 ballIsMovingUp = false
                 ballPos.y = 1
+                soundPool?.play(sample2,1f,1f,0,0,1f)
             }
+
             //Bottom
             if (ballPos.y > screenHeight - ballWidth) {
                 lives -= 1
                 if (lives == 0) {
                     lives = 3
                     score = 0
+                    soundPool?.play(sample4,1f,1f,0,0,1f)
                 }
                 ballPos.y = 1 + ballWidth
                 val randomNumber: Random = Random()
@@ -156,6 +193,7 @@ class MainActivity : AppCompatActivity() {
                 val halfRacket: Int = racketWidth / 2
                 if (ballPos.x + ballWidth > (racketPos.x - halfRacket) &&
                         ballPos.x - ballWidth < (racketPos.x + halfRacket)) {
+                    soundPool?.play(sample3,1f,1f,0,0,1f)
                     score++
                     ballIsMovingUp = true
                     ballIsMovingDown = false
