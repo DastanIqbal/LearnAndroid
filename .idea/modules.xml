@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" filepath="$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" />
       <module fileurl="file://$PROJECT_DIR$/retrosquashgame/retrosquashgame.iml" filepath="$PROJECT_DIR$/retrosquashgame/retrosquashgame.iml" />
       <module fileurl="file://$PROJECT_DIR$/shadersNfilters/shadersNfilters.iml" filepath="$PROJECT_DIR$/shadersNfilters/shadersNfilters.iml" />
+      <module fileurl="file://$PROJECT_DIR$/snake/snake.iml" filepath="$PROJECT_DIR$/snake/snake.iml" />
       <module fileurl="file://$PROJECT_DIR$/tutsopengles/tutsopengles.iml" filepath="$PROJECT_DIR$/tutsopengles/tutsopengles.iml" />
     </modules>
   </component>
