@@ -1,6 +1,7 @@
 package com.dastanapps.snake
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -12,12 +13,12 @@ class MainActivity : AppCompatActivity() {
     private var screenHeight: Int = 480
 
     //The portion of the bitmap to be drawn in the current frame
-    private var rectToBeDrawn:Rect?=null
+    private var rectToBeDrawn: Rect? = null
     //The dimensions of a single frame
-    private var frameHeight:Int=64
-    private var frameWidth:Int=64
-    private var numFrames:Int=6
-    private var frameNumber:Int=0
+    private var frameHeight: Int = 64
+    private var frameWidth: Int = 64
+    private var numFrames: Int = 6
+    private var frameNumber: Int = 0
 
     private var hi: Int = 0
     private var fps: Int = 0
@@ -27,11 +28,12 @@ class MainActivity : AppCompatActivity() {
     private var snakeView: SnakeAnimView? = null
     //The snake head sprite sheet
     private var headBitmap: Bitmap? = null
-
+    private var gameActivityIntent: Intent? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         headBitmap = BitmapFactory.decodeResource(resources, R.drawable.head_sprite_sheet)
         snakeView = SnakeAnimView(this)
+        snakeView?.setOnClickListener({ startActivity(gameActivityIntent) })
         setContentView(snakeView)
 
         val point: Point = Point()
@@ -39,16 +41,22 @@ class MainActivity : AppCompatActivity() {
         screenWidth = point.x
         screenHeight = point.y
 
+        gameActivityIntent = Intent(this, GameActivity::class.java)
     }
+
+    /*override fun onTouchEvent(event: MotionEvent?): Boolean {
+        startActivity(gameActivityIntent)
+        return true
+    }*/
 
     inner class SnakeAnimView(context: Context) : SurfaceView(context), Runnable {
         var thread: Thread? = null
         var paint: Paint = Paint()
-        @Volatile
-        var playingSnake: Boolean = false
-        init{
-            frameWidth= headBitmap?.width?.div(numFrames) as Int
-            frameHeight=headBitmap?.height as Int
+        @Volatile var playingSnake: Boolean = false
+
+        init {
+            frameWidth = headBitmap?.width?.div(numFrames) as Int
+            frameHeight = headBitmap?.height as Int
         }
 
         override fun run() {
@@ -61,18 +69,18 @@ class MainActivity : AppCompatActivity() {
 
         private fun updateScene() {
             //which frame should we draw
-            rectToBeDrawn= Rect((frameNumber*frameWidth)-1,0,(frameNumber*frameWidth+frameWidth)-1,frameHeight)
+            rectToBeDrawn = Rect((frameNumber * frameWidth) - 1, 0, (frameNumber * frameWidth + frameWidth) - 1, frameHeight)
             //now the next frame
             frameNumber++
             //don't try and draw frames that don't exist
-            if(frameNumber == numFrames){
+            if (frameNumber == numFrames) {
                 frameNumber = 0 //back to the first frame
             }
         }
 
         private fun controlToFPS() {
             val timeThisFrame: Long = (System.currentTimeMillis() - lastTimeFrame)
-            val timeToSleep = 500 - timeThisFrame
+            val timeToSleep = 100 - timeThisFrame
             if (timeThisFrame > 0) {
                 fps = (1000 / timeThisFrame).toInt()
             }
@@ -86,12 +94,12 @@ class MainActivity : AppCompatActivity() {
         private fun drawScene() {
             if (holder.surface.isValid) {
                 canvas = holder.lockCanvas()
-                canvas?.drawColor(Color.RED)
+                canvas?.drawColor(Color.BLACK)
                 paint.color = Color.argb(255, 255, 255, 255)
-                paint.textSize = 50f
+                paint.textSize = 150f
                 canvas?.drawText("Snake", 10f, 150f, paint)
                 paint.textSize = 25f
-                canvas?.drawText("Hi Score:" + hi, 160f, 150f, paint)
+                canvas?.drawText("Hi Score:" + hi, 10f, screenHeight - 100f, paint)
 
                 //Draw the snake head
                 //make this Rect whatever size and location you like
@@ -131,7 +139,7 @@ class MainActivity : AppCompatActivity() {
             break
         }
 
-        //finish();
+        finish()
     }
 
     override fun onBackPressed() {

@@ -75,6 +75,11 @@ class MainActivity : AppCompatActivity() {
 
         lives = 3
 
+       setupSound()
+
+    }
+
+    private fun setupSound() {
         //Sound code
         soundPool = SoundPool(10, AudioManager.STREAM_MUSIC, 0)
         var descriptor: AssetFileDescriptor = assets.openFd("sample1.ogg")
@@ -91,7 +96,6 @@ class MainActivity : AppCompatActivity() {
 
         descriptor = assets.openFd("sample4.ogg")
         sample4 = soundPool!!.load(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length, 0)
-
     }
 
     inner class SquashCourtView(context: Context) : SurfaceView(context), Runnable {
