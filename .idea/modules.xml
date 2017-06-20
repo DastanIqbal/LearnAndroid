@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gameframework/gameframework.iml" filepath="$PROJECT_DIR$/gameframework/gameframework.iml" />
       <module fileurl="file://$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" filepath="$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" />
       <module fileurl="file://$PROJECT_DIR$/retrosquashgame/retrosquashgame.iml" filepath="$PROJECT_DIR$/retrosquashgame/retrosquashgame.iml" />
       <module fileurl="file://$PROJECT_DIR$/shadersNfilters/shadersNfilters.iml" filepath="$PROJECT_DIR$/shadersNfilters/shadersNfilters.iml" />
