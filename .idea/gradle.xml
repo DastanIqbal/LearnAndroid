@@ -9,8 +9,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/gameframework" />
-            <option value="$PROJECT_DIR$/retrosquashgame" />
-            <option value="$PROJECT_DIR$/snake" />
+            <option value="$PROJECT_DIR$/testframework" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

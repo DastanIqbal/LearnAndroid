@@ -1,4 +1,6 @@
 //include ':shadersNfilters'
 //include  ':mediaeffectswithopengles'
 //include  ':tutsopengles'
-include ':retrosquashgame', ':snake', ':gameframework'
+//include ':retrosquashgame'
+//include ':snake'
+include ':gameframework', ':testframework'
