@@ -3,10 +3,10 @@ package com.iaandroid.tutsopengles;
 import android.app.Activity;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.FloatMath;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -27,6 +27,15 @@ public class MainActivity extends Activity implements GLSurfaceView.Renderer {
         glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         glSurfaceView.setRenderer(this);
         setContentView(glSurfaceView);
+        BufferedReader bufferedReader = null;
+        String line=null;
+        try {
+            while((line=bufferedReader.readLine())!=null){
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

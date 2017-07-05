@@ -13,7 +13,7 @@ import android.widget.TextView
  * 27/06/2017 12:48
  */
 
-class SingleTouchTest : AppCompatActivity(), View.OnTouchListener {
+open class SingleTouchTest : AppCompatActivity(), View.OnTouchListener {
     var stringBuilder = StringBuilder()
     var textView: TextView? = null
 

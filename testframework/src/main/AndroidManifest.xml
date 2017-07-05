@@ -26,6 +26,14 @@
         <activity android:name=".test.SingleTouchTest" />
         <activity android:name=".test.MultiTouchTest" />
         <activity android:name=".test.KeyTest" />
+        <activity android:name=".test.AccelerometerTest" />
+        <activity android:name=".test.AssetsTest" />
+        <activity android:name=".test.ExternalStorageTest" />
+        <activity android:name=".test.SoundPoolTest" />
+        <activity android:name=".test.MediaPlayerTest" />
+        <activity android:name=".test.FullScreenTest" />
+        <activity android:name=".test.RenderViewTest" />
+        <activity android:name=".test.ShapeTest" />
     </application>
 
 </manifest>
