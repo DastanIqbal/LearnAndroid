@@ -36,6 +36,7 @@
         <activity android:name=".test.ShapeTest" />
         <activity android:name=".test.BitmapTest" />
         <activity android:name=".test.FontTest" />
+        <activity android:name=".test.SurfaceViewTest" />
     </application>
 
 </manifest>
