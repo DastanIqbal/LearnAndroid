@@ -34,6 +34,7 @@
         <activity android:name=".test.FullScreenTest" />
         <activity android:name=".test.RenderViewTest" />
         <activity android:name=".test.ShapeTest" />
+        <activity android:name=".test.BitmapTest" />
     </application>
 
 </manifest>
