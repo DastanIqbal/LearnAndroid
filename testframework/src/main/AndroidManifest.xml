@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.dastanapps.testframework"
+    android:installLocation="preferExternal">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".test.LifeCycleTest" />
+        <activity android:name=".test.SingleTouchTest" />
+        <activity android:name=".test.MultiTouchTest" />
+        <activity android:name=".test.KeyTest" />
+        <activity android:name=".test.AccelerometerTest" />
+        <activity android:name=".test.AssetsTest" />
+        <activity android:name=".test.ExternalStorageTest" />
+        <activity android:name=".test.SoundPoolTest" />
+        <activity android:name=".test.MediaPlayerTest" />
+        <activity android:name=".test.FullScreenTest" />
+        <activity android:name=".test.RenderViewTest" />
+        <activity android:name=".test.ShapeTest" />
+        <activity android:name=".test.BitmapTest" />
+        <activity android:name=".test.FontTest" />
+        <activity android:name=".test.SurfaceViewTest" />
+    </application>
+
+</manifest>

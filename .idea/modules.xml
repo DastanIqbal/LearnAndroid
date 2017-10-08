@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/shadersNfilters/app.iml" filepath="$PROJECT_DIR$/shadersNfilters/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/gameframework/gameframework.iml" filepath="$PROJECT_DIR$/gameframework/gameframework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testframework/testframework.iml" filepath="$PROJECT_DIR$/testframework/testframework.iml" />
+    </modules>
+  </component>
+</project>
