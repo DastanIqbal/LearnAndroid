@@ -1,5 +1,6 @@
 package com.dastanapps.gameframework
 
+import android.content.SharedPreferences
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -9,7 +10,8 @@ import java.io.OutputStream
  * 21/06/2017 12:07
  */
 interface FileIO{
-    fun readAssest():InputStream
-    fun readFile():InputStream
-    fun writeFile():OutputStream
+    fun readAssest(fileName:String):InputStream
+    fun readFile(fileName:String):InputStream
+    fun writeFile(fileName:String):OutputStream
+    fun getPreferences(): SharedPreferences
 }
