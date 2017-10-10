@@ -7,14 +7,19 @@ package com.dastanapps.gameframework
  */
 
 interface Input {
-    class KeyEvent(val type: Int, val keyCode: Int, val keyChar: Char) {
+    class KeyEvent(var type: Int, var keyCode: Int, var keyChar: Char) {
+
+        constructor() : this(-1, -1, Character.MIN_VALUE)
+
         companion object {
             val KEY_DOWN: Int = 0
             val KEY_UP: Int = 1
         }
     }
 
-    class TouchEvent(val type: Int, val x: Int, val y: Int, val pointer: Int) {
+    class TouchEvent(var type: Int, var x: Int, var y: Int, val pointer: Int) {
+        constructor() : this(-1, -1, -1, -1)
+
         companion object {
             val TOUCH_DOWN: Int = 0
             val TOUCH_UP: Int = 1
