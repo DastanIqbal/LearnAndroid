@@ -17,7 +17,7 @@ interface Input {
         }
     }
 
-    class TouchEvent(var type: Int, var x: Int, var y: Int, val pointer: Int) {
+    class TouchEvent(var type: Int, var x: Int, var y: Int, var pointer: Int) {
         constructor() : this(-1, -1, -1, -1)
 
         companion object {
@@ -30,8 +30,8 @@ interface Input {
     fun getTouchX(pointer: Int): Int
     fun getTouchY(pointer: Int): Int
 
-    fun isKeyPressed(keyCode: Boolean): Boolean
-    fun isTouchDown(keyCode: Boolean): Boolean
+    fun isKeyPressed(keyCode: Int): Boolean
+    fun isTouchDown(pointer: Int): Boolean
 
     fun getAccelX(): Float
     fun getAccelY(): Float

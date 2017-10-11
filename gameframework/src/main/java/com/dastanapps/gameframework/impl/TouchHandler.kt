@@ -12,5 +12,5 @@ interface TouchHandler : View.OnTouchListener {
     fun isTouchDown(pointer: Int): Boolean
     fun getTouchX(pointer: Int): Int
     fun getTouchY(pointer: Int): Int
-    fun getTouchEvents(pointer: Int): List<Input.TouchEvent>
+    fun getTouchEvents(): List<Input.TouchEvent>
 }
