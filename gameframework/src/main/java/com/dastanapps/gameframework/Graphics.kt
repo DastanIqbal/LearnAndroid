@@ -10,11 +10,11 @@ interface Graphics {
 
     fun newPixmap(fileName: String, format: PixmapFormat): Pixmap
     fun clear(color: Int)
-    fun drawPixel(x: Int, y: Int, color: Int)
-    fun drawLine(x: Int, y: Int, x2: Int, y2: Int, color: Int)
-    fun drawRect(x: Int, y: Int, width: Int, height: Int, color: Int)
+    fun drawPixel(x: Float, y: Float, color: Int)
+    fun drawLine(x: Float, y: Float, x2: Float, y2: Float, color: Int)
+    fun drawRect(x: Float, y: Float, width: Float, height: Float, color: Int)
     fun drawPixmap(pixmap: Pixmap, x: Int, y: Int, srcX: Int, srcY: Int, srcWidth: Int, srcHeight: Int)
-    fun drawPixmap(pixmap: Pixmap, x: Int, y: Int)
+    fun drawPixmap(pixmap: Pixmap, x: Float, y: Float)
     fun getWidth(): Int
     fun getHeight(): Int
 }
