@@ -12,7 +12,7 @@ import com.dastanapps.gameframework.Pool
  * dastanIqbal@marvelmedia.com
  * 11/10/2017 12:16
  */
-class MultiTouchHandler(view: View, val scaleX: Float, val scaleY: Float) : TouchHandler {
+class MultiTouchHandler(view: View, private val scaleX: Float, private val scaleY: Float) : TouchHandler {
     override fun isTouchDown(pointer: Int): Boolean {
         synchronized(this) {
             val index = getIndex(pointer)
@@ -43,11 +43,9 @@ class MultiTouchHandler(view: View, val scaleX: Float, val scaleY: Float) : Touc
         }
     }
 
-    override fun getTouchEvents(pointer: Int): List<Input.TouchEvent> {
+    override fun getTouchEvents(): List<Input.TouchEvent> {
         synchronized(this) {
-            val len = touchEvents.size
-            for (i in 0 until len)
-                touchEventPool.freeObject(touchEvents[i])
+            for (i in 0 until touchEvents.size) touchEventPool.freeObject(touchEvents[i])
             touchEvents.clear()
             touchEvents.addAll(touchEventsBuffer)
             touchEventsBuffer.clear()
@@ -58,7 +56,7 @@ class MultiTouchHandler(view: View, val scaleX: Float, val scaleY: Float) : Touc
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         synchronized(this) {
             val action = event?.action?.and(MotionEvent.ACTION_MASK)
-            val pointerIndex = event?.action?.and(MotionEvent.ACTION_POINTER_ID_MASK shr MotionEvent.ACTION_POINTER_ID_SHIFT)
+            val pointerIndex = event?.action?.and(MotionEvent.ACTION_POINTER_ID_MASK)?.shr(MotionEvent.ACTION_POINTER_ID_SHIFT)
             val pointerCount = event?.pointerCount
             var touchEvent: TouchEvent
             for (i in 0 until MAX_TOUCHEVENTS) {
@@ -114,25 +112,25 @@ class MultiTouchHandler(view: View, val scaleX: Float, val scaleY: Float) : Touc
         }
     }
 
-    fun getIndex(pointerId: Int): Int {
+    private fun getIndex(pointerId: Int): Int {
         return (0 until MAX_TOUCHEVENTS).firstOrNull { id[it] == pointerId }
                 ?: -1
     }
 
-    val factory = object : Pool.PoolObjectFactory<Input.TouchEvent> {
+    private val factory = object : Pool.PoolObjectFactory<Input.TouchEvent> {
         override fun createObject(): Input.TouchEvent {
             return Input.TouchEvent()
         }
 
     }
-    val MAX_TOUCHEVENTS = 10
-    val touchX = IntArray(MAX_TOUCHEVENTS)
-    val touchY = IntArray(MAX_TOUCHEVENTS)
-    val isTouched = BooleanArray(MAX_TOUCHEVENTS)
-    val id = IntArray(MAX_TOUCHEVENTS)
-    val touchEventPool = Pool(factory, 100)
-    val touchEvents = ArrayList<Input.TouchEvent>()
-    val touchEventsBuffer = ArrayList<Input.TouchEvent>()
+    private val MAX_TOUCHEVENTS = 10
+    private val touchX = IntArray(MAX_TOUCHEVENTS)
+    private val touchY = IntArray(MAX_TOUCHEVENTS)
+    private val isTouched = BooleanArray(MAX_TOUCHEVENTS)
+    private val id = IntArray(MAX_TOUCHEVENTS)
+    private val touchEventPool = Pool(factory, 100)
+    private val touchEvents = ArrayList<Input.TouchEvent>()
+    private val touchEventsBuffer = ArrayList<Input.TouchEvent>()
 
     init {
         view.setOnTouchListener(this)

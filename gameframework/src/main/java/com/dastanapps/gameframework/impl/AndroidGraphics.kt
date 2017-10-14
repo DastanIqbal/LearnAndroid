@@ -46,8 +46,8 @@ class AndroidGraphics(val assets: AssetManager, val frameBuffer: Bitmap) : Graph
 
     override fun clear(color: Int) {
         canvas.drawRGB(color.and(0xff0000).shr(16),
-                color.and(0xff00).shr(16),
-                color.and(0xff).shr(16))
+                color.and(0xff00).shr(8),
+                color.and(0xff))
     }
 
     override fun drawPixel(x: Float, y: Float, color: Int) {
@@ -76,7 +76,7 @@ class AndroidGraphics(val assets: AssetManager, val frameBuffer: Bitmap) : Graph
         destRect.top = y
         destRect.right = x + srcWidth - 1
         destRect.bottom = y + srcHeight - 1
-        canvas.drawBitmap((pixmap as AndroidPixmap).bitmap,srcRect,destRect,null)
+        canvas.drawBitmap((pixmap as AndroidPixmap).bitmap, srcRect, destRect, null)
     }
 
     override fun drawPixmap(pixmap: Pixmap, x: Float, y: Float) {

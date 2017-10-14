@@ -5,21 +5,19 @@ package com.dastanapps.gameframework
  * dastanIqbal@marvelmedia.com
  * 09/10/2017 11:33
  */
-class Pool<T>(val factory: PoolObjectFactory<T>, val maxSize: Int) {
-    interface PoolObjectFactory<T> {
+class Pool<T>(private val factory: PoolObjectFactory<T>, private val maxSize: Int) {
+    interface PoolObjectFactory<out T> {
         fun createObject(): T
     }
 
     private var freeObject = ArrayList<T>(maxSize)
 
     fun newObject(): T {
-        var obj: T? = null
-        obj = if (freeObject.isEmpty()) {
+        return if (freeObject.isEmpty()) {
             factory.createObject()
         } else {
             freeObject.removeAt(freeObject.size - 1)
         }
-        return obj
     }
 
     fun freeObject(obj: T) {
