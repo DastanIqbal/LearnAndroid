@@ -3,5 +3,5 @@
 //include  ':tutsopengles'
 //include ':retrosquashgame'
 //include ':snake'
-include ':gameframework', ':testframework'
+include ':gameframework', ':testframework', ':mrnom'
 //include ':mediaapi'

@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/shadersNfilters/app.iml" filepath="$PROJECT_DIR$/shadersNfilters/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/gameframework/gameframework.iml" filepath="$PROJECT_DIR$/gameframework/gameframework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mrnom/mrnom.iml" filepath="$PROJECT_DIR$/mrnom/mrnom.iml" />
       <module fileurl="file://$PROJECT_DIR$/testframework/testframework.iml" filepath="$PROJECT_DIR$/testframework/testframework.iml" />
     </modules>
   </component>

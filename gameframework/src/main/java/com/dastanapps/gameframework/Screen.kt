@@ -5,7 +5,7 @@ package com.dastanapps.gameframework
  * dastanIqbal@marvelmedia.com
  * 21/06/2017 12:25
  */
-abstract class Screen(game: Game) {
+abstract class Screen(val game: Game) {
     abstract fun update(deltaTime: Float)
     abstract fun present(deltaTime: Float)
     abstract fun pause()

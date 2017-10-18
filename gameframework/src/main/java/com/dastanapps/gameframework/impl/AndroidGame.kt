@@ -3,6 +3,7 @@ package com.dastanapps.gameframework.impl
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.Point
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
@@ -13,18 +14,17 @@ import com.dastanapps.gameframework.*
  * dastanIqbal@marvelmedia.com
  * 14/10/2017 1:37
  */
-class AndroidGame : Activity(), Game {
+open class AndroidGame : Activity(), Game {
     override fun getStartScreen(): Screen {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return gameScreen;
     }
 
     lateinit var renderView: AndroidFastRenderView
     lateinit var graphic: Graphics
     lateinit var input: AndroidInput
     lateinit var gameScreen: Screen
-
-    val audio = AndroidAudio(this)
-    val fileIO = AndroidFileIO(this)
+    lateinit var audio: AndroidAudio
+    lateinit var fileIO: AndroidFileIO
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +37,14 @@ class AndroidGame : Activity(), Game {
         val frameBufferHeight = if (isLandscape) 320 else 480
         val frameBuffer = Bitmap.createBitmap(frameBufferWidth, frameBufferHeight, Bitmap.Config.RGB_565)
 
-        val scaleX: Float = (frameBufferWidth / windowManager.defaultDisplay.width).toFloat()
-        val scaleY: Float = (frameBufferHeight / windowManager.defaultDisplay.height).toFloat()
+        val point = Point()
+        windowManager.defaultDisplay.getSize(point)
 
+        val scaleX: Float = frameBufferWidth.toFloat() / point.x.toFloat()
+        val scaleY: Float = frameBufferHeight.toFloat() / point.y.toFloat()
+
+        audio = AndroidAudio(this)
+        fileIO = AndroidFileIO(this)
         renderView = AndroidFastRenderView(this, frameBuffer)
         graphic = AndroidGraphics(assets, frameBuffer)
         input = AndroidInput(this, renderView, scaleX, scaleY)

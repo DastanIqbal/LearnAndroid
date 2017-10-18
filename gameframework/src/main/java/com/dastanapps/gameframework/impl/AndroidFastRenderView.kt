@@ -9,9 +9,9 @@ import android.view.SurfaceView
  * dastanIqbal@marvelmedia.com
  * 14/10/2017 1:38
  */
-class AndroidFastRenderView(val game: AndroidGame,val frameBuffer:Bitmap) : SurfaceView(game), Runnable {
+class AndroidFastRenderView(val game: AndroidGame, val frameBuffer: Bitmap) : SurfaceView(game), Runnable {
     var running = false
-    var thread:Thread? = null
+    var thread: Thread? = null
 
     fun resume() {
         running = true
@@ -19,23 +19,26 @@ class AndroidFastRenderView(val game: AndroidGame,val frameBuffer:Bitmap) : Surf
         thread?.start()
     }
 
-    fun pause(){
-        running=false
+    fun pause() {
+        running = false
         thread?.join()
     }
 
     override fun run() {
-        val destRect=Rect()
-        var startTime=System.nanoTime()
-        while(running){
-            if(holder?.surface?.isValid!!)
+        val destRect = Rect()
+        var startTime = System.nanoTime()
+        while (running) {
+            if (!holder?.surface?.isValid!!)
                 continue
-            val deltaTime=(System.nanoTime()-startTime)/1000000000f
-            startTime=System.nanoTime()
+            val deltaTime = (System.nanoTime() - startTime) / 1000000000f
+            startTime = System.nanoTime()
 
-            val canvas=holder.lockCanvas()
+            game.getCurrentScreen().update(deltaTime)
+            game.getCurrentScreen().present(deltaTime)
+
+            val canvas = holder.lockCanvas()
             canvas.getClipBounds(destRect)
-            canvas.drawBitmap(frameBuffer,null,destRect,null)
+            canvas.drawBitmap(frameBuffer, null, destRect, null)
             holder.unlockCanvasAndPost(canvas)
         }
     }

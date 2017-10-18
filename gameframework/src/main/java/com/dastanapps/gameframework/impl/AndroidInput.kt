@@ -9,11 +9,10 @@ import com.dastanapps.gameframework.Input
  * dastanIqbal@marvelmedia.com
  * 11/10/2017 11:52
  */
-class AndroidInput(context: Context, val view: View,scaleX: Float,scaleY: Float) : Input {
+class AndroidInput(context: Context, val view: View, scaleX: Float, scaleY: Float) : Input {
     private val acceleroMeterHandler = AccelerometerHandler(context)
     private val keyboardHandler = KeyboardHandler(view)
     private val touchHandler: TouchHandler = MultiTouchHandler(view, scaleX, scaleY)
-
     override fun getTouchX(pointer: Int): Int {
         return touchHandler.getTouchX(pointer)
     }
