@@ -8,9 +8,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/gameframework" />
-            <option value="$PROJECT_DIR$/mrnom" />
-            <option value="$PROJECT_DIR$/testframework" />
+            <option value="$PROJECT_DIR$/mediaapi" />
+            <option value="$PROJECT_DIR$/tutsopengles" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

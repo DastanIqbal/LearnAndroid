@@ -3,10 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/shadersNfilters/app.iml" filepath="$PROJECT_DIR$/shadersNfilters/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/gameframework/gameframework.iml" filepath="$PROJECT_DIR$/gameframework/gameframework.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mrnom/mrnom.iml" filepath="$PROJECT_DIR$/mrnom/mrnom.iml" />
-      <module fileurl="file://$PROJECT_DIR$/testframework/testframework.iml" filepath="$PROJECT_DIR$/testframework/testframework.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediaapi/mediaapi.iml" filepath="$PROJECT_DIR$/mediaapi/mediaapi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tutsopengles/tutsopengles.iml" filepath="$PROJECT_DIR$/tutsopengles/tutsopengles.iml" />
     </modules>
   </component>
 </project>
