@@ -3,7 +3,8 @@
 #include <android/log.h>
 #include <unistd.h>
 
-#include "simpletriangle.h"
+//#include "simpletriangle.h"
+#include "simplecube.h"
 #include "common.h"
 
 extern "C" {
