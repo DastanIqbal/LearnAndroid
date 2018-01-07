@@ -93,7 +93,7 @@ class TutorialView(context: Context) : GLSurfaceView(context) {
         }
 
         override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-            NativeLibrary.init(width, height)
+            NativeLibrary.init2(width, height)
         }
 
         override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {

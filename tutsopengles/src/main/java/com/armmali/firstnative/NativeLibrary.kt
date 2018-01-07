@@ -11,6 +11,6 @@ object NativeLibrary {
     }
 
     external fun init(): String
-    external fun init(width: Int, height: Int)
+    external fun init2(width: Int, height: Int)
     external fun step()
 }
