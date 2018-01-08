@@ -5,11 +5,6 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <math.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
-
 void matrixIdentityFunction(float *matrix);
 
 void matrixTranslate(float *matrix, float x, float y, float z);

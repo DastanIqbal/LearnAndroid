@@ -5,6 +5,7 @@
 
 //#include "simpletriangle.h"
 #include "simplecube.h"
+//#include "Texture.h"
 #include "common.h"
 
 extern "C" {

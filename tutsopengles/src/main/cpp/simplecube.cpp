@@ -2,11 +2,10 @@
 // Created by dastaniqbal on 07/01/2018.
 //
 
-#include "common.h"
-#include "Matrix.h"
+#include "simplecube.h"
 
 static const char glVertexShader[] =
-        "attribute vec4 vertexPosition;\n"
+                "attribute vec4 vertexPosition;\n"
                 "attribute vec3 vertexColour;\n"
                 "varying vec3 fragColour;\n"
                 "uniform mat4 projection;\n"
@@ -18,7 +17,7 @@ static const char glVertexShader[] =
                 "}\n";
 
 static const char glFragmentShader[] =
-        "precision mediump float;\n"
+                "precision mediump float;\n"
                 "varying vec3 fragColour;\n"
                 "void main()\n"
                 "{\n"
@@ -35,60 +34,90 @@ float projectionMatrix[16];
 float modelViewMatrix[16];
 float angle = 0;
 
-GLfloat cubeVertices[] = {-1.0f, 1.0f, -1.0f, /* Back. */
-                          1.0f, 1.0f, -1.0f,
-                          -1.0f, -1.0f, -1.0f,
-                          1.0f, -1.0f, -1.0f,
-                          -1.0f, 1.0f, 1.0f, /* Front. */
-                          1.0f, 1.0f, 1.0f,
-                          -1.0f, -1.0f, 1.0f,
-                          1.0f, -1.0f, 1.0f,
-                          -1.0f, 1.0f, -1.0f, /* Left. */
-                          -1.0f, -1.0f, -1.0f,
-                          -1.0f, -1.0f, 1.0f,
-                          -1.0f, 1.0f, 1.0f,
-                          1.0f, 1.0f, -1.0f, /* Right. */
-                          1.0f, -1.0f, -1.0f,
-                          1.0f, -1.0f, 1.0f,
-                          1.0f, 1.0f, 1.0f,
-                          -1.0f, -1.0f, -1.0f, /* Top. */
-                          -1.0f, -1.0f, 1.0f,
-                          1.0f, -1.0f, 1.0f,
-                          1.0f, -1.0f, -1.0f,
-                          -1.0f, 1.0f, -1.0f, /* Bottom. */
-                          -1.0f, 1.0f, 1.0f,
-                          1.0f, 1.0f, 1.0f,
-                          1.0f, 1.0f, -1.0f
+GLfloat cubeVertices[] = {
+        -1.0f, 1.0f, -1.0f, /* Back. */
+        1.0f, 1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, 1.0f, 1.0f, /* Front. */
+        1.0f, 1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+
+        -1.0f, 1.0f, -1.0f, /* Left. */
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, 1.0f, 1.0f,
+
+        1.0f, 1.0f, -1.0f, /* Right. */
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+
+        -1.0f, -1.0f, -1.0f, /* Top. */
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        -1.0f, 1.0f, -1.0f, /* Bottom. */
+        -1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, -1.0f
 };
 
-GLfloat colour[] = {1.0f, 0.0f, 0.0f,
-                    1.0f, 0.0f, 0.0f,
-                    1.0f, 0.0f, 0.0f,
-                    1.0f, 0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f,
-                    0.0f, 0.0f, 1.0f,
-                    0.0f, 0.0f, 1.0f,
-                    0.0f, 0.0f, 1.0f,
-                    0.0f, 0.0f, 1.0f,
-                    1.0f, 1.0f, 0.0f,
-                    1.0f, 1.0f, 0.0f,
-                    1.0f, 1.0f, 0.0f,
-                    1.0f, 1.0f, 0.0f,
-                    0.0f, 1.0f, 1.0f,
-                    0.0f, 1.0f, 1.0f,
-                    0.0f, 1.0f, 1.0f,
-                    0.0f, 1.0f, 1.0f,
-                    1.0f, 0.0f, 1.0f,
-                    1.0f, 0.0f, 1.0f,
-                    1.0f, 0.0f, 1.0f,
-                    1.0f, 0.0f, 1.0f
+GLfloat colour[] = {
+        1.0f, 0.0f, 0.0f, //RGB -> Red
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 0.0f,
+
+        0.0f, 1.0f, 0.0f, //RGB -> Green
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+
+        0.0f, 0.0f, 1.0f, //RGB -> Blue
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+
+        1.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f,
+
+        0.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 1.0f,
+        0.0f, 1.0f, 1.0f,
+
+        1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 1.0f
 };
 
-GLushort indices[] = {0, 2, 3, 0, 1, 3, 4, 6, 7, 4, 5, 7, 8, 9, 10, 11, 8, 10, 12, 13, 14, 15, 12,
-                      14, 16, 17, 18, 16, 19, 18, 20, 21, 22, 20, 23, 22};
+GLushort indices[] = {
+        //FRONT
+        0, 2, 3,
+        0, 1, 2,
+        //BACK
+        4, 6, 7,
+        4, 5, 7,
+        //TOP
+        8, 10, 11,
+        8, 9, 10,
+        //BOTTOM
+        12, 14, 15,
+        12, 13, 14,
+        //LEFT
+        16, 17, 18,
+        16, 18, 19,
+        //RIGHT
+        20, 21, 22,
+        20, 22, 23
+};
 
 bool setupGraphics(int width, int height) {
     simpleCubeProgram = createProgram(glVertexShader, glFragmentShader);
