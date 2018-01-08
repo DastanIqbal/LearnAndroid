@@ -2,8 +2,7 @@
 // Created by dastaniqbal on 07/01/2018.
 //
 
-#include "common.h"
-#include "Matrix.h"
+#include "simplecube.h"
 
 static const char glVertexShader[] =
         "attribute vec4 vertexPosition;\n"
@@ -87,8 +86,26 @@ GLfloat colour[] = {1.0f, 0.0f, 0.0f,
                     1.0f, 0.0f, 1.0f
 };
 
-GLushort indices[] = {0, 2, 3, 0, 1, 3, 4, 6, 7, 4, 5, 7, 8, 9, 10, 11, 8, 10, 12, 13, 14, 15, 12,
-                      14, 16, 17, 18, 16, 19, 18, 20, 21, 22, 20, 23, 22};
+GLushort indices[] = {
+        //FRONT
+        0, 2, 3,
+        0, 1, 3,
+        //TOP
+        4, 6, 7,
+        4, 5, 7,
+        //BOTTOM
+        8, 9, 10,
+        11, 8, 10,
+        //LEFT
+        12, 13, 14,
+        15, 12,14,
+        //RIGHT
+        16, 17, 18,
+        16, 19, 18,
+        //REAR
+        20, 21, 22,
+        20, 23, 22
+};
 
 bool setupGraphics(int width, int height) {
     simpleCubeProgram = createProgram(glVertexShader, glFragmentShader);

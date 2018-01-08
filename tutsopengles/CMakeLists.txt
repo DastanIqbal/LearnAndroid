@@ -17,6 +17,7 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
+             src/main/cpp/Matrix.cpp
              src/main/cpp/common.cpp
              src/main/cpp/native-lib.cpp
 
@@ -24,8 +25,10 @@ add_library( # Sets the name of the library.
              #src/main/cpp/simpletriangle.cpp
 
              #Tutorial 3
-             src/main/cpp/Matrix.cpp
-             src/main/cpp/simplecube.cpp
+             #src/main/cpp/simplecube.cpp
+
+              #Tutorial 4
+              src/main/cpp/Texture.cpp
              )
 
 # Searches for a specified prebuilt library and stores the path as a
