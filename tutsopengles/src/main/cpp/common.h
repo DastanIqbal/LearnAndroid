@@ -20,3 +20,7 @@
 GLuint loadShader(GLenum shaderType, const char *shaderSource);
 
 GLuint createProgram(const char *vertexSource, const char *fragmentSource);
+
+bool setupGraphics(int w, int h);
+
+void renderFrame();

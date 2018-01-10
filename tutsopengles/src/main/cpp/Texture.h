@@ -11,8 +11,4 @@
 
 GLuint loadSimpleTexture();
 
-bool setupGraphics(int width, int height);
-
-void renderFrame();
-
 #endif //TEXTURE_H

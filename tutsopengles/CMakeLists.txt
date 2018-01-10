@@ -27,8 +27,11 @@ add_library( # Sets the name of the library.
              #Tutorial 3
              #src/main/cpp/simplecube.cpp
 
-              #Tutorial 4
-              src/main/cpp/Texture.cpp
+             #Tutorial 4
+             #src/main/cpp/Texture.cpp
+
+             #Tutorial 5
+             src/main/cpp/Lighting.cpp
              )
 
 # Searches for a specified prebuilt library and stores the path as a

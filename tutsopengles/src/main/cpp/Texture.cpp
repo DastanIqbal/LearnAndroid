@@ -99,7 +99,7 @@ GLushort indicies[] = {
 };
 
 GLuint glProgram;
-GLint vertexLocation;
+GLuint vertexLocation;
 GLint textureCordLocation;
 GLint projectionLocation;
 GLint modelViewLocation;

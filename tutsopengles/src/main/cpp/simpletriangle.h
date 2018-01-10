@@ -3,7 +3,3 @@
 //
 
 #include "common.h"
-
-bool setupGraphics(int w, int h);
-
-void renderFrame();

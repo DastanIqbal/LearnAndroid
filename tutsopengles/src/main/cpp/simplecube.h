@@ -4,7 +4,3 @@
 
 #include "common.h"
 #include "Matrix.h"
-
-bool setupGraphics(int width, int height);
-
-void renderFrame();
