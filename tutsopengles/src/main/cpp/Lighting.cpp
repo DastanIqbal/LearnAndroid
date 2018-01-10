@@ -8,7 +8,6 @@
 static const char glVertexShader[] =
         "attribute vec4 vertexPosition;\n"
                 "attribute vec3 vertexColour;\n"
-                "attribute vec3 vertexNormal;\n"
                 /* [Add a vertex normal attribute.] */
                 "attribute vec3 vertexNormal;\n"
                 /* [Add a vertex normal attribute.] */
@@ -17,8 +16,39 @@ static const char glVertexShader[] =
                 "uniform mat4 modelView;\n"
                 "void main()\n"
                 "{\n"
+                /* [Setup scene vectors.] */
+                "    vec3 transformedVertexNormal = normalize((modelView * vec4(vertexNormal, 0.0)).xyz);"
+                "    vec3 inverseLightDirection = normalize(vec3(0.0, 1.0, 1.0));\n"
+                "    fragColour = vec3(0.0);\n"
+                /* [Setup scene vectors.] */
+                "\n"
+                /* [Calculate the diffuse component.] */
+                "    vec3 diffuseLightIntensity = vec3(1.0, 1.0, 1.0);\n"
+                "    vec3 vertexDiffuseReflectionConstant = vertexColour;\n"
+                "    float normalDotLight = max(0.0, dot(transformedVertexNormal, inverseLightDirection));\n"
+                "    fragColour += normalDotLight * vertexDiffuseReflectionConstant * diffuseLightIntensity;\n"
+                /* [Calculate the diffuse component.] */
+                "\n"
+                /* [Calculate the ambient component.] */
+                "    vec3 ambientLightIntensity = vec3(0.1, 0.1, 0.1);\n"
+                "    vec3 vertexAmbientReflectionConstant = vertexColour;\n"
+                "    fragColour += vertexAmbientReflectionConstant * ambientLightIntensity;\n"
+                /* [Calculate the ambient component.] */
+                "\n"
+                /* [Calculate the specular component.] */
+                "    vec3 inverseEyeDirection = normalize(vec3(0.0, 0.0, 1.0));\n"
+                "    vec3 specularLightIntensity = vec3(1.0, 1.0, 1.0);\n"
+                "    vec3 vertexSpecularReflectionConstant = vec3(1.0, 1.0, 1.0);\n"
+                "    float shininess = 2.0;\n"
+                "    vec3 lightReflectionDirection = reflect(vec3(0) - inverseLightDirection, transformedVertexNormal);\n"
+                "    float normalDotReflection = max(0.0, dot(inverseEyeDirection, lightReflectionDirection));\n"
+                "    fragColour += pow(normalDotReflection, shininess) * vertexSpecularReflectionConstant * specularLightIntensity;\n"
+                /* [Calculate the specular component.] */
+                "\n"
+                "    /* Make sure the fragment colour is between 0 and 1. */"
+                "    clamp(fragColour, 0.0, 1.0);\n"
+                "\n"
                 "    gl_Position = projection * modelView * vertexPosition;\n"
-                "   fragColour = vertexColour;\n"
                 "}\n";
 
 static const char glFragmentShader[] =
@@ -137,7 +167,7 @@ GLfloat normals[] = {
         0.0f, 1.0f, 0.0f
 };
 
-GLushort indicies[] = {
+GLushort indices[] = {
         0, 2, 4, 0, 4, 1, 1, 4, 3, 2, 3, 4,  /* Back. */
         5, 7, 9, 5, 9, 6, 6, 9, 8, 7, 8, 9,  /* Front. */
         10, 12, 14, 10, 14, 11, 11, 14, 13, 12, 13, 14, /* Left. */
@@ -158,43 +188,6 @@ float projectionMatrix[16];
 float modelViewMatrix[16];
 float angle = 0;
 
-GLuint loadSimpleTexture() {
-    /* Texture Object Handle. */
-    GLuint textureId;
-    /* 3 x 3 Image,  R G B A Channels RAW Format. */
-    GLubyte pixels[9 * 4] =
-            {
-                    18, 140, 171, 255, /* Some Colour Bottom Left. */
-                    143, 143, 143, 255, /* Some Colour Bottom Middle. */
-                    255, 255, 255, 255, /* Some Colour Bottom Right. */
-                    255, 255, 0, 255, /* Yellow Middle Left. */
-                    0, 255, 255, 255, /* Some Colour Middle. */
-                    255, 0, 255, 255, /* Some Colour Middle Right. */
-                    255, 0, 0, 255, /* Red Top Left. */
-                    0, 255, 0, 255, /* Green Top Middle. */
-                    0, 0, 255, 255, /* Blue Top Right. */
-            };
-
-    /* Use tightly packed data. */
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    /* Generate a texture object. */
-    glGenTextures(1, &textureId);
-
-    /* Activate a texture. */
-    glActiveTexture(GL_TEXTURE0);
-
-    /* Bind the texture object. */
-    glBindTexture(GL_TEXTURE_2D, textureId);
-
-    /* Load the texture. */
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 3, 3, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-    /* Set the filtering mode. */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    return textureId;
-}
 
 bool setupGraphics(int width, int height) {
     glProgram = createProgram(glVertexShader, glFragmentShader);
@@ -204,16 +197,17 @@ bool setupGraphics(int width, int height) {
     }
     vertexLocation = glGetAttribLocation(glProgram, "vertexPosition");
     vertexColourLocation = glGetAttribLocation(glProgram, "vertexColour");
-  //  vertexNormalLocation = glGetAttribLocation(glProgram, "vertexNormal");
+    vertexNormalLocation = glGetAttribLocation(glProgram, "vertexNormal");
 
     projectionLocation = glGetUniformLocation(glProgram, "projection");
     modelViewLocation = glGetUniformLocation(glProgram, "modelView");
 
     /* Setup the perspective. */
     matrixPerspective(projectionMatrix, 45, (float) width / (float) height, 0.1f, 100);
-    glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, width, height);
 
+    glEnable(GL_DEPTH_TEST);
+
+    glViewport(0, 0, width, height);
     return true;
 }
 
@@ -236,14 +230,14 @@ void renderFrame() {
     glVertexAttribPointer(vertexColourLocation, 3, GL_FLOAT, GL_FALSE, 0, colors);
     glEnableVertexAttribArray(vertexColourLocation);
 
-//    glVertexAttribPointer(vertexNormalLocation, 3, GL_FLOAT, GL_FALSE, 0, normals);
-//    glEnableVertexAttribArray(vertexNormalLocation);
+    glVertexAttribPointer(vertexNormalLocation, 3, GL_FLOAT, GL_FALSE, 0, normals);
+    glEnableVertexAttribArray(vertexNormalLocation);
 
     glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, projectionMatrix);
     glUniformMatrix4fv(modelViewLocation, 1, GL_FALSE, modelViewMatrix);
 
 
-    glDrawElements(GL_TRIANGLES, 72, GL_UNSIGNED_SHORT, indicies);
+    glDrawElements(GL_TRIANGLES, 72, GL_UNSIGNED_SHORT, indices);
 
     angle += 1;
     if (angle > 360) {
