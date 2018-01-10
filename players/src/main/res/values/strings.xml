@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">players</string>
+    <string name="media_url_dash">file:///android_asset/video.mp4</string>
+</resources>
