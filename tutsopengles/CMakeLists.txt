@@ -31,7 +31,10 @@ add_library( # Sets the name of the library.
              #src/main/cpp/Texture.cpp
 
              #Tutorial 5
-             src/main/cpp/Lighting.cpp
+             #src/main/cpp/Lighting.cpp
+
+             #Tutorial 6
+             src/main/cpp/NormalMapping.cpp
              )
 
 # Searches for a specified prebuilt library and stores the path as a
