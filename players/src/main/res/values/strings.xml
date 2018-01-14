@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">players</string>
     <string name="media_url_dash">file:///android_asset/video.mp4</string>
+    <string name="facebook_app_id">1950765391841083</string>
 </resources>
