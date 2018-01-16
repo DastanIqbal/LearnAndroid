@@ -17,13 +17,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.dastanapps.camera2.AutoFitTextureView
-        android:id="@+id/texture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+    <FrameLayout
+        android:id="@+id/fl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.dastanapps.camera2.AutoFitTextureView
+            android:id="@+id/texture"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true" />
+
+        <SurfaceView
+            android:id="@+id/surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -31,9 +44,10 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@id/texture"
-        android:orientation="horizontal"
-        android:background="#4285f4">
+        android:layout_below="@+id/fl"
+        android:background="#4285f4"
+        android:visibility="gone"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_flash"
