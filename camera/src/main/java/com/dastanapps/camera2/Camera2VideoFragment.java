@@ -58,6 +58,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -82,7 +83,7 @@ import java.util.concurrent.TimeUnit;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class Camera2VideoFragment extends Fragment
-        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
+        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback, View.OnTouchListener {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -392,6 +393,7 @@ public class Camera2VideoFragment extends Fragment
         return inflater.inflate(R.layout.fragment_camera2_video, container, false);
     }
 
+
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
         manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
@@ -408,6 +410,7 @@ public class Camera2VideoFragment extends Fragment
         mTextureView = view.findViewById(R.id.texture);
         mButtonVideo = view.findViewById(R.id.video);
         mButtonVideo.setOnClickListener(this);
+        mTextureView.setOnTouchListener(this);
 
         // set the surface view for face detection
         surfaceview = view.findViewById(R.id.surfaceView);
@@ -735,7 +738,7 @@ public class Camera2VideoFragment extends Fragment
 
     private void setFaceDetect(CaptureRequest.Builder requestBuilder, int faceDetectMode) {
         if (mFaceDetectSupported) {
-            requestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, faceDetectMode);
+            //requestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, faceDetectMode);
         }
 
     }
@@ -1091,7 +1094,7 @@ public class Camera2VideoFragment extends Fragment
                             @Override
                             public void run() {
                                 // Update the view now!
-                                mFaceView.setFaces(faces);
+                                //mFaceView.setFaces(faces);
                             }
                         });
                     }
@@ -1181,4 +1184,70 @@ public class Camera2VideoFragment extends Fragment
         }
 
     };
+
+    /**
+     * Pinch to Zoom
+     */
+
+    public float fingerSpacing = 0;
+    public double zoomLevel = 1;
+    protected float maximumZoomLevel;
+    protected Rect zoom;
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        Activity activity = getActivity();
+        maximumZoomLevel = mCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)*10;
+
+        Rect rect = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+        if (rect == null) return false;
+        int action = event.getAction();
+        float currentFingerSpacing;
+
+        if (event.getPointerCount() > 1) {
+            // Multi touch logic
+            currentFingerSpacing = getFingerSpacing(event);
+            if (fingerSpacing != 0) {
+                if (currentFingerSpacing > fingerSpacing && maximumZoomLevel > zoomLevel) {
+                    zoomLevel = zoomLevel + .4;
+                } else if (currentFingerSpacing < fingerSpacing && zoomLevel > 1) {
+                    zoomLevel = zoomLevel - .4;
+                }
+                int minW = (int) (rect.width() / maximumZoomLevel);
+                int minH = (int) (rect.height() / maximumZoomLevel);
+                int difW = rect.width() - minW;
+                int difH = rect.height() - minH;
+                int cropW = difW / 100 * (int) zoomLevel;
+                int cropH = difH / 100 * (int) zoomLevel;
+                cropW -= cropW & 3;
+                cropH -= cropH & 3;
+                Rect zoom = new Rect(cropW, cropH, rect.width() - cropW, rect.height() - cropH);
+                mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+            }
+            fingerSpacing = currentFingerSpacing;
+        } else {
+            if (action == MotionEvent.ACTION_UP) {
+                //single touch logic
+            }
+        }
+
+        try {
+            mPreviewSession
+                    .setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
+        return true;
+    }
+
+
+    //Determine the space between the first two fingers
+    @SuppressWarnings("deprecation")
+    private float getFingerSpacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
 }

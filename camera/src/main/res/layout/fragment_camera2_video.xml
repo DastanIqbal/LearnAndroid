@@ -20,20 +20,21 @@
     <FrameLayout
         android:id="@+id/fl"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
 
         <com.dastanapps.camera2.AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true" />
+            android:layout_height="match_parent" />
 
         <SurfaceView
             android:id="@+id/surfaceView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
 
 
     </FrameLayout>
@@ -46,7 +47,7 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/fl"
         android:background="#4285f4"
-        android:visibility="gone"
+        android:visibility="visible"
         android:orientation="horizontal">
 
         <Button
