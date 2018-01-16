@@ -8,8 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/mediaapi" />
-            <option value="$PROJECT_DIR$/players" />
+            <option value="$PROJECT_DIR$/camera" />
             <option value="$PROJECT_DIR$/tutsopengles" />
           </set>
         </option>

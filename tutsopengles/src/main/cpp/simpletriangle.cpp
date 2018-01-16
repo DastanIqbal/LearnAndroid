@@ -4,13 +4,13 @@
 #include "simpletriangle.h"
 
 static const char glVertexShader[] =
-        "attribute vec4 vPosition;\n"
+                "attribute vec4 vPosition;\n"
                 "void main(){\n"
                 "   gl_Position = vPosition;\n"
                 "}\n";
 
 static const char glFragmentShader[] =
-        "precision mediump float;\n"
+                "precision mediump float;\n"
                 "void main(){\n"
                 "   gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n"
                 "}\n";
