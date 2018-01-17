@@ -16,23 +16,13 @@
 
 package com.dastanapps.camera2;
 
-import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
@@ -52,13 +42,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentCompat;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -76,14 +66,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class Camera2VideoFragment extends Fragment
-        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback, View.OnTouchListener {
+        implements View.OnClickListener, FragmentCompat.OnRequestPermissionsResultCallback {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -91,13 +81,7 @@ public class Camera2VideoFragment extends Fragment
     private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
 
     private static final String TAG = "Camera2VideoFragment";
-    private static final int REQUEST_VIDEO_PERMISSIONS = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
-
-    private static final String[] VIDEO_PERMISSIONS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-    };
 
     static {
         DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
@@ -191,8 +175,10 @@ public class Camera2VideoFragment extends Fragment
 
                 Rect recCameraBounds = charac.get(
                         CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-                cameraWidth = recCameraBounds.right;
-                cameraHeight = recCameraBounds.bottom;
+                if(recCameraBounds!=null) {
+                    cameraWidth = recCameraBounds.right;
+                    cameraHeight = recCameraBounds.bottom;
+                }
                 mFaceView.setCameraBounds(recCameraBounds);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
@@ -202,7 +188,7 @@ public class Camera2VideoFragment extends Fragment
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture,
                                                 int width, int height) {
-            configureTransform(width, height);
+            Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, width, height);
         }
 
         @Override
@@ -212,36 +198,6 @@ public class Camera2VideoFragment extends Fragment
 
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-//            Canvas currentCanvas = surfaceview.getHolder().lockCanvas();
-//            if (currentCanvas != null) {
-//
-//                currentCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-//
-//                if (detectedFace != null && rectangleFace.height() > 0) {
-//
-//                    int canvasWidth = currentCanvas.getWidth();
-//                    int canvasHeight = currentCanvas.getHeight();
-//                    int faceWidthOffset = 0;//rectangleFace.width() / 8;
-//                    int faceHeightOffset = 0;//rectangleFace.height() / 8;
-//
-//                    currentCanvas.save();
-//                    currentCanvas.rotate(360 - mSensorOrientation, canvasWidth / 2,
-//                            canvasHeight / 2);
-//
-//                    int l = rectangleFace.right;
-//                    int t = rectangleFace.bottom;
-//                    int r = rectangleFace.left;
-//                    int b = rectangleFace.top;
-//                    int left = (canvasWidth - (canvasWidth * l) / cameraWidth) - (faceWidthOffset);
-//                    int top = (canvasHeight * t) / cameraHeight - (faceHeightOffset);
-//                    int right = (canvasWidth - (canvasWidth * r) / cameraWidth) + (faceWidthOffset);
-//                    int bottom = (canvasHeight * b) / cameraHeight + (faceHeightOffset);
-//
-//                    currentCanvas.drawRect(left, top, right, bottom, purplePaint);
-//                    currentCanvas.restore();
-//                }
-//            }
-//            surfaceview.getHolder().unlockCanvasAndPost(currentCanvas);
         }
 
     };
@@ -292,7 +248,7 @@ public class Camera2VideoFragment extends Fragment
             startPreview();
             mCameraOpenCloseLock.release();
             if (null != mTextureView) {
-                configureTransform(mTextureView.getWidth(), mTextureView.getHeight());
+                Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
             }
         }
 
@@ -332,59 +288,9 @@ public class Camera2VideoFragment extends Fragment
     //   FaceRectangle facerectangle;
     public SurfaceView surfaceview;
     public int cameraWidth, cameraHeight;
-    private Paint purplePaint;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
-    }
-
-    /**
-     * In this sample, we choose a video size with 3x4 aspect ratio. Also, we don't use sizes
-     * larger than 1080p, since MediaRecorder cannot handle such a high-resolution video.
-     *
-     * @param choices The list of available sizes
-     * @return The video size
-     */
-    private static Size chooseVideoSize(Size[] choices) {
-        for (Size size : choices) {
-            if (size.getWidth() == size.getHeight() * 4 / 3 && size.getWidth() <= 1080) {
-                return size;
-            }
-        }
-        Log.e(TAG, "Couldn't find any suitable video size");
-        return choices[choices.length - 1];
-    }
-
-    /**
-     * Given {@code choices} of {@code Size}s supported by a camera, chooses the smallest one whose
-     * width and height are at least as large as the respective requested values, and whose aspect
-     * ratio matches with the specified value.
-     *
-     * @param choices     The list of sizes that the camera supports for the intended output class
-     * @param width       The minimum desired width
-     * @param height      The minimum desired height
-     * @param aspectRatio The aspect ratio
-     * @return The optimal {@code Size}, or an arbitrary one if none were big enough
-     */
-    private static Size chooseOptimalSize(Size[] choices, int width, int height, Size aspectRatio) {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        List<Size> bigEnough = new ArrayList<>();
-        int w = aspectRatio.getWidth();
-        int h = aspectRatio.getHeight();
-        for (Size option : choices) {
-            if (option.getHeight() == option.getWidth() * h / w &&
-                    option.getWidth() >= width && option.getHeight() >= height) {
-                bigEnough.add(option);
-            }
-        }
-
-        // Pick the smallest of those, assuming we found any
-        if (bigEnough.size() > 0) {
-            return Collections.min(bigEnough, new CompareSizesByArea());
-        } else {
-            Log.e(TAG, "Couldn't find any suitable preview size");
-            return choices[0];
-        }
     }
 
     @Override
@@ -407,53 +313,22 @@ public class Camera2VideoFragment extends Fragment
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+
         mTextureView = view.findViewById(R.id.texture);
         mButtonVideo = view.findViewById(R.id.video);
         mButtonVideo.setOnClickListener(this);
-        mTextureView.setOnTouchListener(this);
 
         // set the surface view for face detection
         surfaceview = view.findViewById(R.id.surfaceView);
         surfaceview.setZOrderOnTop(true);
         surfaceview.getHolder().setFormat(PixelFormat.TRANSPARENT); //for making it not visible on camera preview
-        purplePaint = new Paint();
-        purplePaint.setAntiAlias(true);
-        purplePaint.setDither(true);
-        purplePaint.setTextSize(20);
-        purplePaint.setColor(Color.GREEN);
-        purplePaint.setStyle(Paint.Style.FILL);
-
 
         // Now create the OverlayView:
         mFaceView = new FaceOverlayView(getActivity());
         getActivity().addContentView(mFaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        view.findViewById(R.id.btn_flash).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isFlash && cameraId.equals("0")) {
-                    isFlash = true;
-                    mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
-                } else {
-                    isFlash = false;
-                    mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
-                }
-                try {
-                    mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
-                } catch (CameraAccessException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        view.findViewById(R.id.btn_switch).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (cameraId.equals("0")) cameraId = "1"; //Front
-                else cameraId = "0"; //Back
-                closeCamera();
-                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-            }
-        });
+        view.findViewById(R.id.btn_flash).setOnClickListener(this);
+        view.findViewById(R.id.btn_switch).setOnClickListener(this);
 
         // Setup a new OrientationEventListener.  This is used to handle rotation events like a
         // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
@@ -463,7 +338,7 @@ public class Camera2VideoFragment extends Fragment
             @Override
             public void onOrientationChanged(int orientation) {
                 if (mTextureView != null && mTextureView.isAvailable()) {
-                    configureTransform(mTextureView.getWidth(), mTextureView.getHeight());
+                    Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
                     // We keep the last known orientation. So if the user first orient
                     // the camera then point the camera to floor or sky, we still have
                     // the correct orientation.
@@ -521,6 +396,26 @@ public class Camera2VideoFragment extends Fragment
                 }
                 break;
             }
+            case R.id.btn_flash:
+                if (!isFlash && cameraId.equals("0")) {
+                    isFlash = true;
+                    mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_TORCH);
+                } else {
+                    isFlash = false;
+                    mPreviewBuilder.set(CaptureRequest.FLASH_MODE, CameraMetadata.FLASH_MODE_OFF);
+                }
+                try {
+                    mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.btn_switch:
+                if (cameraId.equals("0")) cameraId = "1"; //Front
+                else cameraId = "0"; //Back
+                closeCamera();
+                openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                break;
         }
     }
 
@@ -566,10 +461,10 @@ public class Camera2VideoFragment extends Fragment
      * Requests permissions needed for recording video.
      */
     private void requestVideoPermissions() {
-        if (shouldShowRequestPermissionRationale(VIDEO_PERMISSIONS)) {
-            new ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
+        if (shouldShowRequestPermissionRationale(DialogHelper.VIDEO_PERMISSIONS)) {
+            new DialogHelper.ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
         } else {
-            FragmentCompat.requestPermissions(this, VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS);
+            FragmentCompat.requestPermissions(this, DialogHelper.VIDEO_PERMISSIONS, DialogHelper.REQUEST_VIDEO_PERMISSIONS);
         }
     }
 
@@ -577,17 +472,17 @@ public class Camera2VideoFragment extends Fragment
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         Log.d(TAG, "onRequestPermissionsResult");
-        if (requestCode == REQUEST_VIDEO_PERMISSIONS) {
-            if (grantResults.length == VIDEO_PERMISSIONS.length) {
+        if (requestCode == DialogHelper.REQUEST_VIDEO_PERMISSIONS) {
+            if (grantResults.length == DialogHelper.VIDEO_PERMISSIONS.length) {
                 for (int result : grantResults) {
                     if (result != PackageManager.PERMISSION_GRANTED) {
-                        ErrorDialog.newInstance(getString(R.string.permission_request))
+                        DialogHelper.ErrorDialog.newInstance(getString(R.string.permission_request))
                                 .show(getChildFragmentManager(), FRAGMENT_DIALOG);
                         break;
                     }
                 }
             } else {
-                ErrorDialog.newInstance(getString(R.string.permission_request))
+                DialogHelper.ErrorDialog.newInstance(getString(R.string.permission_request))
                         .show(getChildFragmentManager(), FRAGMENT_DIALOG);
             }
         } else {
@@ -610,7 +505,7 @@ public class Camera2VideoFragment extends Fragment
      */
     @SuppressWarnings("MissingPermission")
     private void openCamera(int width, int height) {
-        if (!hasPermissionsGranted(VIDEO_PERMISSIONS)) {
+        if (!hasPermissionsGranted(DialogHelper.VIDEO_PERMISSIONS)) {
             requestVideoPermissions();
             return;
         }
@@ -629,7 +524,8 @@ public class Camera2VideoFragment extends Fragment
             StreamConfigurationMap map = mCharacteristics
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             int[] FD = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
-            int maxFD = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT);
+            Integer faceCount = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT);
+            int maxFD = faceCount != null ? faceCount : 0;
 
             if (FD != null && FD.length > 0) {
                 List<Integer> fdList = new ArrayList<>();
@@ -647,12 +543,13 @@ public class Camera2VideoFragment extends Fragment
             }
 
             mSensorOrientation = mCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-            mFaceView.setDisplayOrientation(mSensorOrientation);
+            if (mSensorOrientation != null)
+                mFaceView.setDisplayOrientation(mSensorOrientation);
             if (map == null) {
                 throw new RuntimeException("Cannot get available preview/video sizes");
             }
-            mVideoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder.class));
-            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+            mVideoSize = Camera2Helper.chooseVideoSize(map.getOutputSizes(MediaRecorder.class));
+            mPreviewSize = Camera2Helper.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                     width, height, mVideoSize);
 
             int orientation = getResources().getConfiguration().orientation;
@@ -661,7 +558,7 @@ public class Camera2VideoFragment extends Fragment
             } else {
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
             }
-            configureTransform(width, height);
+            Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, width, height);
             mMediaRecorder = new MediaRecorder();
             manager.openCamera(cameraId, mStateCallback, null);
         } catch (CameraAccessException e) {
@@ -670,7 +567,7 @@ public class Camera2VideoFragment extends Fragment
         } catch (NullPointerException e) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
-            ErrorDialog.newInstance(getString(R.string.camera_error))
+            DialogHelper.ErrorDialog.newInstance(getString(R.string.camera_error))
                     .show(getChildFragmentManager(), FRAGMENT_DIALOG);
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.");
@@ -706,7 +603,6 @@ public class Camera2VideoFragment extends Fragment
         try {
             closePreviewSession();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
@@ -719,6 +615,7 @@ public class Camera2VideoFragment extends Fragment
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
                             mPreviewSession = session;
+                            mTextureView.setCameraSettings(mCharacteristics,mPreviewSession,mPreviewBuilder,mCaptureCallback);
                             setFaceDetect(mPreviewBuilder, mFaceDetectMode);
                             updatePreview();
                         }
@@ -779,7 +676,7 @@ public class Camera2VideoFragment extends Fragment
 
         if (!mNoAFRun) {
             // If there is a "continuous picture" mode available, use it, otherwise default to AUTO.
-            if (contains(mCharacteristics.get(
+            if (Camera2Helper.contains(mCharacteristics.get(
                     CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES),
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
                 builder.set(CaptureRequest.CONTROL_AF_MODE,
@@ -792,7 +689,7 @@ public class Camera2VideoFragment extends Fragment
 
         // If there is an auto-magical flash control mode available, use it, otherwise default to
         // the "on" mode, which is guaranteed to always be available.
-        if (contains(mCharacteristics.get(
+        if (Camera2Helper.contains(mCharacteristics.get(
                 CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES),
                 CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)) {
             builder.set(CaptureRequest.CONTROL_AE_MODE,
@@ -803,63 +700,13 @@ public class Camera2VideoFragment extends Fragment
         }
 
         // If there is an auto-magical white balance control mode available, use it.
-        if (contains(mCharacteristics.get(
+        if (Camera2Helper.contains(mCharacteristics.get(
                 CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES),
                 CaptureRequest.CONTROL_AWB_MODE_AUTO)) {
             // Allow AWB to run auto-magically if this device supports this
             builder.set(CaptureRequest.CONTROL_AWB_MODE,
                     CaptureRequest.CONTROL_AWB_MODE_AUTO);
         }
-    }
-
-    /**
-     * Return true if the given array contains the given integer.
-     *
-     * @param modes array to check.
-     * @param mode  integer to get for.
-     * @return true if the array contains the given integer, otherwise false.
-     */
-    private static boolean contains(int[] modes, int mode) {
-        if (modes == null) {
-            return false;
-        }
-        for (int i : modes) {
-            if (i == mode) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Configures the necessary {@link Matrix} transformation to `mTextureView`.
-     * This method should not to be called until the camera preview size is determined in
-     * openCamera, or until the size of `mTextureView` is fixed.
-     *
-     * @param viewWidth  The width of `mTextureView`
-     * @param viewHeight The height of `mTextureView`
-     */
-    private void configureTransform(int viewWidth, int viewHeight) {
-        Activity activity = getActivity();
-        if (null == mTextureView || null == mPreviewSize || null == activity) {
-            return;
-        }
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        Matrix matrix = new Matrix();
-        RectF viewRect = new RectF(0, 0, viewWidth, viewHeight);
-        RectF bufferRect = new RectF(0, 0, mPreviewSize.getHeight(), mPreviewSize.getWidth());
-        float centerX = viewRect.centerX();
-        float centerY = viewRect.centerY();
-        if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY());
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL);
-            float scale = Math.max(
-                    (float) viewHeight / mPreviewSize.getHeight(),
-                    (float) viewWidth / mPreviewSize.getWidth());
-            matrix.postScale(scale, scale, centerX, centerY);
-            matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        }
-        mTextureView.setTransform(matrix);
     }
 
     private void setUpMediaRecorder() throws IOException {
@@ -905,7 +752,6 @@ public class Camera2VideoFragment extends Fragment
             closePreviewSession();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
-            assert texture != null;
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
             List<Surface> surfaces = new ArrayList<>();
@@ -985,74 +831,6 @@ public class Camera2VideoFragment extends Fragment
         }
         mNextVideoAbsolutePath = null;
         startPreview();
-    }
-
-    /**
-     * Compares two {@code Size}s based on their areas.
-     */
-    static class CompareSizesByArea implements Comparator<Size> {
-
-        @Override
-        public int compare(Size lhs, Size rhs) {
-            // We cast here to ensure the multiplications won't overflow
-            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
-                    (long) rhs.getWidth() * rhs.getHeight());
-        }
-
-    }
-
-    public static class ErrorDialog extends DialogFragment {
-
-        private static final String ARG_MESSAGE = "message";
-
-        public static ErrorDialog newInstance(String message) {
-            ErrorDialog dialog = new ErrorDialog();
-            Bundle args = new Bundle();
-            args.putString(ARG_MESSAGE, message);
-            dialog.setArguments(args);
-            return dialog;
-        }
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Activity activity = getActivity();
-            return new AlertDialog.Builder(activity)
-                    .setMessage(getArguments().getString(ARG_MESSAGE))
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            activity.finish();
-                        }
-                    })
-                    .create();
-        }
-
-    }
-
-    public static class ConfirmationDialog extends DialogFragment {
-
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Fragment parent = getParentFragment();
-            return new AlertDialog.Builder(getActivity())
-                    .setMessage(R.string.permission_request)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            FragmentCompat.requestPermissions(parent, VIDEO_PERMISSIONS,
-                                    REQUEST_VIDEO_PERMISSIONS);
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    parent.getActivity().finish();
-                                }
-                            })
-                    .create();
-        }
-
     }
 
     /**
@@ -1184,70 +962,4 @@ public class Camera2VideoFragment extends Fragment
         }
 
     };
-
-    /**
-     * Pinch to Zoom
-     */
-
-    public float fingerSpacing = 0;
-    public double zoomLevel = 1;
-    protected float maximumZoomLevel;
-    protected Rect zoom;
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        Activity activity = getActivity();
-        maximumZoomLevel = mCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)*10;
-
-        Rect rect = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-        if (rect == null) return false;
-        int action = event.getAction();
-        float currentFingerSpacing;
-
-        if (event.getPointerCount() > 1) {
-            // Multi touch logic
-            currentFingerSpacing = getFingerSpacing(event);
-            if (fingerSpacing != 0) {
-                if (currentFingerSpacing > fingerSpacing && maximumZoomLevel > zoomLevel) {
-                    zoomLevel = zoomLevel + .4;
-                } else if (currentFingerSpacing < fingerSpacing && zoomLevel > 1) {
-                    zoomLevel = zoomLevel - .4;
-                }
-                int minW = (int) (rect.width() / maximumZoomLevel);
-                int minH = (int) (rect.height() / maximumZoomLevel);
-                int difW = rect.width() - minW;
-                int difH = rect.height() - minH;
-                int cropW = difW / 100 * (int) zoomLevel;
-                int cropH = difH / 100 * (int) zoomLevel;
-                cropW -= cropW & 3;
-                cropH -= cropH & 3;
-                Rect zoom = new Rect(cropW, cropH, rect.width() - cropW, rect.height() - cropH);
-                mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
-            }
-            fingerSpacing = currentFingerSpacing;
-        } else {
-            if (action == MotionEvent.ACTION_UP) {
-                //single touch logic
-            }
-        }
-
-        try {
-            mPreviewSession
-                    .setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
-        }
-        return true;
-    }
-
-
-    //Determine the space between the first two fingers
-    @SuppressWarnings("deprecation")
-    private float getFingerSpacing(MotionEvent event) {
-        float x = event.getX(0) - event.getX(1);
-        float y = event.getY(0) - event.getY(1);
-        return (float) Math.sqrt(x * x + y * y);
-    }
 }

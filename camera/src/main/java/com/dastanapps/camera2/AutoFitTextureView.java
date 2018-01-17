@@ -17,16 +17,31 @@
 package com.dastanapps.camera2;
 
 import android.content.Context;
+import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CaptureRequest;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.TextureView;
+import android.view.View;
 
 /**
  * A {@link TextureView} that can be adjusted to a specified aspect ratio.
  */
-public class AutoFitTextureView extends TextureView {
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+public class AutoFitTextureView extends TextureView implements View.OnTouchListener {
 
     private int mRatioWidth = 0;
     private int mRatioHeight = 0;
+
+    private CameraCharacteristics mCharacteristics;
+    private CaptureRequest.Builder mPreviewBuilder;
+    private CameraCaptureSession mPreviewSession;
+    private CameraCaptureSession.CaptureCallback mCaptureCallback;
 
     public AutoFitTextureView(Context context) {
         this(context, null);
@@ -38,6 +53,11 @@ public class AutoFitTextureView extends TextureView {
 
     public AutoFitTextureView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init() {
+        setOnTouchListener(this);
     }
 
     /**
@@ -73,4 +93,78 @@ public class AutoFitTextureView extends TextureView {
         }
     }
 
+    /**
+     * Pinch to Zoom
+     */
+
+    public float fingerSpacing = 0;
+    public double zoomLevel = 1;
+    protected float maximumZoomLevel;
+    protected Rect zoom;
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (mCharacteristics != null && mPreviewBuilder != null && mPreviewSession != null) {
+            maximumZoomLevel = mCharacteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) * 10;
+            Rect rect = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            if (rect == null) return false;
+            int action = event.getAction();
+            float currentFingerSpacing;
+
+            if (event.getPointerCount() > 1) {
+                // Multi touch logic
+                currentFingerSpacing = getFingerSpacing(event);
+                if (fingerSpacing != 0) {
+                    if (currentFingerSpacing > fingerSpacing && maximumZoomLevel > zoomLevel) {
+                        zoomLevel = zoomLevel + .4;
+                    } else if (currentFingerSpacing < fingerSpacing && zoomLevel > 1) {
+                        zoomLevel = zoomLevel - .4;
+                    }
+                    int minW = (int) (rect.width() / maximumZoomLevel);
+                    int minH = (int) (rect.height() / maximumZoomLevel);
+                    int difW = rect.width() - minW;
+                    int difH = rect.height() - minH;
+                    int cropW = difW / 100 * (int) zoomLevel;
+                    int cropH = difH / 100 * (int) zoomLevel;
+                    cropW -= cropW & 3;
+                    cropH -= cropH & 3;
+                    Rect zoom = new Rect(cropW, cropH, rect.width() - cropW, rect.height() - cropH);
+                    mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                }
+                fingerSpacing = currentFingerSpacing;
+            } else {
+                if (action == MotionEvent.ACTION_UP) {
+                    //single touch logic
+                }
+            }
+
+            try {
+                mPreviewSession
+                        .setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, null);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            } catch (NullPointerException ex) {
+                ex.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+    private float getFingerSpacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+    public void setCameraSettings(CameraCharacteristics mCharacteristics,
+                                  CameraCaptureSession mPreviewSession,
+                                  CaptureRequest.Builder mPreviewBuilder,
+                                  CameraCaptureSession.CaptureCallback mCaptureCallback) {
+        this.mCharacteristics = mCharacteristics;
+        this.mPreviewSession = mPreviewSession;
+        this.mPreviewBuilder = mPreviewBuilder;
+        this.mCaptureCallback = mCaptureCallback;
+    }
 }
