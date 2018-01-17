@@ -175,7 +175,7 @@ public class Camera2VideoFragment extends Fragment
 
                 Rect recCameraBounds = charac.get(
                         CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-                if(recCameraBounds!=null) {
+                if (recCameraBounds != null) {
                     cameraWidth = recCameraBounds.right;
                     cameraHeight = recCameraBounds.bottom;
                 }
@@ -329,6 +329,7 @@ public class Camera2VideoFragment extends Fragment
 
         view.findViewById(R.id.btn_flash).setOnClickListener(this);
         view.findViewById(R.id.btn_switch).setOnClickListener(this);
+        view.findViewById(R.id.effects).setOnClickListener(this);
 
         // Setup a new OrientationEventListener.  This is used to handle rotation events like a
         // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
@@ -415,6 +416,14 @@ public class Camera2VideoFragment extends Fragment
                 else cameraId = "0"; //Back
                 closeCamera();
                 openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                break;
+            case R.id.effects:
+                int effects[] = mCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
+                String[] intList = new String[effects.length];
+                for (int index = 0; index < effects.length; index++) {
+                    intList[index] = effects[index] + "|" + Camera2Helper.getEffectName(effects[index]);
+                }
+                DialogHelper.EffectsDialog.newInstance().setEffects(mPreviewSession, mPreviewBuilder, intList).show(getChildFragmentManager(), FRAGMENT_DIALOG);
                 break;
         }
     }
@@ -523,6 +532,8 @@ public class Camera2VideoFragment extends Fragment
             mCharacteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = mCharacteristics
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+            //Face Detection
             int[] FD = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
             Integer faceCount = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT);
             int maxFD = faceCount != null ? faceCount : 0;
@@ -605,6 +616,14 @@ public class Camera2VideoFragment extends Fragment
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
+            int effects[] = cameraCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_EFFECTS);
+            if (effects != null && effects.length > 0) {
+                for (int effect : effects) {
+                    Log.d(TAG, effect + " Effects");
+                }
+            }
+            // mPreviewBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, CameraMetadata.CONTROL_EFFECT_MODE_AQUA);
 
             Surface previewSurface = new Surface(texture);
             mPreviewBuilder.addTarget(previewSurface);
@@ -615,7 +634,7 @@ public class Camera2VideoFragment extends Fragment
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
                             mPreviewSession = session;
-                            mTextureView.setCameraSettings(mCharacteristics,mPreviewSession,mPreviewBuilder,mCaptureCallback);
+                            mTextureView.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder, mCaptureCallback);
                             setFaceDetect(mPreviewBuilder, mFaceDetectMode);
                             updatePreview();
                         }
@@ -962,4 +981,5 @@ public class Camera2VideoFragment extends Fragment
         }
 
     };
+
 }

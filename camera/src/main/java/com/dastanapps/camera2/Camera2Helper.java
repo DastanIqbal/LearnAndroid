@@ -3,6 +3,8 @@ package com.dastanapps.camera2;
 import android.app.Activity;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
@@ -134,6 +136,83 @@ public class Camera2Helper {
         } else {
             Log.e(TAG, "Couldn't find any suitable preview size");
             return choices[0];
+        }
+    }
+
+    public static String getEffectName(int effect) {
+        switch (effect) {
+            /**
+             * <p>A "monocolor" effect where the image is mapped into
+             * a single color.</p>
+             * <p>This will typically be grayscale.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_MONO:
+                return "MONO";
+
+            /**
+             * <p>A "photo-negative" effect where the image's colors
+             * are inverted.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_NEGATIVE:
+                return "NEGATIVE";
+
+            /**
+             * <p>A "solarisation" effect (Sabattier effect) where the
+             * image is wholly or partially reversed in
+             * tone.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_SOLARIZE:
+                return "SOLARIZE";
+
+            /**
+             * <p>A "sepia" effect where the image is mapped into warm
+             * gray, red, and brown tones.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_SEPIA:
+                return "SEPIA";
+
+            /**
+             * <p>A "posterization" effect where the image uses
+             * discrete regions of tone rather than a continuous
+             * gradient of tones.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_POSTERIZE:
+                return "POSTERIZE";
+
+            /**
+             * <p>A "whiteboard" effect where the image is typically displayed
+             * as regions of white, with black or grey details.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_WHITEBOARD:
+                return "WHITEBOARD";
+
+            /**
+             * <p>A "blackboard" effect where the image is typically displayed
+             * as regions of black, with white or grey details.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_BLACKBOARD:
+                return "BLACKBOARD";
+
+            /**
+             * <p>An "aqua" effect where a blue hue is added to the image.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            case CameraMetadata.CONTROL_EFFECT_MODE_AQUA:
+                return "AQUA";
+            /**
+             * <p>No color effect will be applied.</p>
+             * @see CaptureRequest#CONTROL_EFFECT_MODE
+             */
+            default:
+                return "OFF";
+
         }
     }
 }

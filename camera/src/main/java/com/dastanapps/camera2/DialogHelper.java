@@ -7,10 +7,14 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.DialogInterface;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentCompat;
+import android.widget.ArrayAdapter;
 
 import com.dastanapps.camera.R;
 
@@ -82,4 +86,44 @@ public class DialogHelper {
 
     }
 
+    public static class EffectsDialog extends DialogFragment {
+
+        private ArrayAdapter<String> arrayAdapter;
+        private CaptureRequest.Builder mPreviewBuilder;
+        private CameraCaptureSession mPreviewSession;
+        private String[] effects;
+
+        public static EffectsDialog newInstance() {
+            EffectsDialog dialog = new EffectsDialog();
+            Bundle args = new Bundle();
+            return dialog;
+        }
+
+        public EffectsDialog setEffects(CameraCaptureSession mPreviewSession, CaptureRequest.Builder mPreviewBuilder, String[] effects) {
+            this.mPreviewBuilder = mPreviewBuilder;
+            this.mPreviewSession = mPreviewSession;
+            this.effects = effects;
+            return this;
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            arrayAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, effects);
+            return new AlertDialog.Builder(getActivity())
+                    .setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            mPreviewBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, Integer.parseInt(effects[which].split("[|]")[0]));
+                            try {
+                                mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+                            } catch (CameraAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    })
+                    .create();
+        }
+
+    }
 }

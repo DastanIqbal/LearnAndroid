@@ -34,7 +34,7 @@
             android:id="@+id/surfaceView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
 
     </FrameLayout>
@@ -47,8 +47,8 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/fl"
         android:background="#4285f4"
-        android:visibility="visible"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="visible">
 
         <Button
             android:id="@+id/btn_flash"
@@ -68,6 +68,11 @@
             android:layout_height="wrap_content"
             android:text="Record" />
 
+        <Button
+            android:id="@+id/effects"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Effects" />
     </LinearLayout>
 
 </RelativeLayout>
