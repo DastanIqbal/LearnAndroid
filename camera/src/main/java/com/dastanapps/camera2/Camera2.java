@@ -31,8 +31,11 @@ import android.util.SparseIntArray;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.dastanapps.view.AnimationImageView;
 import com.dastanapps.view.FaceOverlayView;
 import com.dastanapps.view.Util;
 
@@ -219,20 +222,21 @@ public class Camera2 {
     private String cameraId;
     private String mNextVideoAbsolutePath;
     private AutoFitTextureView mTextureView;
-    private boolean isPreview = false;
+    private AnimationImageView focusImage;
 
     public Camera2(Context context, AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
         this.context = context;
         this.activity = (Activity) context;
         this.mTextureView = mTextureView;
         this.camera2Listener = camera2Listener;
+        setupManager();
     }
 
     public void setFaceView(FaceOverlayView mFaceView) {
         this.mFaceView = mFaceView;
     }
 
-    public void setupManager() {
+    private void setupManager() {
         manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
         try {
             if (manager != null) {
@@ -308,24 +312,24 @@ public class Camera2 {
                     .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
             //Face Detection
-            int[] FD = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
-            Integer faceCount = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT);
-            int maxFD = faceCount != null ? faceCount : 0;
-
-            if (FD != null && FD.length > 0) {
-                List<Integer> fdList = new ArrayList<>();
-                for (int FaceD : FD
-                        ) {
-                    fdList.add(FaceD);
-                    Log.d(TAG, "setUpCameraOutputs: FD type:" + Integer.toString(FaceD));
-                }
-                Log.d(TAG, "setUpCameraOutputs: FD count" + Integer.toString(maxFD));
-
-                if (maxFD > 0) {
-                    mFaceDetectSupported = true;
-                    mFaceDetectMode = Collections.max(fdList);
-                }
-            }
+//            int[] FD = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_AVAILABLE_FACE_DETECT_MODES);
+//            Integer faceCount = mCharacteristics.get(CameraCharacteristics.STATISTICS_INFO_MAX_FACE_COUNT);
+//            int maxFD = faceCount != null ? faceCount : 0;
+//
+//            if (FD != null && FD.length > 0) {
+//                List<Integer> fdList = new ArrayList<>();
+//                for (int FaceD : FD
+//                        ) {
+//                    fdList.add(FaceD);
+//                    Log.d(TAG, "setUpCameraOutputs: FD type:" + Integer.toString(FaceD));
+//                }
+//                Log.d(TAG, "setUpCameraOutputs: FD count" + Integer.toString(maxFD));
+//
+//                if (maxFD > 0) {
+//                    mFaceDetectSupported = true;
+//                    mFaceDetectMode = Collections.max(fdList);
+//                }
+//            }
 
             mSensorOrientation = mCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
             if (mSensorOrientation != null)
@@ -398,7 +402,6 @@ public class Camera2 {
             Surface previewSurface = new Surface(texture);
             mPreviewBuilder.addTarget(previewSurface);
 
-            isPreview = true;
             mCameraDevice.createCaptureSession(Collections.singletonList(previewSurface), cameraSessionStateCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -483,7 +486,6 @@ public class Camera2 {
 
     private void closePreviewSession() {
         mIsRecordingVideo = false;
-        isPreview = false;
         if (mPreviewSession != null) {
             mPreviewSession.close();
             mPreviewSession = null;
@@ -501,6 +503,8 @@ public class Camera2 {
 
     private Face detectedFace;
     private Rect rectangleFace;
+    private Integer afState = CameraMetadata.CONTROL_AF_STATE_INACTIVE;
+    ;
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
      */
@@ -510,31 +514,31 @@ public class Camera2 {
         private void process(CaptureResult result) {
             switch (mState) {
                 case STATE_PREVIEW: {
-                    Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
-                    faces = result.get(CaptureResult.STATISTICS_FACES);
-                    if (faces != null && mode != null) {
-                        Log.e(TAG, "faces : " + faces.length + " , mode : " + mode);
-                    }
-                    // We have nothing to do when the camera preview is working normally.
-                    //But we can for example detect faces
-                    Face face[] = result.get(CaptureResult.STATISTICS_FACES);
-                    if (face != null && face.length > 0) {
-                        detectedFace = faces[0];
-                        rectangleFace = detectedFace.getBounds();
-                        Log.d(TAG, "face detected " + Integer.toString(face.length));
-                        activity.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                // Update the view now!
-                                //mFaceView.setFaces(faces);
-                            }
-                        });
-                    }
+//                    Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
+//                    faces = result.get(CaptureResult.STATISTICS_FACES);
+//                    if (faces != null && mode != null) {
+//                        Log.e(TAG, "faces : " + faces.length + " , mode : " + mode);
+//                    }
+//                    // We have nothing to do when the camera preview is working normally.
+//                    //But we can for example detect faces
+//                    Face face[] = result.get(CaptureResult.STATISTICS_FACES);
+//                    if (face != null && face.length > 0) {
+//                        detectedFace = faces[0];
+//                        rectangleFace = detectedFace.getBounds();
+//                        Log.d(TAG, "face detected " + Integer.toString(face.length));
+//                        activity.runOnUiThread(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                // Update the view now!
+//                                //mFaceView.setFaces(faces);
+//                            }
+//                        });
+//                    }
                     break;
                 }
 
                 case STATE_WAITING_LOCK: {
-                    Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                    afState = result.get(CaptureResult.CONTROL_AF_STATE);
                     if (afState == null) {
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
                             CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
@@ -560,7 +564,7 @@ public class Camera2 {
                 case STATE_WAITING_NON_PRECAPTURE: {
                     boolean readyToCapture = true;
                     if (!mNoAFRun) {
-                        Integer afState = result.get(CaptureResult.CONTROL_AF_STATE);
+                        afState = result.get(CaptureResult.CONTROL_AF_STATE);
                         if (afState == null) {
                             break;
                         }
@@ -613,6 +617,20 @@ public class Camera2 {
                                        @NonNull CaptureRequest request,
                                        @NonNull TotalCaptureResult result) {
             process(result);
+            Integer nowAfState = result.get(CaptureResult.CONTROL_AF_STATE);
+            if (nowAfState == null) {
+                return;
+            }
+            if (nowAfState.intValue() == afState) {
+                return;
+            }
+            afState = nowAfState.intValue();
+            mBackgroundHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    judgeFocus();
+                }
+            });
         }
 
     };
@@ -651,7 +669,6 @@ public class Camera2 {
             mPreviewBuilder.addTarget(recorderSurface);
 
             mIsRecordingVideo = true;
-            isPreview = false;
 
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
@@ -831,11 +848,9 @@ public class Camera2 {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     mPreviewSession = cameraCaptureSession;
+                    mTextureView.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder, mCaptureCallback);
+                    setFaceDetect(mPreviewBuilder, mFaceDetectMode);
                     updatePreview();
-                    if (isPreview) {
-                        mTextureView.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder, mCaptureCallback);
-                        setFaceDetect(mPreviewBuilder, mFaceDetectMode);
-                    }
                     if (mIsRecordingVideo) {
                         camera2Listener.cameraRecordingStarted();
                         // Start recording
@@ -853,6 +868,7 @@ public class Camera2 {
                 @Override
                 public void onClosed(@NonNull CameraCaptureSession session) {
                     super.onClosed(session);
+                    Log.e(TAG, "Session Closed");
                 }
             };
 
@@ -864,4 +880,110 @@ public class Camera2 {
             mMediaRecorder.reset();
         }
     };
+
+    private long focusSleepTime = 800;
+
+    private void judgeFocus() {
+        switch (afState) {
+            case CameraMetadata.CONTROL_AF_STATE_ACTIVE_SCAN:
+            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_SCAN:
+                mBackgroundHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        focusFocusing();
+                        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
+                        try {
+                            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+                        } catch (CameraAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, focusSleepTime);
+                break;
+            case CameraMetadata.CONTROL_AF_STATE_FOCUSED_LOCKED:
+            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_FOCUSED:
+                mBackgroundHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        focusSucceed();
+                    }
+                }, focusSleepTime);
+                break;
+            case CameraMetadata.CONTROL_AF_STATE_INACTIVE:
+                mBackgroundHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        focusInactive();
+                    }
+                }, focusSleepTime);
+                break;
+            case CameraMetadata.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED:
+            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_UNFOCUSED:
+                mBackgroundHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        focusFailed();
+                    }
+                }, focusSleepTime);
+                break;
+        }
+    }
+
+    private int mRawX, mRawY;
+
+    private void focusFocusing() {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int width = focusImage.getWidth();
+                int height = focusImage.getHeight();
+                if (mTextureView.getPosition() != null &&
+                        mRawX != mTextureView.getPosition().getX() &&
+                        mRawY != mTextureView.getPosition().getY()) {
+                    mRawX = (int) mTextureView.getPosition().getX();
+                    mRawY = (int) mTextureView.getPosition().getY();
+                    ViewGroup.MarginLayoutParams margin = new ViewGroup.MarginLayoutParams(focusImage.getLayoutParams());
+                    margin.setMargins(mRawX - width / 2, mRawY - height / 2, margin.rightMargin, margin.bottomMargin);
+                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(margin);
+                    focusImage.setLayoutParams(layoutParams);
+                    focusImage.startFocusing();
+                    Log.d(TAG, "focusFocusing");
+                }
+            }
+        });
+    }
+
+    private void focusSucceed() {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                focusImage.focusSuccess();
+                Log.d(TAG, "focusSucceed");
+            }
+        });
+    }
+
+    private void focusInactive() {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                focusImage.stopFocus();
+                Log.d(TAG, "focusInactive");
+            }
+        });
+    }
+
+    private void focusFailed() {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                focusImage.focusFailed();
+                Log.d(TAG, "focusFailed");
+            }
+        });
+    }
+
+    public void setFocusImage(AnimationImageView focusImage) {
+        this.focusImage = focusImage;
+    }
 }

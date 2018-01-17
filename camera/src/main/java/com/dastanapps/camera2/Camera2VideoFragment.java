@@ -36,6 +36,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.dastanapps.camera.R;
+import com.dastanapps.view.AnimationImageView;
 import com.dastanapps.view.FaceOverlayView;
 
 
@@ -122,9 +123,11 @@ public class Camera2VideoFragment extends Fragment
         view.findViewById(R.id.btn_switch).setOnClickListener(this);
         view.findViewById(R.id.effects).setOnClickListener(this);
 
+        AnimationImageView mFocusImage=view.findViewById(R.id.img_focus);
         camera2 = new Camera2(getActivity(), mTextureView, this);
         camera2.setFaceView(mFaceView);
-        camera2.setupManager();
+        camera2.setFocusImage(mFocusImage);
+
     }
 
     @Override
