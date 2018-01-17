@@ -156,7 +156,6 @@ bool setupGraphics(int width, int height) {
     }
     vertexLocation = glGetAttribLocation(glProgram, "vertexPosition");
     textureCordLocation = glGetAttribLocation(glProgram, "vertexTextureCord");
-
     projectionLocation = glGetUniformLocation(glProgram, "projection");
     modelViewLocation = glGetUniformLocation(glProgram, "modelView");
     samplerLocation = glGetUniformLocation(glProgram, "texture");

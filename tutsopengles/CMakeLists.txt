@@ -27,6 +27,7 @@ add_library( # Sets the name of the library.
              #Tutorial 3
              #src/main/cpp/simplecube.cpp
 
+<<<<<<< HEAD
              #Tutorial 4
              #src/main/cpp/Texture.cpp
 
@@ -35,6 +36,10 @@ add_library( # Sets the name of the library.
 
              #Tutorial 6
              src/main/cpp/NormalMapping.cpp
+=======
+              #Tutorial 4
+              src/main/cpp/Texture.cpp
+>>>>>>> 7014db0170ba5792d8b1b1eb919b64efa8f0470f
              )
 
 # Searches for a specified prebuilt library and stores the path as a
