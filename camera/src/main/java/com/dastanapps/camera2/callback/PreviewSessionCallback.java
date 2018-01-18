@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.AutoFitTextureView;
 
 /**
  * Created by yuyidong on 14-12-19.

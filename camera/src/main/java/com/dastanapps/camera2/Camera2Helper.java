@@ -3,6 +3,7 @@ package com.dastanapps.camera2;
 import android.app.Activity;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
@@ -11,7 +12,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
-import com.dastanapps.camera2.callback.AutoFitTextureView;
+import com.dastanapps.camera2.view.AutoFitTextureView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -453,5 +454,15 @@ public class Camera2Helper {
             default:
                 return "UNKNOWN";
         }
+    }
+
+    // Returns true if the device supports the required hardware level, or better.
+    public static boolean isHardwareLevelSupported(CameraCharacteristics c, int requiredLevel) {
+        int deviceLevel = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+        if (deviceLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+            return requiredLevel == deviceLevel;
+        }
+        // deviceLevel is not LEGACY, can use numerical sort
+        return requiredLevel <= deviceLevel;
     }
 }

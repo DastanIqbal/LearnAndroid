@@ -32,11 +32,11 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.widget.Toast;
 
-import com.dastanapps.camera2.callback.AutoFitTextureView;
 import com.dastanapps.camera2.callback.PreviewSessionCallback;
 import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
 import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
 import com.dastanapps.view.Util;
@@ -48,6 +48,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import static android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_FULL;
+import static android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY;
+import static android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED;
 
 /**
  * Created by dastaniqbal on 17/01/2018.
@@ -766,6 +770,28 @@ public class Camera2 {
             mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Image Sensor sensitivity
+     *
+     * @param isoValue sensitivity value
+     */
+    public void setISO(int isoValue) {
+        Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_FULL) + " FULL Capablities");
+        Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED) + " Limited Capablities");
+        Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) + " Legacy Capablities");
+        if (Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_FULL)) {
+            mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
+            Range<Integer> range = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+            if (range != null) {
+                int max1 = range.getUpper();//10000
+                int min1 = range.getLower();//100
+                int iso = ((isoValue * (max1 - min1)) / 100 + min1);
+                mPreviewBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);
+            }
         }
     }
 

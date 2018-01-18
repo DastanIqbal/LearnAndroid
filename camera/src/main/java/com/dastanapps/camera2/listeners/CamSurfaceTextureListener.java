@@ -6,7 +6,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.view.TextureView;
 
-import com.dastanapps.camera2.callback.AutoFitTextureView;
+import com.dastanapps.camera2.view.AutoFitTextureView;
 import com.dastanapps.camera2.Camera2;
 import com.dastanapps.camera2.Camera2Helper;
 

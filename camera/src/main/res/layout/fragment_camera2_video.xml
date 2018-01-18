@@ -26,7 +26,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true">
 
-        <com.dastanapps.camera2.callback.AutoFitTextureView
+        <com.dastanapps.camera2.view.AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -72,6 +72,15 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="16dp"
                     android:text="White Balance"
+                    android:textColor="#fff"
+                    app:buttonTint="@color/colorAccent" />
+
+                <android.support.v7.widget.AppCompatRadioButton
+                    android:id="@+id/iso"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:text="ISO"
                     android:textColor="#fff"
                     app:buttonTint="@color/colorAccent" />
             </RadioGroup>

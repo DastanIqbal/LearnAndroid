@@ -36,8 +36,8 @@ import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
 import com.dastanapps.camera.R;
-import com.dastanapps.camera2.callback.AutoFitTextureView;
 import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
 
@@ -116,6 +116,11 @@ public class Camera2VideoFragment extends Fragment
                 if (group.getCheckedRadioButtonId() == view.findViewById(R.id.ae).getId()) {
                     isAE = true;
                     seekBar.setProgress(50);
+                    awbSeekBar.setVisibility(View.GONE);
+                    seekBar.setVisibility(View.VISIBLE);
+                } else if (group.getCheckedRadioButtonId() == view.findViewById(R.id.iso).getId()) {
+                    isAE = false;
+                    seekBar.setProgress(100);
                     awbSeekBar.setVisibility(View.GONE);
                     seekBar.setVisibility(View.VISIBLE);
                 } else {
@@ -270,6 +275,7 @@ public class Camera2VideoFragment extends Fragment
         if (isAE) {
             camera2.setAutoExposure(progress);
         } else {
+            camera2.setISO(progress);
         }
     }
 
