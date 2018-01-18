@@ -11,6 +11,8 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
+import com.dastanapps.camera2.callback.AutoFitTextureView;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

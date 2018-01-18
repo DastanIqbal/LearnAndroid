@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.dastanapps.camera2;
+package com.dastanapps.camera2.callback;
 
 import android.content.Context;
 import android.graphics.Rect;

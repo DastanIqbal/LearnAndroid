@@ -1,4 +1,4 @@
-package com.dastanapps.view;
+package com.dastanapps.camera2.view;
 
 import android.content.Context;
 import android.support.v4.content.ContextCompat;
@@ -10,17 +10,13 @@ import android.view.animation.ScaleAnimation;
 
 import com.dastanapps.camera.R;
 
+
 /**
  * Created by yuyidong on 14-12-23.
  */
 public class AnimationImageView extends AppCompatImageView {
     private Animation mAnimation;
     private Context mContext;
-    /**
-     * 防止又换了个text，但是上次哪个还没有消失即将小时就把新的text的给消失了
-     */
-    public int mTimes = 0;
-
     public AnimationImageView(Context context) {
         this(context, null);
         mContext = context;
@@ -41,19 +37,16 @@ public class AnimationImageView extends AppCompatImageView {
     }
 
     public void startFocusing() {
-        mTimes++;
         this.setVisibility(View.VISIBLE);
         this.startAnimation(mAnimation);
         this.setBackground(ContextCompat.getDrawable(mContext, R.drawable.focus));
     }
 
     public void focusFailed() {
-        mTimes++;
         this.setBackground(ContextCompat.getDrawable(mContext, R.drawable.focus_failed));
     }
 
     public void focusSuccess() {
-        mTimes++;
         this.setVisibility(View.VISIBLE);
         this.setBackground(ContextCompat.getDrawable(mContext, R.drawable.focus_succeed));
     }

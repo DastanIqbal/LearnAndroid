@@ -14,8 +14,6 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
-import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.MediaRecorder;
@@ -32,11 +30,14 @@ import android.util.SparseIntArray;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.TextureView;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import com.dastanapps.view.AnimationImageView;
+import com.dastanapps.camera2.callback.AutoFitTextureView;
+import com.dastanapps.camera2.callback.PreviewSessionCallback;
+import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
+import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
+import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
 import com.dastanapps.view.Util;
 
@@ -80,32 +81,6 @@ public class Camera2 {
     public static int FLASH_AUTO = 2;
 
     private int flashMode = FLASH_OFF;
-    /**
-     * The current state of camera state for taking pictures.
-     *
-     * @see #mCaptureCallback
-     */
-    private int mState = STATE_PREVIEW;
-
-    /**
-     * Camera state: Showing camera preview.
-     */
-    private static final int STATE_PREVIEW = 0;
-
-    /**
-     * Camera state: Waiting for the focus to be locked.
-     */
-    private static final int STATE_WAITING_LOCK = 1;
-
-    /**
-     * Camera state: Waiting for the exposure to be precapture state.
-     */
-    private static final int STATE_WAITING_PRECAPTURE = 2;
-
-    /**
-     * Camera state: Waiting for the exposure state to be something other than precapture.
-     */
-    private static final int STATE_WAITING_NON_PRECAPTURE = 3;
 
     /**
      * Whether or not the currently configured camera device is fixed-focus.
@@ -225,12 +200,17 @@ public class Camera2 {
     private AutoFitTextureView mTextureView;
     private AnimationImageView focusImage;
     private int autoExposure;
+    private CamSurfaceTextureListener mSurfaceTextureListener;
+    private AwbSeekBar awbView;
+    private PreviewSessionCallback mCaptureCallback;
 
     public Camera2(Context context, AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
         this.context = context;
         this.activity = (Activity) context;
         this.mTextureView = mTextureView;
         this.camera2Listener = camera2Listener;
+        mSurfaceTextureListener = new CamSurfaceTextureListener(this, mTextureView, activity);
+
         setupManager();
     }
 
@@ -280,6 +260,11 @@ public class Camera2 {
 
     public void onResume() {
         startBackgroundThread();
+        if (mTextureView.isAvailable()) {
+            openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+        } else {
+            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+        }
         if (mOrientationListener != null && mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
@@ -448,45 +433,45 @@ public class Camera2 {
         // Enable auto-magical 3A run by camera device
         builder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO);
 
-        Float minFocusDist =
-                mCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
-
-        // If MINIMUM_FOCUS_DISTANCE is 0, lens is fixed-focus and we need to skip the AF run.
-        mNoAFRun = (minFocusDist == null || minFocusDist == 0);
-
-        if (!mNoAFRun) {
-            // If there is a "continuous picture" mode available, use it, otherwise default to AUTO.
-            if (Camera2Helper.contains(mCharacteristics.get(
-                    CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES),
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
-                builder.set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            } else {
-                builder.set(CaptureRequest.CONTROL_AF_MODE,
-                        CaptureRequest.CONTROL_AF_MODE_AUTO);
-            }
-        }
-
-        // If there is an auto-magical flash control mode available, use it, otherwise default to
-        // the "on" mode, which is guaranteed to always be available.
-        if (Camera2Helper.contains(mCharacteristics.get(
-                CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES),
-                CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)) {
-            builder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-        } else {
-            builder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON);
-        }
-
-        // If there is an auto-magical white balance control mode available, use it.
-        if (Camera2Helper.contains(mCharacteristics.get(
-                CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES),
-                CaptureRequest.CONTROL_AWB_MODE_AUTO)) {
-            // Allow AWB to run auto-magically if this device supports this
-            builder.set(CaptureRequest.CONTROL_AWB_MODE,
-                    CaptureRequest.CONTROL_AWB_MODE_AUTO);
-        }
+//        Float minFocusDist =
+//                mCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+//
+//        // If MINIMUM_FOCUS_DISTANCE is 0, lens is fixed-focus and we need to skip the AF run.
+//        mNoAFRun = (minFocusDist == null || minFocusDist == 0);
+//
+//        if (!mNoAFRun) {
+//            // If there is a "continuous picture" mode available, use it, otherwise default to AUTO.
+//            if (Camera2Helper.contains(mCharacteristics.get(
+//                    CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES),
+//                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) {
+//                builder.set(CaptureRequest.CONTROL_AF_MODE,
+//                        CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+//            } else {
+//                builder.set(CaptureRequest.CONTROL_AF_MODE,
+//                        CaptureRequest.CONTROL_AF_MODE_AUTO);
+//            }
+//        }
+//
+//        // If there is an auto-magical flash control mode available, use it, otherwise default to
+//        // the "on" mode, which is guaranteed to always be available.
+//        if (Camera2Helper.contains(mCharacteristics.get(
+//                CameraCharacteristics.CONTROL_AE_AVAILABLE_MODES),
+//                CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH)) {
+//            builder.set(CaptureRequest.CONTROL_AE_MODE,
+//                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+//        } else {
+//            builder.set(CaptureRequest.CONTROL_AE_MODE,
+//                    CaptureRequest.CONTROL_AE_MODE_ON);
+//        }
+//
+//        // If there is an auto-magical white balance control mode available, use it.
+//        if (Camera2Helper.contains(mCharacteristics.get(
+//                CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES),
+//                CaptureRequest.CONTROL_AWB_MODE_AUTO)) {
+//            // Allow AWB to run auto-magically if this device supports this
+//            builder.set(CaptureRequest.CONTROL_AWB_MODE,
+//                    CaptureRequest.CONTROL_AWB_MODE_AUTO);
+//        }
     }
 
     private void closePreviewSession() {
@@ -508,152 +493,6 @@ public class Camera2 {
 
     private Face detectedFace;
     private Rect rectangleFace;
-    private Integer afState = CameraMetadata.CONTROL_AF_STATE_INACTIVE;
-    ;
-    /**
-     * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
-     */
-    private CameraCaptureSession.CaptureCallback mCaptureCallback
-            = new CameraCaptureSession.CaptureCallback() {
-
-        private void process(CaptureResult result) {
-            switch (mState) {
-                case STATE_PREVIEW: {
-                    Log.d(TAG, "STATE_PREVIEW");
-//                    Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
-//                    faces = result.get(CaptureResult.STATISTICS_FACES);
-//                    if (faces != null && mode != null) {
-//                        Log.e(TAG, "faces : " + faces.length + " , mode : " + mode);
-//                    }
-//                    // We have nothing to do when the camera preview is working normally.
-//                    //But we can for example detect faces
-//                    Face face[] = result.get(CaptureResult.STATISTICS_FACES);
-//                    if (face != null && face.length > 0) {
-//                        detectedFace = faces[0];
-//                        rectangleFace = detectedFace.getBounds();
-//                        Log.d(TAG, "face detected " + Integer.toString(face.length));
-//                        activity.runOnUiThread(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                // Update the view now!
-//                                //mFaceView.setFaces(faces);
-//                            }
-//                        });
-//                    }
-                    break;
-                }
-
-                case STATE_WAITING_LOCK: {
-                    Log.d(TAG, "STATE_WAITING_LOCK");
-                    afState = result.get(CaptureResult.CONTROL_AF_STATE);
-                    if (afState == null) {
-                    } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
-                            CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED == afState) {
-                        // CONTROL_AE_STATE can be null on some devices
-                        Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                        if (aeState == null ||
-                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                        } else {
-                        }
-                    }
-                    break;
-                }
-                case STATE_WAITING_PRECAPTURE: {
-                    Log.d(TAG, "STATE_WAITING_PRECAPTURE");
-                    // CONTROL_AE_STATE can be null on some devices
-                    Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                    if (aeState == null ||
-                            aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
-                            aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) {
-                        mState = STATE_WAITING_NON_PRECAPTURE;
-                    }
-                    break;
-                }
-                case STATE_WAITING_NON_PRECAPTURE: {
-                    Log.d(TAG, "STATE_WAITING_NON_PRECAPTURE");
-                    boolean readyToCapture = true;
-                    if (!mNoAFRun) {
-                        afState = result.get(CaptureResult.CONTROL_AF_STATE);
-                        if (afState == null) {
-                            break;
-                        }
-
-                        // If auto-focus has reached locked state, we are ready to capture
-                        readyToCapture =
-                                (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED ||
-                                        afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED);
-                    }
-
-                    // If we are running on an non-legacy device, we should also wait until
-                    // auto-exposure and auto-white-balance have converged as well before
-                    // taking a picture.
-                    if (!isLegacyLocked()) {
-                        Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
-                        Integer awbState = result.get(CaptureResult.CONTROL_AWB_STATE);
-                        if (aeState == null || awbState == null) {
-                            break;
-                        }
-
-                        readyToCapture = readyToCapture &&
-                                aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED &&
-                                awbState == CaptureResult.CONTROL_AWB_STATE_CONVERGED;
-                    }
-
-                    // If we haven't finished the pre-capture sequence but have hit our maximum
-                    // wait timeout, too bad! Begin capture anyway.
-//                    if (!readyToCapture && hitTimeoutLocked()) {
-//                        Log.w(TAG, "Timed out waiting for pre-capture sequence to complete.");
-//                        readyToCapture = true;
-//                    }
-
-                    if (readyToCapture) {
-                        // After this, the camera will go back to the normal state of preview.
-                        mState = STATE_PREVIEW;
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onCaptureProgressed(@NonNull CameraCaptureSession session,
-                                        @NonNull CaptureRequest request,
-                                        @NonNull CaptureResult partialResult) {
-            process(partialResult);
-        }
-
-        @Override
-        public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                       @NonNull CaptureRequest request,
-                                       @NonNull TotalCaptureResult result) {
-            process(result);
-            Integer nowAfState = result.get(CaptureResult.CONTROL_AF_STATE);
-            if (nowAfState == null) {
-                return;
-            }
-            if (nowAfState.intValue() == afState) {
-                return;
-            }
-            afState = nowAfState.intValue();
-            mBackgroundHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    judgeFocus();
-                }
-            });
-        }
-
-    };
-
-    /**
-     * Check if we are using a device that only supports the LEGACY hardware level.
-     * <p/>
-     *
-     * @return true if this is a legacy device.
-     */
-    private boolean isLegacyLocked() {
-        return mCharacteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL) ==
-                CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY;
-    }
 
     public void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
@@ -866,8 +705,7 @@ public class Camera2 {
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     mPreviewSession = cameraCaptureSession;
-                    mTextureView.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder, mCaptureCallback);
-                    setFaceDetect(mPreviewBuilder, mFaceDetectMode);
+                    newSession();
                     updatePreview();
                     if (mIsRecordingVideo) {
                         mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
@@ -893,6 +731,16 @@ public class Camera2 {
                 }
             };
 
+    private void newSession() {
+        mCaptureCallback = new PreviewSessionCallback(focusImage, mBackgroundHandler, mTextureView);
+        mCaptureCallback.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder);
+
+        mTextureView.setCameraSettings(mCharacteristics, mPreviewSession, mPreviewBuilder, mCaptureCallback);
+        if (awbView != null)
+            awbView.setmOnAwbSeekBarChangeListener(new AwbSeekBarChangeListener(mPreviewBuilder, mPreviewSession, mBackgroundHandler, mCaptureCallback));
+        setFaceDetect(mPreviewBuilder, mFaceDetectMode);
+    }
+
     private Runnable stopRecodingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -901,109 +749,6 @@ public class Camera2 {
             mMediaRecorder.reset();
         }
     };
-
-    private long focusSleepTime = 800;
-
-    private void judgeFocus() {
-        switch (afState) {
-            case CameraMetadata.CONTROL_AF_STATE_ACTIVE_SCAN:
-            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_SCAN:
-                mBackgroundHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        focusFocusing();
-                    }
-                }, focusSleepTime);
-                break;
-            case CameraMetadata.CONTROL_AF_STATE_FOCUSED_LOCKED:
-            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_FOCUSED:
-                mBackgroundHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        focusSucceed();
-                        mState = STATE_PREVIEW;
-                        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
-                        try {
-                            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
-                        } catch (CameraAccessException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, focusSleepTime);
-                break;
-            case CameraMetadata.CONTROL_AF_STATE_INACTIVE:
-                mBackgroundHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        focusInactive();
-                    }
-                }, focusSleepTime);
-                break;
-            case CameraMetadata.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED:
-            case CameraMetadata.CONTROL_AF_STATE_PASSIVE_UNFOCUSED:
-                mBackgroundHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        focusFailed();
-                    }
-                }, focusSleepTime);
-                break;
-        }
-    }
-
-    private int mRawX, mRawY;
-
-    private void focusFocusing() {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                int width = focusImage.getWidth();
-                int height = focusImage.getHeight();
-                if (mTextureView.getPosition() != null &&
-                        mRawX != mTextureView.getPosition().getX() &&
-                        mRawY != mTextureView.getPosition().getY()) {
-                    mRawX = (int) mTextureView.getPosition().getX();
-                    mRawY = (int) mTextureView.getPosition().getY();
-                    ViewGroup.MarginLayoutParams margin = new ViewGroup.MarginLayoutParams(focusImage.getLayoutParams());
-                    margin.setMargins(mRawX - width / 2, mRawY - height / 2, margin.rightMargin, margin.bottomMargin);
-                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(margin);
-                    focusImage.setLayoutParams(layoutParams);
-                    focusImage.startFocusing();
-                    Log.d(TAG, "focusFocusing");
-                }
-            }
-        });
-    }
-
-    private void focusSucceed() {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                focusImage.focusSuccess();
-                Log.d(TAG, "focusSucceed");
-            }
-        });
-    }
-
-    private void focusInactive() {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                focusImage.stopFocus();
-                Log.d(TAG, "focusInactive");
-            }
-        });
-    }
-
-    private void focusFailed() {
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                focusImage.focusFailed();
-                Log.d(TAG, "focusFailed");
-            }
-        });
-    }
 
     public void setFocusImage(AnimationImageView focusImage) {
         this.focusImage = focusImage;
@@ -1024,56 +769,7 @@ public class Camera2 {
         }
     }
 
-    public void setWhiteBalance(int mProgress) {
-        int num = 0;
-        if (0 <= mProgress && mProgress < 5) {
-            num = 0;
-        } else if (5 <= mProgress && mProgress < 15) {
-            num = 10;
-        } else if (15 <= mProgress && mProgress < 25) {
-            num = 20;
-        } else if (25 <= mProgress && mProgress < 35) {
-            num = 30;
-        } else if (35 <= mProgress && mProgress < 45) {
-            num = 40;
-        } else if (45 <= mProgress && mProgress < 55) {
-            num = 50;
-        } else if (55 <= mProgress && mProgress < 65) {
-            num = 60;
-        } else if (65 <= mProgress && mProgress < 70) {
-            num = 70;
-        }
-        switch (num) {
-            case 0:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
-                break;
-            case 10:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
-                break;
-            case 20:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
-                break;
-            case 30:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
-                break;
-            case 40:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
-                break;
-            case 50:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
-                break;
-            case 60:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
-                break;
-            case 70:
-                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_WARM_FLUORESCENT);
-                break;
-        }
-        try {
-            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
+    public void setAwbView(AwbSeekBar awbView) {
+        this.awbView = awbView;
     }
-
 }
