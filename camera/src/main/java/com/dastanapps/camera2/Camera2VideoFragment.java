@@ -155,7 +155,6 @@ public class Camera2VideoFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
-        camera2.startBackgroundThread();
         if (mTextureView.isAvailable()) {
             camera2.openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
@@ -167,8 +166,6 @@ public class Camera2VideoFragment extends Fragment
     @Override
     public void onPause() {
         camera2.onPause();
-        camera2.closeCamera();
-        camera2.stopBackgroundThread();
         super.onPause();
     }
 

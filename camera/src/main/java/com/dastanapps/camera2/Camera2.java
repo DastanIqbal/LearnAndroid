@@ -279,12 +279,15 @@ public class Camera2 {
     }
 
     public void onResume() {
+        startBackgroundThread();
         if (mOrientationListener != null && mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
     }
 
     public void onPause() {
+        closeCamera();
+        stopBackgroundThread();
         if (mOrientationListener != null) {
             mOrientationListener.disable();
         }
@@ -763,7 +766,7 @@ public class Camera2 {
     /**
      * Stops the background thread and its {@link Handler}.
      */
-    public void stopBackgroundThread() {
+    private void stopBackgroundThread() {
         mBackgroundThread.quitSafely();
         try {
             mBackgroundThread.join();
