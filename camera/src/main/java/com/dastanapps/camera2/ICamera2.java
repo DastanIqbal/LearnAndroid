@@ -10,9 +10,14 @@ import android.util.Size;
 
 public interface ICamera2 {
     void cameraOperned(Size mPreviewSize);
+
     void cameraError(int error);
+
     void cameraRecordingStarted();
+
     void requestVideoPermissions();
+
     void cameraRecordingStopped();
+
     void updateFlashMode(int flashMode);
 }

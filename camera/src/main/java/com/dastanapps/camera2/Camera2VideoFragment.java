@@ -20,7 +20,6 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
-import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,7 +29,6 @@ import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -38,7 +36,9 @@ import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
 import com.dastanapps.camera.R;
-import com.dastanapps.view.AnimationImageView;
+import com.dastanapps.camera2.callback.AutoFitTextureView;
+import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
 
 
@@ -59,39 +59,13 @@ public class Camera2VideoFragment extends Fragment
      */
     private Button mButtonVideo;
 
-    private TextureView.SurfaceTextureListener mSurfaceTextureListener
-            = new TextureView.SurfaceTextureListener() {
-
-        @Override
-        public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture,
-                                              int width, int height) {
-            camera2.openCamera(width, height);
-            camera2.setCameraWidthHeight();
-        }
-
-        @Override
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture,
-                                                int width, int height) {
-            Camera2Helper.configureTransform(getActivity(), camera2.getPreviewSize(), mTextureView, width, height);
-        }
-
-        @Override
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
-            return true;
-        }
-
-        @Override
-        public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
-        }
-
-    };
-
     public SurfaceView surfaceview;
     private Camera2 camera2;
     // Draw rectangles and other fancy stuff:
     private FaceOverlayView mFaceView;
     private Button mFlashButton;
     private SeekBar seekBar;
+    private AwbSeekBar awbSeekBar;
     private RadioGroup rb;
     private boolean isAE = true;
 
@@ -131,17 +105,23 @@ public class Camera2VideoFragment extends Fragment
 
         AnimationImageView mFocusImage = view.findViewById(R.id.img_focus);
         seekBar = view.findViewById(R.id.seekbar);
+        seekBar.setMax(100);
         seekBar.setOnSeekBarChangeListener(this);
+
+        awbSeekBar = view.findViewById(R.id.awbSeekbar);
         rb = view.findViewById(R.id.rb);
         rb.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 if (group.getCheckedRadioButtonId() == view.findViewById(R.id.ae).getId()) {
                     isAE = true;
-                    seekBar.setMax(100);
+                    seekBar.setProgress(50);
+                    awbSeekBar.setVisibility(View.GONE);
+                    seekBar.setVisibility(View.VISIBLE);
                 } else {
                     isAE = false;
-                    seekBar.setMax(70);
+                    awbSeekBar.setVisibility(View.VISIBLE);
+                    seekBar.setVisibility(View.GONE);
                 }
             }
         });
@@ -149,17 +129,13 @@ public class Camera2VideoFragment extends Fragment
         camera2 = new Camera2(getActivity(), mTextureView, this);
         camera2.setFaceView(mFaceView);
         camera2.setFocusImage(mFocusImage);
+        camera2.setAwbView(awbSeekBar);
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (mTextureView.isAvailable()) {
-            camera2.openCamera(mTextureView.getWidth(), mTextureView.getHeight());
-        } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
-        }
         camera2.onResume();
     }
 
@@ -294,7 +270,6 @@ public class Camera2VideoFragment extends Fragment
         if (isAE) {
             camera2.setAutoExposure(progress);
         } else {
-            camera2.setWhiteBalance(progress);
         }
     }
 
