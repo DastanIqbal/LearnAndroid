@@ -34,6 +34,8 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
 
 import com.dastanapps.camera.R;
 import com.dastanapps.view.AnimationImageView;
@@ -42,7 +44,7 @@ import com.dastanapps.view.FaceOverlayView;
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class Camera2VideoFragment extends Fragment
-        implements View.OnClickListener, ICamera2, FragmentCompat.OnRequestPermissionsResultCallback {
+        implements View.OnClickListener, ICamera2, FragmentCompat.OnRequestPermissionsResultCallback, SeekBar.OnSeekBarChangeListener {
 
     private static final String TAG = "Camera2VideoFragment";
     private static final String FRAGMENT_DIALOG = "dialog";
@@ -89,6 +91,9 @@ public class Camera2VideoFragment extends Fragment
     // Draw rectangles and other fancy stuff:
     private FaceOverlayView mFaceView;
     private Button mFlashButton;
+    private SeekBar seekBar;
+    private RadioGroup rb;
+    private boolean isAE = true;
 
     public static Camera2VideoFragment newInstance() {
         return new Camera2VideoFragment();
@@ -122,8 +127,25 @@ public class Camera2VideoFragment extends Fragment
         mFlashButton.setOnClickListener(this);
         view.findViewById(R.id.btn_switch).setOnClickListener(this);
         view.findViewById(R.id.effects).setOnClickListener(this);
+        view.findViewById(R.id.scenes).setOnClickListener(this);
 
-        AnimationImageView mFocusImage=view.findViewById(R.id.img_focus);
+        AnimationImageView mFocusImage = view.findViewById(R.id.img_focus);
+        seekBar = view.findViewById(R.id.seekbar);
+        seekBar.setOnSeekBarChangeListener(this);
+        rb = view.findViewById(R.id.rb);
+        rb.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (group.getCheckedRadioButtonId() == view.findViewById(R.id.ae).getId()) {
+                    isAE = true;
+                    seekBar.setMax(100);
+                } else {
+                    isAE = false;
+                    seekBar.setMax(70);
+                }
+            }
+        });
+
         camera2 = new Camera2(getActivity(), mTextureView, this);
         camera2.setFaceView(mFaceView);
         camera2.setFocusImage(mFocusImage);
@@ -165,6 +187,9 @@ public class Camera2VideoFragment extends Fragment
                 break;
             case R.id.effects:
                 camera2.showEffectsDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
+                break;
+            case R.id.scenes:
+                camera2.showScenesDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
                 break;
         }
     }
@@ -265,5 +290,24 @@ public class Camera2VideoFragment extends Fragment
         } else {
             mFlashButton.setText("Flash Off");
         }
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (isAE) {
+            camera2.setAutoExposure(progress);
+        } else {
+            camera2.setWhiteBalance(progress);
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 }

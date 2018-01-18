@@ -9,6 +9,7 @@ import android.app.Fragment;
 import android.content.DialogInterface;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
 import android.os.Bundle;
@@ -115,6 +116,48 @@ public class DialogHelper {
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.dismiss();
                             mPreviewBuilder.set(CaptureRequest.CONTROL_EFFECT_MODE, Integer.parseInt(effects[which].split("[|]")[0]));
+                            try {
+                                mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+                            } catch (CameraAccessException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    })
+                    .create();
+        }
+
+    }
+
+    public static class SceneDialog extends DialogFragment {
+
+        private ArrayAdapter<String> arrayAdapter;
+        private CaptureRequest.Builder mPreviewBuilder;
+        private CameraCaptureSession mPreviewSession;
+        private String[] scenes;
+
+        public static SceneDialog newInstance() {
+            SceneDialog dialog = new SceneDialog();
+            Bundle args = new Bundle();
+            return dialog;
+        }
+
+        public SceneDialog setScenes(CameraCaptureSession mPreviewSession, CaptureRequest.Builder mPreviewBuilder, String[] scenes) {
+            this.mPreviewBuilder = mPreviewBuilder;
+            this.mPreviewSession = mPreviewSession;
+            this.scenes = scenes;
+            return this;
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            arrayAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, scenes);
+            return new AlertDialog.Builder(getActivity())
+                    .setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_USE_SCENE_MODE);
+                            mPreviewBuilder.set(CaptureRequest.CONTROL_SCENE_MODE, Integer.parseInt(scenes[which].split("[|]")[0]));
                             try {
                                 mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
                             } catch (CameraAccessException e) {

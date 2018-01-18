@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.OrientationEventListener;
@@ -223,6 +224,7 @@ public class Camera2 {
     private String mNextVideoAbsolutePath;
     private AutoFitTextureView mTextureView;
     private AnimationImageView focusImage;
+    private int autoExposure;
 
     public Camera2(Context context, AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
         this.context = context;
@@ -514,6 +516,7 @@ public class Camera2 {
         private void process(CaptureResult result) {
             switch (mState) {
                 case STATE_PREVIEW: {
+                    Log.d(TAG, "STATE_PREVIEW");
 //                    Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
 //                    faces = result.get(CaptureResult.STATISTICS_FACES);
 //                    if (faces != null && mode != null) {
@@ -538,6 +541,7 @@ public class Camera2 {
                 }
 
                 case STATE_WAITING_LOCK: {
+                    Log.d(TAG, "STATE_WAITING_LOCK");
                     afState = result.get(CaptureResult.CONTROL_AF_STATE);
                     if (afState == null) {
                     } else if (CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED == afState ||
@@ -552,6 +556,7 @@ public class Camera2 {
                     break;
                 }
                 case STATE_WAITING_PRECAPTURE: {
+                    Log.d(TAG, "STATE_WAITING_PRECAPTURE");
                     // CONTROL_AE_STATE can be null on some devices
                     Integer aeState = result.get(CaptureResult.CONTROL_AE_STATE);
                     if (aeState == null ||
@@ -562,6 +567,7 @@ public class Camera2 {
                     break;
                 }
                 case STATE_WAITING_NON_PRECAPTURE: {
+                    Log.d(TAG, "STATE_WAITING_NON_PRECAPTURE");
                     boolean readyToCapture = true;
                     if (!mNoAFRun) {
                         afState = result.get(CaptureResult.CONTROL_AF_STATE);
@@ -736,6 +742,15 @@ public class Camera2 {
         return DialogHelper.EffectsDialog.newInstance().setEffects(mPreviewSession, mPreviewBuilder, intList);
     }
 
+    public DialogHelper.SceneDialog showScenesDialog() {
+        int scenes[] = mCharacteristics.get(CameraCharacteristics.CONTROL_AVAILABLE_SCENE_MODES);
+        String[] intList = new String[scenes.length];
+        for (int index = 0; index < scenes.length; index++) {
+            intList[index] = scenes[index] + "|" + Camera2Helper.getSceneNames(scenes[index]);
+        }
+        return DialogHelper.SceneDialog.newInstance().setScenes(mPreviewSession, mPreviewBuilder, intList);
+    }
+
     /**
      * Starts a background thread and its {@link Handler}.
      */
@@ -852,6 +867,9 @@ public class Camera2 {
                     setFaceDetect(mPreviewBuilder, mFaceDetectMode);
                     updatePreview();
                     if (mIsRecordingVideo) {
+                        mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
+                        mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
+                        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO);
                         camera2Listener.cameraRecordingStarted();
                         // Start recording
                         mMediaRecorder.start();
@@ -891,12 +909,6 @@ public class Camera2 {
                     @Override
                     public void run() {
                         focusFocusing();
-                        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-                        try {
-                            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
-                        } catch (CameraAccessException e) {
-                            e.printStackTrace();
-                        }
                     }
                 }, focusSleepTime);
                 break;
@@ -906,6 +918,13 @@ public class Camera2 {
                     @Override
                     public void run() {
                         focusSucceed();
+                        mState = STATE_PREVIEW;
+                        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
+                        try {
+                            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
+                        } catch (CameraAccessException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }, focusSleepTime);
                 break;
@@ -986,4 +1005,72 @@ public class Camera2 {
     public void setFocusImage(AnimationImageView focusImage) {
         this.focusImage = focusImage;
     }
+
+    public void setAutoExposure(int autoExposure) {
+        Range<Integer> range1 = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
+        int maxmax = range1.getUpper();
+        int minmin = range1.getLower();
+        int all = (-minmin) + maxmax;
+        int time = 100 / all;
+        int ae = ((autoExposure / time) - maxmax) > maxmax ? maxmax : ((autoExposure / time) - maxmax) < minmin ? minmin : ((autoExposure / time) - maxmax);
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, ae);
+        try {
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setWhiteBalance(int mProgress) {
+        int num = 0;
+        if (0 <= mProgress && mProgress < 5) {
+            num = 0;
+        } else if (5 <= mProgress && mProgress < 15) {
+            num = 10;
+        } else if (15 <= mProgress && mProgress < 25) {
+            num = 20;
+        } else if (25 <= mProgress && mProgress < 35) {
+            num = 30;
+        } else if (35 <= mProgress && mProgress < 45) {
+            num = 40;
+        } else if (45 <= mProgress && mProgress < 55) {
+            num = 50;
+        } else if (55 <= mProgress && mProgress < 65) {
+            num = 60;
+        } else if (65 <= mProgress && mProgress < 70) {
+            num = 70;
+        }
+        switch (num) {
+            case 0:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_AUTO);
+                break;
+            case 10:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_CLOUDY_DAYLIGHT);
+                break;
+            case 20:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_DAYLIGHT);
+                break;
+            case 30:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_FLUORESCENT);
+                break;
+            case 40:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_INCANDESCENT);
+                break;
+            case 50:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_SHADE);
+                break;
+            case 60:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_TWILIGHT);
+                break;
+            case 70:
+                mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_WARM_FLUORESCENT);
+                break;
+        }
+        try {
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

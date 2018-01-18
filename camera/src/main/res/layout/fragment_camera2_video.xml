@@ -14,6 +14,7 @@
  limitations under the License.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -44,6 +45,43 @@
             android:background="@drawable/focus"
             android:visibility="invisible" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="#33000000"
+            android:orientation="vertical">
+
+            <RadioGroup
+                android:id="@+id/rb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.v7.widget.AppCompatRadioButton
+                    android:id="@+id/ae"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Auto Exposure"
+                    android:textColor="#fff"
+                    app:buttonTint="@color/colorAccent" />
+
+                <android.support.v7.widget.AppCompatRadioButton
+                    android:id="@+id/awb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:text="White Balance"
+                    android:textColor="#fff"
+                    app:buttonTint="@color/colorAccent" />
+            </RadioGroup>
+
+            <SeekBar
+                android:id="@+id/seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp" />
+        </LinearLayout>
     </FrameLayout>
 
     <LinearLayout
@@ -54,32 +92,50 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/fl"
         android:background="#4285f4"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:visibility="visible">
 
-        <Button
-            android:id="@+id/btn_flash"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Flash" />
+            android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/btn_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Switch" />
+            <Button
+                android:id="@+id/btn_flash"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Flash" />
 
-        <Button
-            android:id="@+id/video"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Record" />
+            <Button
+                android:id="@+id/btn_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Switch" />
 
-        <Button
-            android:id="@+id/effects"
-            android:layout_width="wrap_content"
+            <Button
+                android:id="@+id/video"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Record" />
+
+            <Button
+                android:id="@+id/effects"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Effects" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Effects" />
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/scenes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scene Mode" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

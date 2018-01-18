@@ -1,6 +1,7 @@
 //include ':shadersNfilters'
 //include  ':mediaeffectswithopengles'
-include  ':tutsopengles', ':camera'
+//include  ':tutsopengles'
+include ':camera'
 //include ':players'
 //include ':retrosquashgame'
 //include ':snake'
