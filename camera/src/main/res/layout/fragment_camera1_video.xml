@@ -26,7 +26,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true">
 
-        <com.dastanapps.camera2.view.Cam2AutoFitTextureView
+        <com.dastanapps.camera.view.Cam1AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -108,7 +108,6 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/fl"
         android:background="#4285f4"
         android:orientation="vertical"
         android:visibility="visible">
@@ -153,6 +152,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Scene Mode" />
+
+            <Button
+                android:id="@+id/whitebalance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="White Balance" />
         </LinearLayout>
     </LinearLayout>
 

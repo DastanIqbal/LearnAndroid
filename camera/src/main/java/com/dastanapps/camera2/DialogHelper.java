@@ -24,7 +24,6 @@ import com.dastanapps.camera.R;
  * dastanIqbal@marvelmedia.com
  * 17/01/2018 10:16
  */
-
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class DialogHelper {
     public static final String[] VIDEO_PERMISSIONS = {

@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package com.dastanapps.camera2;
+package com.dastanapps.camera;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 import android.support.v13.app.FragmentCompat;
-import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -35,24 +30,22 @@ import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
-import com.dastanapps.camera.R;
+import com.dastanapps.camera.view.Cam1AutoFitTextureView;
 import com.dastanapps.camera2.view.AnimationImageView;
-import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
-import com.dastanapps.view.FaceOverlayView;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-public class Camera2VideoFragment extends Fragment
-        implements View.OnClickListener, ICamera2, FragmentCompat.OnRequestPermissionsResultCallback, SeekBar.OnSeekBarChangeListener {
+public class Camera1VideoFragment extends Fragment
+        implements View.OnClickListener, ICamera1, FragmentCompat.OnRequestPermissionsResultCallback, SeekBar.OnSeekBarChangeListener {
 
     private static final String TAG = "Camera2VideoFragment";
     private static final String FRAGMENT_DIALOG = "dialog";
 
     /**
-     * An {@link Cam2AutoFitTextureView} for camera preview.
+     * An {@link Cam1AutoFitTextureView} for camera preview.
      */
-    private Cam2AutoFitTextureView mTextureView;
+    private Cam1AutoFitTextureView mTextureView;
 
     /**
      * Button to record video
@@ -60,23 +53,21 @@ public class Camera2VideoFragment extends Fragment
     private Button mButtonVideo;
 
     public SurfaceView surfaceview;
-    private Camera2 camera2;
-    // Draw rectangles and other fancy stuff:
-    private FaceOverlayView mFaceView;
+    private Camera1 camera1;
     private Button mFlashButton;
     private SeekBar seekBar;
     private AwbSeekBar awbSeekBar;
     private RadioGroup rb;
     private boolean isAE = true;
 
-    public static Camera2VideoFragment newInstance() {
-        return new Camera2VideoFragment();
+    public static Camera1VideoFragment newInstance() {
+        return new Camera1VideoFragment();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_camera2_video, container, false);
+        return inflater.inflate(R.layout.fragment_camera1_video, container, false);
     }
 
 
@@ -92,16 +83,13 @@ public class Camera2VideoFragment extends Fragment
         surfaceview.setZOrderOnTop(true);
         surfaceview.getHolder().setFormat(PixelFormat.TRANSPARENT); //for making it not visible on camera preview
 
-        // Now create the OverlayView:
-        mFaceView = new FaceOverlayView(getActivity());
-        getActivity().addContentView(mFaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
 
         mFlashButton = view.findViewById(R.id.btn_flash);
         mFlashButton.setOnClickListener(this);
         view.findViewById(R.id.btn_switch).setOnClickListener(this);
         view.findViewById(R.id.effects).setOnClickListener(this);
         view.findViewById(R.id.scenes).setOnClickListener(this);
+        view.findViewById(R.id.whitebalance).setOnClickListener(this);
 
         AnimationImageView mFocusImage = view.findViewById(R.id.img_focus);
         seekBar = view.findViewById(R.id.seekbar);
@@ -131,22 +119,22 @@ public class Camera2VideoFragment extends Fragment
             }
         });
 
-        camera2 = new Camera2(getActivity(), mTextureView, this);
-        camera2.setFaceView(mFaceView);
-        camera2.setFocusImage(mFocusImage);
-        camera2.setAwbView(awbSeekBar);
+        camera1 = new Camera1(getActivity(), mTextureView);
+//        camera1.setFaceView(mFaceView);
+//        camera1.setFocusImage(mFocusImage);
+//        camera1.setAwbView(awbSeekBar);
 
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        camera2.onResume();
+        camera1.onResume();
     }
 
     @Override
     public void onPause() {
-        camera2.onPause();
+        camera1.onPause();
         super.onPause();
     }
 
@@ -154,50 +142,31 @@ public class Camera2VideoFragment extends Fragment
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.video: {
-                camera2.toggleRecording();
+                //camera1.toggleRecording();
                 break;
             }
             case R.id.btn_flash:
-                camera2.toggleFlash();
+                camera1.toggleFlash().show(getChildFragmentManager(), FRAGMENT_DIALOG);
                 break;
             case R.id.btn_switch:
-                camera2.switchFaces();
+                camera1.switchFaces();
                 break;
             case R.id.effects:
-                camera2.showEffectsDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
+                camera1.showEffectsDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
                 break;
             case R.id.scenes:
-                camera2.showScenesDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
+                camera1.showScenesDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
                 break;
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        Log.d(TAG, "onRequestPermissionsResult");
-        if (requestCode == DialogHelper.REQUEST_VIDEO_PERMISSIONS) {
-            if (grantResults.length == DialogHelper.VIDEO_PERMISSIONS.length) {
-                for (int result : grantResults) {
-                    if (result != PackageManager.PERMISSION_GRANTED) {
-                        DialogHelper.ErrorDialog.newInstance(getString(R.string.permission_request))
-                                .show(getChildFragmentManager(), FRAGMENT_DIALOG);
-                        break;
-                    }
-                }
-            } else {
-                DialogHelper.ErrorDialog.newInstance(getString(R.string.permission_request))
-                        .show(getChildFragmentManager(), FRAGMENT_DIALOG);
-            }
-        } else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            case R.id.whitebalance:
+                camera1.showWhiteBalance().show(getChildFragmentManager(), FRAGMENT_DIALOG);
+                break;
         }
     }
 
     @Override
     public void cameraOperned(Size mPreviewSize) {
         if (null != mTextureView) {
-            Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
+            //Camera2Helper.configureTransform(getActivity(), mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
         }
     }
 
@@ -227,33 +196,6 @@ public class Camera2VideoFragment extends Fragment
         });
     }
 
-    /**
-     * Requests permissions needed for recording video.
-     */
-    @Override
-    public void requestVideoPermissions() {
-        if (shouldShowRequestPermissionRationale(DialogHelper.VIDEO_PERMISSIONS)) {
-            new DialogHelper.ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
-        } else {
-            FragmentCompat.requestPermissions(this, DialogHelper.VIDEO_PERMISSIONS, DialogHelper.REQUEST_VIDEO_PERMISSIONS);
-        }
-    }
-
-    /**
-     * Gets whether you should show UI with rationale for requesting permissions.
-     *
-     * @param permissions The permissions your app wants to request.
-     * @return Whether you can show permission rationale UI.
-     */
-    private boolean shouldShowRequestPermissionRationale(String[] permissions) {
-        for (String permission : permissions) {
-            if (FragmentCompat.shouldShowRequestPermissionRationale(this, permission)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public void cameraRecordingStopped() {
         mButtonVideo.setText(R.string.record);
@@ -261,21 +203,21 @@ public class Camera2VideoFragment extends Fragment
 
     @Override
     public void updateFlashMode(int flashMode) {
-        if (flashMode == Camera2.FLASH_ON) {
-            mFlashButton.setText("Flash On");
-        } else if (flashMode == Camera2.FLASH_AUTO) {
-            mFlashButton.setText("Flash Auto");
-        } else {
-            mFlashButton.setText("Flash Off");
-        }
+//        if (flashMode == Camera2.FLASH_ON) {
+//            mFlashButton.setText("Flash On");
+//        } else if (flashMode == Camera2.FLASH_AUTO) {
+//            mFlashButton.setText("Flash Auto");
+//        } else {
+//            mFlashButton.setText("Flash Off");
+//        }
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (isAE) {
-            camera2.setAutoExposure(progress);
+            camera1.setAutoExposure(progress);
         } else {
-            camera2.setISO(progress);
+            camera1.setISO(progress);
         }
     }
 

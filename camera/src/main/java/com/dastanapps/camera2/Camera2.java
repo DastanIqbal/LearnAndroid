@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -34,12 +33,12 @@ import android.widget.Toast;
 
 import com.dastanapps.camera2.callback.PreviewSessionCallback;
 import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
+import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
 import com.dastanapps.camera2.view.AnimationImageView;
-import com.dastanapps.camera2.view.AutoFitTextureView;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
-import com.dastanapps.view.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +107,7 @@ public class Camera2 {
      * onCreate or onConfigurationChanged is not called as the view dimensions remain the same,
      * but the orientation of the has changed, and thus the preview rotation must be updated.
      */
-    private OrientationEventListener mOrientationListener;
+    private Cam2OrientationEventListener mOrientationListener;
 
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -201,20 +200,23 @@ public class Camera2 {
 
     private String cameraId;
     private String mNextVideoAbsolutePath;
-    private AutoFitTextureView mTextureView;
+    private Cam2AutoFitTextureView mTextureView;
     private AnimationImageView focusImage;
     private int autoExposure;
     private CamSurfaceTextureListener mSurfaceTextureListener;
     private AwbSeekBar awbView;
     private PreviewSessionCallback mCaptureCallback;
 
-    public Camera2(Context context, AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
+    public Camera2(Context context, Cam2AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
         this.context = context;
         this.activity = (Activity) context;
         this.mTextureView = mTextureView;
         this.camera2Listener = camera2Listener;
         mSurfaceTextureListener = new CamSurfaceTextureListener(this, mTextureView, activity);
-
+        // Setup a new OrientationEventListener.  This is used to handle rotation events like a
+        // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
+        // or otherwise cause the preview TextureView's size to change.
+        mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize);
         setupManager();
     }
 
@@ -234,32 +236,6 @@ public class Camera2 {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-
-        // Setup a new OrientationEventListener.  This is used to handle rotation events like a
-        // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
-        // or otherwise cause the preview TextureView's size to change.
-        mOrientationListener = new OrientationEventListener(context,
-                SensorManager.SENSOR_DELAY_NORMAL) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                if (mTextureView != null && mTextureView.isAvailable()) {
-                    Camera2Helper.configureTransform(activity, mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
-                    // We keep the last known orientation. So if the user first orient
-                    // the camera then point the camera to floor or sky, we still have
-                    // the correct orientation.
-                    if (orientation == ORIENTATION_UNKNOWN) return;
-                    mOrientation = Util.roundOrientation(orientation, mOrientation);
-                    // When the screen is unlocked, display rotation may change. Always
-                    // calculate the up-to-date orientationCompensation.
-                    int orientationCompensation = mOrientation
-                            + Util.getDisplayRotation(activity);
-                    if (mOrientationCompensation != orientationCompensation) {
-                        mOrientationCompensation = orientationCompensation;
-                        mFaceView.setOrientation(mOrientationCompensation);
-                    }
-                }
-            }
-        };
     }
 
     public void onResume() {

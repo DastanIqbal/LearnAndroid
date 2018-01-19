@@ -12,7 +12,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
-import com.dastanapps.camera2.view.AutoFitTextureView;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +52,7 @@ public class Camera2Helper {
      * @param viewWidth    The width of `mTextureView`
      * @param viewHeight   The height of `mTextureView`
      */
-    public static void configureTransform(Activity activity, Size mPreviewSize, AutoFitTextureView mTextureView, int viewWidth, int viewHeight) {
+    public static void configureTransform(Activity activity, Size mPreviewSize, Cam2AutoFitTextureView mTextureView, int viewWidth, int viewHeight) {
         if (null == mTextureView || null == mPreviewSize || null == activity) {
             return;
         }

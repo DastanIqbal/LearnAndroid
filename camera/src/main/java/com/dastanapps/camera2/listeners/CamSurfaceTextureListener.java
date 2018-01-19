@@ -6,7 +6,7 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.view.TextureView;
 
-import com.dastanapps.camera2.view.AutoFitTextureView;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.Camera2;
 import com.dastanapps.camera2.Camera2Helper;
 
@@ -20,10 +20,10 @@ import com.dastanapps.camera2.Camera2Helper;
 public class CamSurfaceTextureListener implements TextureView.SurfaceTextureListener {
 
     private Camera2 camera2;
-    private AutoFitTextureView mTextureView;
+    private Cam2AutoFitTextureView mTextureView;
     private Activity mActivity;
 
-    public CamSurfaceTextureListener(Camera2 camera2, AutoFitTextureView mTextureView, Activity mActivity) {
+    public CamSurfaceTextureListener(Camera2 camera2, Cam2AutoFitTextureView mTextureView, Activity mActivity) {
         this.camera2 = camera2;
         this.mTextureView = mTextureView;
         this.mActivity = mActivity;
