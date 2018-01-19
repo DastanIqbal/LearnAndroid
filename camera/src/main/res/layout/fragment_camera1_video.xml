@@ -21,7 +21,8 @@
     <FrameLayout
         android:id="@+id/fl"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/buttons"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true">
@@ -29,6 +30,7 @@
         <com.dastanapps.camera.view.Cam1AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="match_parent"
+            android:layout_gravity="center"
             android:layout_height="match_parent" />
 
         <SurfaceView
@@ -66,23 +68,6 @@
                     android:textColor="#fff"
                     app:buttonTint="@color/colorAccent" />
 
-                <android.support.v7.widget.AppCompatRadioButton
-                    android:id="@+id/awb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="16dp"
-                    android:text="White Balance"
-                    android:textColor="#fff"
-                    app:buttonTint="@color/colorAccent" />
-
-                <android.support.v7.widget.AppCompatRadioButton
-                    android:id="@+id/iso"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="16dp"
-                    android:text="ISO"
-                    android:textColor="#fff"
-                    app:buttonTint="@color/colorAccent" />
             </RadioGroup>
 
             <SeekBar
@@ -91,18 +76,11 @@
                 android:layout_height="wrap_content"
                 android:padding="8dp"
                 android:visibility="visible" />
-
-            <com.dastanapps.camera2.view.AwbSeekBar
-                android:id="@+id/awbSeekbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:padding="8dp"
-                android:visibility="gone" />
         </LinearLayout>
     </FrameLayout>
 
     <LinearLayout
+        android:id="@+id/buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"

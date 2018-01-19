@@ -37,8 +37,7 @@ public class Camera1 {
     private Cam1AutoFitTextureView mTextureView;
     private Context mContext;
     private Activity mActivity;
-    private int autoExposure;
-    private int ISO;
+
     private Camera mCamera;
     private int mDisplayOrientation;
     private int cameraId;
@@ -146,15 +145,20 @@ public class Camera1 {
     }
 
     public void setAutoExposure(int autoExposure) {
-        this.autoExposure = autoExposure;
-    }
-
-    public void setISO(int ISO) {
-        this.ISO = ISO;
+        mCharacteristics.setAutoExposureLock(false);
+        int maxmax = mCharacteristics.getMaxExposureCompensation();
+        int minmin = mCharacteristics.getMinExposureCompensation();
+        int all = (-minmin) + maxmax;
+        int time = 100 / all;
+        int ae = ((autoExposure / time) - maxmax) > maxmax ? maxmax : ((autoExposure / time) - maxmax) < minmin ? minmin : ((autoExposure / time) - maxmax);
+        mCharacteristics.setExposureCompensation(ae);
+        mCamera.setParameters(mCharacteristics);
+        mCharacteristics.setAutoExposureLock(true);
     }
 
     public void closeCamera() {
         try {
+            mCameraOpenCloseLock.release();
             mCameraOpenCloseLock.acquire();
             if (mCamera != null) {
                 mCamera.stopPreview();
@@ -176,7 +180,6 @@ public class Camera1 {
         if (cameraId == Camera.CameraInfo.CAMERA_FACING_BACK)
             cameraId = Camera.CameraInfo.CAMERA_FACING_FRONT; //Front
         else cameraId = Camera.CameraInfo.CAMERA_FACING_BACK; //Back
-        closeCamera();
         openCamera();
     }
 

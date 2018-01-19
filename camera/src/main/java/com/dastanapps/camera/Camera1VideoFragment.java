@@ -32,7 +32,6 @@ import android.widget.SeekBar;
 
 import com.dastanapps.camera.view.Cam1AutoFitTextureView;
 import com.dastanapps.camera.view.FocusImageView;
-import com.dastanapps.camera2.view.AwbSeekBar;
 
 
 public class Camera1VideoFragment extends Fragment
@@ -55,7 +54,6 @@ public class Camera1VideoFragment extends Fragment
     private Camera1 camera1;
     private Button mFlashButton;
     private SeekBar seekBar;
-    private AwbSeekBar awbSeekBar;
     private RadioGroup rb;
     private boolean isAE = true;
 
@@ -95,7 +93,6 @@ public class Camera1VideoFragment extends Fragment
         seekBar.setMax(100);
         seekBar.setOnSeekBarChangeListener(this);
 
-        awbSeekBar = view.findViewById(R.id.awbSeekbar);
         rb = view.findViewById(R.id.rb);
         rb.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -103,16 +100,9 @@ public class Camera1VideoFragment extends Fragment
                 if (group.getCheckedRadioButtonId() == view.findViewById(R.id.ae).getId()) {
                     isAE = true;
                     seekBar.setProgress(50);
-                    awbSeekBar.setVisibility(View.GONE);
-                    seekBar.setVisibility(View.VISIBLE);
-                } else if (group.getCheckedRadioButtonId() == view.findViewById(R.id.iso).getId()) {
-                    isAE = false;
-                    seekBar.setProgress(100);
-                    awbSeekBar.setVisibility(View.GONE);
                     seekBar.setVisibility(View.VISIBLE);
                 } else {
                     isAE = false;
-                    awbSeekBar.setVisibility(View.VISIBLE);
                     seekBar.setVisibility(View.GONE);
                 }
             }
@@ -121,7 +111,6 @@ public class Camera1VideoFragment extends Fragment
         camera1 = new Camera1(getActivity(), mTextureView);
 //        camera1.setFaceView(mFaceView);
         camera1.setFocusImage(mFocusImage);
-//        camera1.setAwbView(awbSeekBar);
 
     }
 
@@ -215,8 +204,6 @@ public class Camera1VideoFragment extends Fragment
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (isAE) {
             camera1.setAutoExposure(progress);
-        } else {
-            camera1.setISO(progress);
         }
     }
 
