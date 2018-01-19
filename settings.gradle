@@ -2,7 +2,7 @@
 //include  ':mediaeffectswithopengles'
 //include  ':tutsopengles'
 include ':camera'
-include ':webviewfeatures'
+//include ':webviewfeatures'
 //include ':players'
 //include ':retrosquashgame'
 //include ':snake'

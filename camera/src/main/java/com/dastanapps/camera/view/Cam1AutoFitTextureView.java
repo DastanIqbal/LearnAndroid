@@ -17,14 +17,19 @@
 package com.dastanapps.camera.view;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.hardware.Camera;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 
+import com.dastanapps.camera.Camera1;
 import com.dastanapps.view.AutoFitTextureView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,6 +38,7 @@ import java.util.List;
 public class Cam1AutoFitTextureView extends AutoFitTextureView {
     private Camera mCamera;
     float mDist = 0;
+    private Handler mainHandler;
 
     public Cam1AutoFitTextureView(Context context) {
         super(context);
@@ -63,18 +69,19 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
             } else if (action == MotionEvent.ACTION_MOVE
                     && params.isZoomSupported()) {
                 mCamera.cancelAutoFocus();
-                pinchToZoom(event, params);
+                pinchToZoom(event);
             }
         } else {
             // handle single touch events
             if (action == MotionEvent.ACTION_UP) {
-                touchToFocus(event, params);
+                touchToFocus(event);
             }
         }
         return true;
     }
 
-    private void pinchToZoom(MotionEvent event, Camera.Parameters params) {
+    protected void pinchToZoom(MotionEvent event) {
+        Camera.Parameters params = mCamera.getParameters();
         int maxZoom = params.getMaxZoom();
         int zoom = params.getZoom();
         float newDist = getFingerSpacing(event);
@@ -92,29 +99,53 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
         mCamera.setParameters(params);
     }
 
-    public void touchToFocus(MotionEvent event, Camera.Parameters params) {
-        int pointerId = event.getPointerId(0);
-        int pointerIndex = event.findPointerIndex(pointerId);
-        // Get the pointer's current position
-        float x = event.getX(pointerIndex);
-        float y = event.getY(pointerIndex);
+    protected void touchToFocus(MotionEvent event) {
+        Camera.Parameters params = mCamera.getParameters();
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            List<String> supportedFocusModes = params.getSupportedFocusModes();
+            if (supportedFocusModes != null
+                    && supportedFocusModes
+                    .contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                float x = event.getX();
+                float y = event.getY();
 
-        List<String> supportedFocusModes = params.getSupportedFocusModes();
-        if (supportedFocusModes != null
-                && supportedFocusModes
-                .contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-            mCamera.autoFocus(new Camera.AutoFocusCallback() {
-                @Override
-                public void onAutoFocus(boolean b, Camera camera) {
-                    // currently set to auto-focus on single touch
-                }
-            });
+                Rect touchRect = new Rect((int) (x - 100), (int) (y - 100), (int) (x + 100), (int) (y + 100));
+
+                final Rect targetFocusRect = new Rect(
+                        touchRect.left * 2000 / this.getWidth() - 1000,
+                        touchRect.top * 2000 / this.getHeight() - 1000,
+                        touchRect.right * 2000 / this.getWidth() - 1000,
+                        touchRect.bottom * 2000 / this.getHeight() - 1000);
+
+                final List<Camera.Area> focusList = new ArrayList<Camera.Area>();
+                Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
+                focusList.add(focusArea);
+
+                Camera.Parameters para = mCamera.getParameters();
+                para.setFocusAreas(focusList);
+                para.setMeteringAreas(focusList);
+                mCamera.setParameters(para);
+
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+                        if (success) {
+                            mCamera.cancelAutoFocus();
+                        }
+                    }
+                });
+
+
+                //Update UI
+                Message message = mainHandler.obtainMessage();
+                message.what = Camera1.UPDATE_FOCUS_VIEW;
+                message.obj = touchRect;
+                mainHandler.sendMessage(message);
+            }
         }
     }
 
-    protected void pinchToZoom(MotionEvent event) {
-    }
-
-    protected void touchToFocus(MotionEvent event) {
+    public void setMainHandler(Handler mainHandler) {
+        this.mainHandler = mainHandler;
     }
 }

@@ -26,9 +26,7 @@ import android.util.Log;
 import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.view.OrientationEventListener;
 import android.view.Surface;
-import android.view.TextureView;
 import android.widget.Toast;
 
 import com.dastanapps.camera2.callback.PreviewSessionCallback;
@@ -36,8 +34,8 @@ import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
 import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
 import com.dastanapps.camera2.view.AnimationImageView;
-import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.view.FaceOverlayView;
 
 import java.io.File;
@@ -89,30 +87,9 @@ public class Camera2 {
      * Whether or not the currently configured camera device is fixed-focus.
      */
     private boolean mNoAFRun = false;
-
-    /**
-     * A reference to the opened {@link CameraDevice}.
-     */
     private CameraDevice mCameraDevice;
-
-    /**
-     * A reference to the current {@link CameraCaptureSession} for
-     * preview.
-     */
     private CameraCaptureSession mPreviewSession;
-
-    /**
-     * An {@link OrientationEventListener} used to determine when device rotation has occurred.
-     * This is mainly necessary for when the device is rotated by 180 degrees, in which case
-     * onCreate or onConfigurationChanged is not called as the view dimensions remain the same,
-     * but the orientation of the has changed, and thus the preview rotation must be updated.
-     */
     private Cam2OrientationEventListener mOrientationListener;
-
-    /**
-     * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
-     * {@link TextureView}.
-     */
 
     /**
      * The {@link Size} of camera preview.
