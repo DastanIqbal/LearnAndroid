@@ -69,9 +69,10 @@ public class Camera1 {
         this.mContext = context;
         this.mActivity = (Activity) context;
         this.mTextureView = mTextureView;
+        mCameraSurfaceTextureListener = new Cam1SurfaceTextureListener(this, mTextureView, mActivity);
         this.mTextureView.setSurfaceTextureListener(mCameraSurfaceTextureListener);
         this.mTextureView.setMainHandler(mainHandler);
-        mCameraSurfaceTextureListener = new Cam1SurfaceTextureListener(this, mTextureView, mActivity);
+
         mOrientationEventListener = new Cam1OrientationEventListener(mContext);
         setupManager();
     }
@@ -113,8 +114,8 @@ public class Camera1 {
 //            mTextureView.setAspectRatio(mPreviewSize.height, mPreviewSize.width);
 //        }
 //            Camera1Helper.configureTransform(mActivity, mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
-            mCharacteristics.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
-            mCamera.setParameters(mCharacteristics);
+//            mCharacteristics.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+//            mCamera.setParameters(mCharacteristics);
 
             try {
                 SurfaceTexture texture = mTextureView.getSurfaceTexture();

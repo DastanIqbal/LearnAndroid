@@ -21,6 +21,7 @@ import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -73,7 +74,7 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
             }
         } else {
             // handle single touch events
-            if (action == MotionEvent.ACTION_UP) {
+            if (action == MotionEvent.ACTION_DOWN) {
                 touchToFocus(event);
             }
         }
@@ -101,51 +102,49 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
 
     protected void touchToFocus(MotionEvent event) {
         Camera.Parameters params = mCamera.getParameters();
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            List<String> supportedFocusModes = params.getSupportedFocusModes();
-            if (supportedFocusModes != null
-                    && supportedFocusModes
-                    .contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
-                float x = event.getX();
-                float y = event.getY();
+        List<String> supportedFocusModes = params.getSupportedFocusModes();
+        if (supportedFocusModes != null
+                && supportedFocusModes
+                .contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+            float x = event.getX();
+            float y = event.getY();
 
-                Rect touchRect = new Rect((int) (x - 100), (int) (y - 100), (int) (x + 100), (int) (y + 100));
+            Rect touchRect = new Rect((int) (x - 100), (int) (y - 100), (int) (x + 100), (int) (y + 100));
 
-                final Rect targetFocusRect = new Rect(
-                        touchRect.left * 2000 / this.getWidth() - 1000,
-                        touchRect.top * 2000 / this.getHeight() - 1000,
-                        touchRect.right * 2000 / this.getWidth() - 1000,
-                        touchRect.bottom * 2000 / this.getHeight() - 1000);
+            final Rect targetFocusRect = new Rect(
+                    touchRect.left * 2000 / this.getWidth() - 1000,
+                    touchRect.top * 2000 / this.getHeight() - 1000,
+                    touchRect.right * 2000 / this.getWidth() - 1000,
+                    touchRect.bottom * 2000 / this.getHeight() - 1000);
 
-                final List<Camera.Area> focusList = new ArrayList<Camera.Area>();
-                Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
-                focusList.add(focusArea);
+            final List<Camera.Area> focusList = new ArrayList<Camera.Area>();
+            Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
+            focusList.add(focusArea);
 
-                Camera.Parameters para = mCamera.getParameters();
-                para.setFocusAreas(focusList);
-                para.setMeteringAreas(focusList);
-                mCamera.setParameters(para);
+            Camera.Parameters para = mCamera.getParameters();
+            para.setFocusAreas(focusList);
+            para.setMeteringAreas(focusList);
+            mCamera.setParameters(para);
 
-                mCamera.autoFocus(new Camera.AutoFocusCallback() {
-                    @Override
-                    public void onAutoFocus(boolean success, Camera camera) {
-                        if (success) {
-                            mCamera.cancelAutoFocus();
-                        }
+            mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                @Override
+                public void onAutoFocus(boolean success, Camera camera) {
+                    if (success) {
+                        mCamera.cancelAutoFocus();
                     }
-                });
+                }
+            });
 
 
-                //Update UI
-                Message message = mainHandler.obtainMessage();
-                message.what = Camera1.UPDATE_FOCUS_VIEW;
-                message.obj = touchRect;
-                mainHandler.sendMessage(message);
-            }
+            //Update UI
+            Message message = mainHandler.obtainMessage();
+            message.what = Camera1.UPDATE_FOCUS_VIEW;
+            message.obj = touchRect;
+            mainHandler.sendMessage(message);
         }
     }
 
-    public void setMainHandler(Handler mainHandler) {
+    public void setMainHandler(@NonNull Handler mainHandler) {
         this.mainHandler = mainHandler;
     }
 }

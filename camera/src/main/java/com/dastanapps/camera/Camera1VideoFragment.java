@@ -90,7 +90,7 @@ public class Camera1VideoFragment extends Fragment
         view.findViewById(R.id.scenes).setOnClickListener(this);
         view.findViewById(R.id.whitebalance).setOnClickListener(this);
 
-      //  DrawingView mFocusImage = view.findViewById(R.id.img_focus);
+        DrawingView mFocusImage = view.findViewById(R.id.img_focus);
         seekBar = view.findViewById(R.id.seekbar);
         seekBar.setMax(100);
         seekBar.setOnSeekBarChangeListener(this);
@@ -120,7 +120,7 @@ public class Camera1VideoFragment extends Fragment
 
         camera1 = new Camera1(getActivity(), mTextureView);
 //        camera1.setFaceView(mFaceView);
-     //   camera1.setFocusImage(mFocusImage);
+        camera1.setFocusImage(mFocusImage);
 //        camera1.setAwbView(awbSeekBar);
 
     }
