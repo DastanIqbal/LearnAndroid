@@ -103,21 +103,18 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
     protected void touchToFocus(MotionEvent event) {
         Camera.Parameters params = mCamera.getParameters();
         List<String> supportedFocusModes = params.getSupportedFocusModes();
-        if (supportedFocusModes != null
-                && supportedFocusModes
-                .contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+        if (supportedFocusModes != null && supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
             float x = event.getX();
             float y = event.getY();
 
-            Rect touchRect = new Rect((int) (x - 100), (int) (y - 100), (int) (x + 100), (int) (y + 100));
-
+            final Rect touchRect = new Rect((int) (x - 100), (int) (y - 100), (int) (x + 100), (int) (y + 100));
             final Rect targetFocusRect = new Rect(
                     touchRect.left * 2000 / this.getWidth() - 1000,
                     touchRect.top * 2000 / this.getHeight() - 1000,
                     touchRect.right * 2000 / this.getWidth() - 1000,
                     touchRect.bottom * 2000 / this.getHeight() - 1000);
 
-            final List<Camera.Area> focusList = new ArrayList<Camera.Area>();
+            final List<Camera.Area> focusList = new ArrayList<>();
             Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
             focusList.add(focusArea);
 
@@ -126,21 +123,32 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
             para.setMeteringAreas(focusList);
             mCamera.setParameters(para);
 
+            final MotionEvent touchEvent = event;
+
+            //Focusing
+            Message message = mainHandler.obtainMessage();
+            message.what = Camera1.FOCUSING_FOCUS_VIEW;
+            message.obj = touchEvent;
+            mainHandler.sendMessage(message);
+            mCamera.cancelAutoFocus();
+
             mCamera.autoFocus(new Camera.AutoFocusCallback() {
                 @Override
                 public void onAutoFocus(boolean success, Camera camera) {
                     if (success) {
+                        Message message = mainHandler.obtainMessage();
+                        message.what = Camera1.SUCCESS_FOCUS_VIEW;
+                        message.obj = touchEvent;
+                        mainHandler.sendMessage(message);
                         mCamera.cancelAutoFocus();
+                    } else {
+                        Message message = mainHandler.obtainMessage();
+                        message.what = Camera1.FAILED_FOCUS_VIEW;
+                        message.obj = touchEvent;
+                        mainHandler.sendMessage(message);
                     }
                 }
             });
-
-
-            //Update UI
-            Message message = mainHandler.obtainMessage();
-            message.what = Camera1.UPDATE_FOCUS_VIEW;
-            message.obj = touchRect;
-            mainHandler.sendMessage(message);
         }
     }
 

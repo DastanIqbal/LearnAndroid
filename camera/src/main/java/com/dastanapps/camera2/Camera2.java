@@ -33,7 +33,7 @@ import com.dastanapps.camera2.callback.PreviewSessionCallback;
 import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
 import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
-import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.view.FaceOverlayView;
@@ -178,7 +178,7 @@ public class Camera2 {
     private String cameraId;
     private String mNextVideoAbsolutePath;
     private Cam2AutoFitTextureView mTextureView;
-    private AnimationImageView focusImage;
+    private FocusImageView focusImage;
     private int autoExposure;
     private CamSurfaceTextureListener mSurfaceTextureListener;
     private AwbSeekBar awbView;
@@ -707,7 +707,7 @@ public class Camera2 {
         }
     };
 
-    public void setFocusImage(AnimationImageView focusImage) {
+    public void setFocusImage(FocusImageView focusImage) {
         this.focusImage = focusImage;
     }
 

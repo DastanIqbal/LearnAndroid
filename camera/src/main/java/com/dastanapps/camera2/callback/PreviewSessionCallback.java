@@ -15,7 +15,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 
 /**
@@ -25,7 +25,7 @@ import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 public class PreviewSessionCallback extends CameraCaptureSession.CaptureCallback {
     private final Cam2AutoFitTextureView mTextureView;
     private Integer mAfState = CameraMetadata.CONTROL_AF_STATE_INACTIVE;
-    private AnimationImageView mFocusImage;
+    private FocusImageView mFocusImage;
     private Handler mBackgroundHandler;
     private int mRawX;
     private int mRawY;
@@ -63,7 +63,7 @@ public class PreviewSessionCallback extends CameraCaptureSession.CaptureCallback
     private CaptureRequest.Builder mPreviewBuilder;
     private CameraCaptureSession mPreviewSession;
 
-    public PreviewSessionCallback(AnimationImageView mFocusImage, Handler mMainHandler, Cam2AutoFitTextureView mTextureView) {
+    public PreviewSessionCallback(FocusImageView mFocusImage, Handler mMainHandler, Cam2AutoFitTextureView mTextureView) {
         this.mFocusImage = mFocusImage;
         this.mBackgroundHandler = mMainHandler;
         this.mTextureView = mTextureView;

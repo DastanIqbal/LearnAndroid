@@ -36,7 +36,7 @@ import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
 import com.dastanapps.camera.R;
-import com.dastanapps.camera2.view.AnimationImageView;
+import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.view.FaceOverlayView;
@@ -103,7 +103,7 @@ public class Camera2VideoFragment extends Fragment
         view.findViewById(R.id.effects).setOnClickListener(this);
         view.findViewById(R.id.scenes).setOnClickListener(this);
 
-        AnimationImageView mFocusImage = view.findViewById(R.id.img_focus);
+        FocusImageView mFocusImage = view.findViewById(R.id.img_focus);
         seekBar = view.findViewById(R.id.seekbar);
         seekBar.setMax(100);
         seekBar.setOnSeekBarChangeListener(this);

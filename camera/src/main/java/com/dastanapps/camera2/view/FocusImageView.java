@@ -14,22 +14,19 @@ import com.dastanapps.camera.R;
 /**
  * Created by yuyidong on 14-12-23.
  */
-public class AnimationImageView extends AppCompatImageView {
+public class FocusImageView extends AppCompatImageView {
     private Animation mAnimation;
     private Context mContext;
-    public AnimationImageView(Context context) {
+    public FocusImageView(Context context) {
         this(context, null);
-        mContext = context;
     }
 
-    public AnimationImageView(Context context, AttributeSet attrs) {
+    public FocusImageView(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        mContext = context;
     }
 
-    public AnimationImageView(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FocusImageView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mContext = context;
         mContext = context;
         mAnimation = new ScaleAnimation(2.0f, 1.0f, 2.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
         mAnimation.setDuration(200);

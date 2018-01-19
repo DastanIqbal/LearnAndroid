@@ -31,7 +31,7 @@ import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
 import com.dastanapps.camera.view.Cam1AutoFitTextureView;
-import com.dastanapps.camera.view.DrawingView;
+import com.dastanapps.camera.view.FocusImageView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 
 
@@ -90,7 +90,7 @@ public class Camera1VideoFragment extends Fragment
         view.findViewById(R.id.scenes).setOnClickListener(this);
         view.findViewById(R.id.whitebalance).setOnClickListener(this);
 
-        DrawingView mFocusImage = view.findViewById(R.id.img_focus);
+        FocusImageView mFocusImage = view.findViewById(R.id.img_focus);
         seekBar = view.findViewById(R.id.seekbar);
         seekBar.setMax(100);
         seekBar.setOnSeekBarChangeListener(this);

@@ -2,7 +2,6 @@ package com.dastanapps.camera;
 
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Handler;
@@ -10,12 +9,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 
 import com.dastanapps.camera.listeners.Cam1OrientationEventListener;
 import com.dastanapps.camera.listeners.Cam1SurfaceTextureListener;
 import com.dastanapps.camera.view.Cam1AutoFitTextureView;
-import com.dastanapps.camera.view.DrawingView;
+import com.dastanapps.camera.view.FocusImageView;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +29,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class Camera1 {
-    public final static int UPDATE_FOCUS_VIEW = 0;
+    public final static int FOCUSING_FOCUS_VIEW = 0;
+    public final static int SUCCESS_FOCUS_VIEW = 1;
+    public final static int FAILED_FOCUS_VIEW = 2;
     private Cam1SurfaceTextureListener mCameraSurfaceTextureListener;
     private OrientationEventListener mOrientationEventListener;
     private Cam1AutoFitTextureView mTextureView;
@@ -47,17 +49,27 @@ public class Camera1 {
      * A {@link Semaphore} to prevent the app from exiting before closing the camera.
      */
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
-    private DrawingView focusImage;
+    private FocusImageView focusImage;
     private Handler mainHandler = new Handler(Looper.getMainLooper()) {
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
-                case UPDATE_FOCUS_VIEW:
-                    Rect rect = (Rect) msg.obj;
-                    if (rect != null) {
-                        updateFocus(rect);
+                case FOCUSING_FOCUS_VIEW:
+                    MotionEvent touchEvent = (MotionEvent) msg.obj;
+                    if (touchEvent != null && focusImage != null) {
+                        focusImage.startFocusing(touchEvent);
+                    }
+                    break;
+                case SUCCESS_FOCUS_VIEW:
+                    if (focusImage != null) {
+                        focusImage.focusSuccess();
+                    }
+                    break;
+                case FAILED_FOCUS_VIEW:
+                    if (focusImage != null) {
+                        focusImage.focusFailed();
                     }
                     break;
             }
@@ -212,13 +224,7 @@ public class Camera1 {
         });
     }
 
-    public void setFocusImage(@NonNull DrawingView focusImage) {
+    public void setFocusImage(@NonNull FocusImageView focusImage) {
         this.focusImage = focusImage;
-    }
-
-    void updateFocus(Rect touchRect) {
-        if (focusImage != null) {
-            focusImage.updatePosition(touchRect);
-        }
     }
 }

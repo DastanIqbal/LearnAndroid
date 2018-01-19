@@ -37,7 +37,7 @@
             android:layout_height="match_parent"
             android:visibility="gone" />
 
-        <com.dastanapps.camera2.view.AnimationImageView
+        <com.dastanapps.camera2.view.FocusImageView
             android:id="@+id/img_focus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
