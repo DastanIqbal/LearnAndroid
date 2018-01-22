@@ -33,9 +33,9 @@ import com.dastanapps.camera2.callback.PreviewSessionCallback;
 import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
 import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
-import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
+import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.view.FaceOverlayView;
 
 import java.io.File;
@@ -600,6 +600,7 @@ public class Camera2 {
         mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
         mMediaRecorder.setVideoEncodingBitRate(10000000);
         mMediaRecorder.setVideoFrameRate(30);
+        mMediaRecorder.setMaxDuration(30);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);

@@ -300,6 +300,7 @@ public class Camera1 {
         profile.videoFrameWidth = mVideoSize.width;
         profile.videoFrameRate = 30;
         profile.videoBitRate = 5000000;
+        profile.duration = 30;
 
         mMediaRecorder.setOrientationHint(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation));
         ;

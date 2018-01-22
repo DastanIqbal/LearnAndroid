@@ -114,14 +114,15 @@ public class Cam1AutoFitTextureView extends AutoFitTextureView {
                     touchRect.right * 2000 / this.getWidth() - 1000,
                     touchRect.bottom * 2000 / this.getHeight() - 1000);
 
-            final List<Camera.Area> focusList = new ArrayList<>();
-            Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
-            focusList.add(focusArea);
+            if (params.getMaxNumFocusAreas() > 0) {
+                List<Camera.Area> focusList = new ArrayList<>();
+                Camera.Area focusArea = new Camera.Area(targetFocusRect, 1000);
+                focusList.add(focusArea);
 
-            Camera.Parameters para = mCamera.getParameters();
-            para.setFocusAreas(focusList);
-            para.setMeteringAreas(focusList);
-            mCamera.setParameters(para);
+                params.setFocusAreas(focusList);
+                params.setMeteringAreas(focusList);
+                mCamera.setParameters(params);
+            }
 
             final MotionEvent touchEvent = event;
 
