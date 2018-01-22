@@ -39,7 +39,7 @@ public class Camera1Helper extends CameraHelper {
         return null;
     }
 
-    public static void setDisplayOrientation(Activity activity, int orientation, Camera camera) {
+    public static int setDisplayOrientation(Activity activity, int orientation) {
         final int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         int degrees = 0;
         switch (rotation) {
@@ -58,7 +58,7 @@ public class Camera1Helper extends CameraHelper {
         }
 
         final int displayOrientation = (orientation - degrees + 360) % 360;
-        camera.setDisplayOrientation(displayOrientation);
+        return displayOrientation;
     }
 
     /**

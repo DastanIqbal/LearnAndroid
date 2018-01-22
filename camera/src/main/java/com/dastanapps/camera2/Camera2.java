@@ -457,7 +457,7 @@ public class Camera2 {
         }
         try {
             closePreviewSession();
-            setUpMediaRecorder();
+            prepareMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
@@ -587,7 +587,7 @@ public class Camera2 {
         return true;
     }
 
-    private void setUpMediaRecorder() throws IOException {
+    private void prepareMediaRecorder() throws IOException {
         if (null == activity) {
             return;
         }

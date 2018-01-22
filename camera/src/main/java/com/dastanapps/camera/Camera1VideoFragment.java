@@ -34,8 +34,8 @@ import com.dastanapps.camera.view.Cam1AutoFitTextureView;
 import com.dastanapps.camera.view.FocusImageView;
 
 
-public class Camera1VideoFragment extends Fragment
-        implements View.OnClickListener, ICamera1, FragmentCompat.OnRequestPermissionsResultCallback, SeekBar.OnSeekBarChangeListener {
+public class Camera1VideoFragment extends Fragment implements
+        View.OnClickListener, ICamera1, FragmentCompat.OnRequestPermissionsResultCallback, SeekBar.OnSeekBarChangeListener {
 
     private static final String TAG = "Camera2VideoFragment";
     private static final String FRAGMENT_DIALOG = "dialog";
@@ -108,7 +108,7 @@ public class Camera1VideoFragment extends Fragment
             }
         });
 
-        camera1 = new Camera1(getActivity(), mTextureView);
+        camera1 = new Camera1(getActivity(), mTextureView, this);
 //        camera1.setFaceView(mFaceView);
         camera1.setFocusImage(mFocusImage);
 
@@ -130,7 +130,7 @@ public class Camera1VideoFragment extends Fragment
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.video: {
-                //camera1.toggleRecording();
+                camera1.toggleRecording();
                 break;
             }
             case R.id.btn_flash:
