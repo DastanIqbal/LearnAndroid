@@ -36,9 +36,9 @@ import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
 import com.dastanapps.camera.R;
-import com.dastanapps.camera2.view.FocusImageView;
-import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.AwbSeekBar;
+import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
+import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.view.FaceOverlayView;
 
 
@@ -237,6 +237,14 @@ public class Camera2VideoFragment extends Fragment
         } else {
             FragmentCompat.requestPermissions(this, DialogHelper.VIDEO_PERMISSIONS, DialogHelper.REQUEST_VIDEO_PERMISSIONS);
         }
+    }
+
+    @Override
+    public void orientationChanged(int rotation) {
+        if (rotation == 270 || rotation == 90)
+            mFlashButton.setRotation(90);
+        else if (rotation == 0 || rotation == 180)
+            mFlashButton.setRotation(0);
     }
 
     /**

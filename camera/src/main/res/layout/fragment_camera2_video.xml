@@ -13,7 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -24,7 +24,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true">
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center">
 
         <com.dastanapps.camera2.view.Cam2AutoFitTextureView
             android:id="@+id/texture"
@@ -105,11 +106,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/fl"
-        android:background="#4285f4"
+        android:background="@android:color/transparent"
         android:orientation="vertical"
         android:visibility="visible">
 
@@ -156,4 +153,4 @@
         </LinearLayout>
     </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>

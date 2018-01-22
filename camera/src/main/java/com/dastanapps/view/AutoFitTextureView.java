@@ -75,9 +75,9 @@ public abstract class AutoFitTextureView extends TextureView implements View.OnT
             setMeasuredDimension(width, height);
         } else {
             if (width < height * mRatioWidth / mRatioHeight) {
-                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
-            } else {
                 setMeasuredDimension(height * mRatioWidth / mRatioHeight, height);
+            } else {
+                setMeasuredDimension(width, width * mRatioHeight / mRatioWidth);
             }
         }
     }

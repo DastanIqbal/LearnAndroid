@@ -5,6 +5,8 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.media.CamcorderProfile;
+import android.os.Build;
 import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.Surface;
@@ -154,5 +156,109 @@ public class Camera1Helper extends CameraHelper {
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
         }
         mTextureView.setTransform(matrix);
+    }
+
+    public static CamcorderProfile getBaseRecordingProfile() {
+        CamcorderProfile returnProfile;
+        if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_720P)) {
+            returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P);
+        } else if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_480P)) {
+            returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
+        } else {
+            returnProfile = getDefaultRecordingProfile();
+        }
+        return returnProfile;
+    }
+
+    public static CamcorderProfile getDefaultRecordingProfile() {
+        CamcorderProfile highProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+        if (highProfile != null) {
+            return highProfile;
+        }
+        CamcorderProfile lowProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_LOW);
+        if (lowProfile != null) {
+            return lowProfile;
+        }
+        throw new RuntimeException("No quality level found");
+    }
+
+    /**
+     * Copyright (C) 2013 The Android Open Source Project
+     * <p/>
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     * <p/>
+     * http://www.apache.org/licenses/LICENSE-2.0
+     * <p/>
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+    public static Size getOptimalSize(List<Camera.Size> sizes, int w, int h) {
+        // Use a very small tolerance because we want an exact match.
+        final double ASPECT_TOLERANCE = 0.1;
+        final double targetRatio = (double) w / h;
+        if (sizes == null) return null;
+
+        Camera.Size optimalSize = null;
+
+        // Start with max value and refine as we iterate over available preview sizes. This is the
+        // minimum difference between view and camera height.
+        double minDiff = Double.MAX_VALUE;
+
+        // Target view height
+        final int targetHeight = h;
+
+        // Try to find a preview size that matches aspect ratio and the target view size.
+        // Iterate over all available sizes and pick the largest size that can fit in the view and
+        // still maintain the aspect ratio.
+        for (final Camera.Size size : sizes) {
+            final double ratio = (double) size.width / size.height;
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) {
+                continue;
+            }
+            if (Math.abs(size.height - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.height - targetHeight);
+            }
+        }
+
+        // Cannot find preview size that matches the aspect ratio, ignore the requirement
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (final Camera.Size size : sizes) {
+                if (Math.abs(size.height - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.height - targetHeight);
+                }
+            }
+        }
+        return optimalSize;
+    }
+
+    public static Pair<Integer,Integer> getSupportedRecordingSize(Camera camera, int width, int height) {
+        Camera.Size recordingSize = getOptimalSize(getSupportedVideoSizes(camera, Build.VERSION.SDK_INT), width, height);
+        if (recordingSize == null) {
+            return new Pair(width, height);
+        }
+        return new Pair(recordingSize.width, recordingSize.height);
+    }
+
+    private static List<Size> getSupportedVideoSizes(Camera camera, int currentSdkInt) {
+        Camera.Parameters params = camera.getParameters();
+
+        List<Size> supportedVideoSizes;
+        if (currentSdkInt < Build.VERSION_CODES.HONEYCOMB) {
+            supportedVideoSizes = params.getSupportedPreviewSizes();
+        } else if (params.getSupportedVideoSizes() == null) {
+            supportedVideoSizes = params.getSupportedPreviewSizes();
+        } else {
+            supportedVideoSizes = params.getSupportedVideoSizes();
+        }
+
+        return supportedVideoSizes;
     }
 }

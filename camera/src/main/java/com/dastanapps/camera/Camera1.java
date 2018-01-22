@@ -278,8 +278,27 @@ public class Camera1 {
             return false;
         }
         Surface surface = new Surface(mTextureView.getSurfaceTexture());
-        if (mMediaRecorder == null)
+        if (mMediaRecorder == null) {
             mMediaRecorder = new MediaRecorder();
+            mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+                @Override
+                public void onInfo(MediaRecorder mr, int what, int extra) {
+                    switch (what) {
+                        case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
+                            // NOP
+                            break;
+                        case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
+                            stopRecordingVideo();
+                            break;
+                        case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
+                            stopRecordingVideo();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
 
         // Step 1: Unlock and set camera to MediaRecorder
         mCamera.unlock();
@@ -292,18 +311,20 @@ public class Camera1 {
 
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
         // Customise your profile based on a pre-existing profile
-        CamcorderProfile profile = getBaseRecordingProfile();
+        CamcorderProfile profile = Camera1Helper.getBaseRecordingProfile();
         profile.fileFormat = MediaRecorder.OutputFormat.MPEG_4;
         profile.videoCodec = MediaRecorder.VideoEncoder.H264;
         profile.audioCodec = MediaRecorder.AudioEncoder.AAC;
-        profile.videoFrameHeight = mVideoSize.height;
-        profile.videoFrameWidth = mVideoSize.width;
+        Pair size = Camera1Helper.getSupportedRecordingSize(mCamera, 1280, 720);
+
+        profile.videoFrameHeight = (int) size.first;
+        profile.videoFrameWidth = (int) size.second;
         profile.videoFrameRate = 30;
         profile.videoBitRate = 5000000;
         profile.duration = 30;
 
-        mMediaRecorder.setOrientationHint(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation));
-        ;
+        //mMediaRecorder.setOrientationHint(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation));
+        mMediaRecorder.setOrientationHint(getRotationCorrection());
         mMediaRecorder.setProfile(profile);
 //
         if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
@@ -327,28 +348,17 @@ public class Camera1 {
         return true;
     }
 
-    private CamcorderProfile getBaseRecordingProfile() {
-        CamcorderProfile returnProfile;
-        if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_720P)) {
-            returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P);
-        } else if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_480P)) {
-            returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
-        } else {
-            returnProfile = getDefaultRecordingProfile();
-        }
-        return returnProfile;
-    }
+    public int getRotationCorrection() {
+        int displayRotation = mDisplayOrientation * 90;
+        Camera.CameraInfo mCamInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(cameraId, mCamInfo);
 
-    private CamcorderProfile getDefaultRecordingProfile() {
-        CamcorderProfile highProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
-        if (highProfile != null) {
-            return highProfile;
+        if (cameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            int mirroredRotation = (mCamInfo.orientation + displayRotation) % 360;
+            return (360 - mirroredRotation) % 360;
+        } else {
+            return (mCamInfo.orientation - displayRotation + 360) % 360;
         }
-        CamcorderProfile lowProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_LOW);
-        if (lowProfile != null) {
-            return lowProfile;
-        }
-        throw new RuntimeException("No quality level found");
     }
 
     private String getVideoFilePath(Context context) {

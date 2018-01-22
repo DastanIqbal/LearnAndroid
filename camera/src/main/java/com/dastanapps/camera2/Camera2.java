@@ -19,6 +19,8 @@ import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -183,6 +185,18 @@ public class Camera2 {
     private CamSurfaceTextureListener mSurfaceTextureListener;
     private AwbSeekBar awbView;
     private PreviewSessionCallback mCaptureCallback;
+    private Handler mMainhandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 1:
+                    int rotation = (int) msg.obj;
+                    camera2Listener.orientationChanged(rotation);
+                    break;
+            }
+        }
+    };
 
     public Camera2(Context context, Cam2AutoFitTextureView mTextureView, ICamera2 camera2Listener) {
         this.context = context;
@@ -193,7 +207,7 @@ public class Camera2 {
         // Setup a new OrientationEventListener.  This is used to handle rotation events like a
         // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
         // or otherwise cause the preview TextureView's size to change.
-        mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize);
+        mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize, mMainhandler);
         setupManager();
     }
 
@@ -295,7 +309,27 @@ public class Camera2 {
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
             }
             Camera2Helper.configureTransform(activity, mPreviewSize, mTextureView, width, height);
-            mMediaRecorder = new MediaRecorder();
+            if (mMediaRecorder == null) {
+                mMediaRecorder = new MediaRecorder();
+                mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+                    @Override
+                    public void onInfo(MediaRecorder mr, int what, int extra) {
+                        switch (what) {
+                            case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
+                                // NOP
+                                break;
+                            case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
+                                stopRecordingVideo();
+                                break;
+                            case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
+                                stopRecordingVideo();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+            }
             manager.openCamera(cameraId, mStateCallback, null);
         } catch (CameraAccessException e) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
@@ -600,7 +634,7 @@ public class Camera2 {
         mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
         mMediaRecorder.setVideoEncodingBitRate(10000000);
         mMediaRecorder.setVideoFrameRate(30);
-        mMediaRecorder.setMaxDuration(30);
+        mMediaRecorder.setMaxDuration(30 * 1000);
         mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);

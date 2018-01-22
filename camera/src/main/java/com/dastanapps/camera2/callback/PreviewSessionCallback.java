@@ -1,6 +1,5 @@
 package com.dastanapps.camera2.callback;
 
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraMetadata;
@@ -15,8 +14,8 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import com.dastanapps.camera2.view.FocusImageView;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
+import com.dastanapps.camera2.view.FocusImageView;
 
 /**
  * Created by yuyidong on 14-12-19.
@@ -79,7 +78,7 @@ public class PreviewSessionCallback extends CameraCaptureSession.CaptureCallback
     private void process(CaptureResult result) {
         switch (mState) {
             case STATE_PREVIEW: {
-                Log.d(TAG, "STATE_PREVIEW");
+                // Log.d(TAG, "STATE_PREVIEW");
 //                    Integer mode = result.get(CaptureResult.STATISTICS_FACE_DETECT_MODE);
 //                    faces = result.get(CaptureResult.STATISTICS_FACES);
 //                    if (faces != null && mode != null) {
@@ -217,8 +216,8 @@ public class PreviewSessionCallback extends CameraCaptureSession.CaptureCallback
                         mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
                         try {
                             mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), PreviewSessionCallback.this, mBackgroundHandler);
-                        } catch (CameraAccessException e) {
-                            e.printStackTrace();
+                        } catch (Exception e) {
+                            // e.printStackTrace();
                         }
                     }
                 }, focusSleepTime);

@@ -4,7 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.RequiresApi;
+import android.util.Log;
 import android.util.Size;
 
 import com.dastanapps.camera2.Camera2Helper;
@@ -26,12 +29,14 @@ public class Cam2OrientationEventListener extends android.view.OrientationEventL
     private Cam2AutoFitTextureView mTextureView;
     private Activity mActivity;
     private Size mPreviewSize;
+    private Handler mMainhandler;
 
-    public Cam2OrientationEventListener(Context context, Cam2AutoFitTextureView textureView, Size previewSize) {
+    public Cam2OrientationEventListener(Context context, Cam2AutoFitTextureView textureView, Size previewSize, Handler handler) {
         super(context, SensorManager.SENSOR_DELAY_NORMAL);
         this.mTextureView = textureView;
         this.mActivity = (Activity) context;
         this.mPreviewSize = previewSize;
+        this.mMainhandler = handler;
     }
 
     public void setFaceView(FaceOverlayView mFaceView) {
@@ -56,6 +61,13 @@ public class Cam2OrientationEventListener extends android.view.OrientationEventL
                 if (mFaceView != null)
                     mFaceView.setOrientation(mOrientationCompensation);
             }
+
+            Log.d("!!!!", "rotation!!! mOrientationCompensation:" + orientationCompensation);
+
+            Message msg = new Message();
+            msg.what = 1;
+            msg.obj = orientationCompensation;
+            mMainhandler.sendMessage(msg);
         }
     }
 }
