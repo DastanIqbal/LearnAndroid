@@ -38,6 +38,8 @@ import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.camera2.view.FocusImageView;
+import com.dastanapps.gles.DefaultCameraRenderer;
+import com.dastanapps.gles.TextureViewGLWrapper;
 import com.dastanapps.view.FaceOverlayView;
 
 import java.io.File;
@@ -187,12 +189,16 @@ public class Camera2 {
         this.activity = (Activity) context;
         this.mTextureView = mTextureView;
         this.camera2Listener = camera2Listener;
-        mSurfaceTextureListener = new CamSurfaceTextureListener(this, mTextureView, activity);
+
         // Setup a new OrientationEventListener.  This is used to handle rotation events like a
         // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
         // or otherwise cause the preview TextureView's size to change.
         mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize, mMainhandler);
         setupManager();
+        startBackgroundThread();
+        setUpFilters();
+        mSurfaceTextureListener = new CamSurfaceTextureListener(this, mTextureView, activity);
+        mSurfaceTextureListener.setFilterTextureGL(mTextureViewGLWrapper);
     }
 
     public void setFaceView(FaceOverlayView mFaceView) {
@@ -242,7 +248,7 @@ public class Camera2 {
             camera2Listener.requestVideoPermissions();
             return;
         }
-        if (null == activity || activity.isFinishing()) {
+        if (null == activity || activity.isFinishing() || filterTexture == null) {
             return;
         }
         try {
@@ -337,6 +343,7 @@ public class Camera2 {
                 mMediaRecorder.release();
                 mMediaRecorder = null;
             }
+            filterTexture = null;
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera closing.");
         } finally {
@@ -353,7 +360,7 @@ public class Camera2 {
         }
         try {
             closePreviewSession();
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+            SurfaceTexture texture = filterTexture;//mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             CameraCharacteristics cameraCharacteristics = manager.getCameraCharacteristics(cameraId);
@@ -476,7 +483,7 @@ public class Camera2 {
         try {
             closePreviewSession();
             prepareMediaRecorder();
-            SurfaceTexture texture = mTextureView.getSurfaceTexture();
+            SurfaceTexture texture = filterTexture;//mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
             List<Surface> surfaces = new ArrayList<>();
@@ -770,5 +777,24 @@ public class Camera2 {
 
     public void setAwbView(AwbSeekBar awbView) {
         this.awbView = awbView;
+    }
+
+    private TextureViewGLWrapper mTextureViewGLWrapper;
+    private SurfaceTexture filterTexture;
+
+    private void setUpFilters() {
+        mTextureViewGLWrapper = new TextureViewGLWrapper(new DefaultCameraRenderer(context));
+        mTextureViewGLWrapper.setListener(new TextureViewGLWrapper.EGLSurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureReady(SurfaceTexture surfaceTexture) {
+                filterTexture = surfaceTexture;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+                    }
+                });
+            }
+        }, mBackgroundHandler);
     }
 }

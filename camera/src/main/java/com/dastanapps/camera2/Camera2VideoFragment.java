@@ -135,7 +135,6 @@ public class Camera2VideoFragment extends Fragment
         camera2.setFaceView(mFaceView);
         camera2.setFocusImage(mFocusImage);
         camera2.setAwbView(awbSeekBar);
-
     }
 
     @Override
