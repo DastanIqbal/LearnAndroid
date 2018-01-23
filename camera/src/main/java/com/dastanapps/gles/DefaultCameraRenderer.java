@@ -2,10 +2,8 @@ package com.dastanapps.gles;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.os.Handler;
 
 import com.dastanapps.gles.filters.CameraFilter;
-import com.dastanapps.gles.filters.NegateFilter;
 import com.dastanapps.gles.filters.NoneFilter;
 
 /**
@@ -25,13 +23,7 @@ public class DefaultCameraRenderer implements TextureViewGLWrapper.GLRenderer {
     public void onSurfaceCreated(SurfaceTexture eglSurfaceTexture, int surfaceWidth, int surfaceHeight) {
         this.surfaceWidth = surfaceWidth;
         this.surfaceHeight = surfaceHeight;
-        cameraFilter = new NegateFilter();
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                cameraFilter = new NoneFilter();
-            }
-        }, 5000);
+        cameraFilter = new NoneFilter();
     }
 
     @Override
@@ -50,5 +42,10 @@ public class DefaultCameraRenderer implements TextureViewGLWrapper.GLRenderer {
     public void onSurfaceDestroyed(SurfaceTexture eglSurfaceTexture) {
         //We have nothing to dispose
         cameraFilter.release();
+    }
+
+    @Override
+    public void changeFilter(final CameraFilter filter) {
+        cameraFilter = filter;
     }
 }

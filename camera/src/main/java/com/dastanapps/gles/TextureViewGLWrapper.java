@@ -6,6 +6,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.TextureView;
 
+import com.dastanapps.gles.filters.BlackNWhiteFilter;
+import com.dastanapps.gles.filters.CameraFilter;
+import com.dastanapps.gles.filters.NegateFilter;
+import com.dastanapps.gles.filters.NoneFilter;
+
 import java.util.concurrent.Semaphore;
 
 /**
@@ -28,9 +33,9 @@ public class TextureViewGLWrapper implements SurfaceTexture.OnFrameAvailableList
     private int surfaceWidth, surfaceHeight;
 
     //Drawing
-    private GLRenderer renderer;
+    private DefaultCameraRenderer renderer;
 
-    public TextureViewGLWrapper(GLRenderer renderer) {
+    public TextureViewGLWrapper(DefaultCameraRenderer renderer) {
         this.renderer = renderer;
     }
 
@@ -118,12 +123,32 @@ public class TextureViewGLWrapper implements SurfaceTexture.OnFrameAvailableList
         eglHelper.destroySurface();
     }
 
+
+    int i = 0;
+
     public void changeFragmentShader() {
-        renderer.onSurfaceDestroyed(eglSurfaceTexture);
-        eglHelper.bind();
-        this.renderThread = new RenderThread();
-        this.renderThread.start();
-        eglHelper.unbind();
+        this.renderThread.blockingHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                switch (i) {
+                    case 0:
+                        renderer.changeFilter(new BlackNWhiteFilter());
+                        break;
+                    case 1:
+                        renderer.changeFilter(new NegateFilter());
+                        break;
+                    case 2:
+                        renderer.changeFilter(new NoneFilter());
+                        break;
+
+                }
+                if (i >= 2) {
+                    i = 0;
+                } else {
+                    i++;
+                }
+            }
+        });
     }
 
     private class RenderThread extends Thread {
@@ -189,5 +214,7 @@ public class TextureViewGLWrapper implements SurfaceTexture.OnFrameAvailableList
          * is active to bind the camera output to the <code>samplerExternalOES</code> in the shader.
          */
         void onFrameAvailable(SurfaceTexture eglSurfaceTexture);
+
+        void changeFilter(CameraFilter filter);
     }
 }
