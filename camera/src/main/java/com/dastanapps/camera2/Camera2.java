@@ -797,4 +797,10 @@ public class Camera2 {
             }
         }, mBackgroundHandler);
     }
+
+    public void changeFilter() {
+        if (mTextureViewGLWrapper != null) {
+           mTextureViewGLWrapper.changeFragmentShader();
+        }
+    }
 }

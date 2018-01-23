@@ -113,9 +113,17 @@ public class TextureViewGLWrapper implements SurfaceTexture.OnFrameAvailableList
         eglHelper.swapBuffers();
     }
 
-    private void dispose() {
+    public void dispose() {
         renderer.onSurfaceDestroyed(eglSurfaceTexture);
         eglHelper.destroySurface();
+    }
+
+    public void changeFragmentShader() {
+        renderer.onSurfaceDestroyed(eglSurfaceTexture);
+        eglHelper.bind();
+        this.renderThread = new RenderThread();
+        this.renderThread.start();
+        eglHelper.unbind();
     }
 
     private class RenderThread extends Thread {

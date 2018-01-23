@@ -135,6 +135,13 @@ public class Camera2VideoFragment extends Fragment
         camera2.setFaceView(mFaceView);
         camera2.setFocusImage(mFocusImage);
         camera2.setAwbView(awbSeekBar);
+
+        view.findViewById(R.id.customFilter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                camera2.changeFilter();
+            }
+        });
     }
 
     @Override

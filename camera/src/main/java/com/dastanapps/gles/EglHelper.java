@@ -143,4 +143,12 @@ class EglHelper {
             throw new RuntimeException(msg + ": EGL error: 0x" + Integer.toHexString(error));
         }
     }
+
+    void bind() {
+        makeCurrent();
+    }
+
+    void unbind() {
+        mEgl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+    }
 }
