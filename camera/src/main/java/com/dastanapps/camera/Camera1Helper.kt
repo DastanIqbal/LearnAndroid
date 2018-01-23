@@ -50,8 +50,8 @@ class Camera1Helper : CameraHelper() {
             return null
         }
 
-        fun setDisplayOrientation(activity: Activity, orientation: Int): Int {
-            val rotation = activity.windowManager.defaultDisplay.rotation
+        fun setDisplayOrientation(activity: Activity?, orientation: Int): Int {
+            val rotation = activity?.windowManager?.defaultDisplay?.rotation
             var degrees = 0
             when (rotation) {
                 Surface.ROTATION_0 -> degrees = 0

@@ -27,10 +27,10 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.util.Range;
 import android.util.Size;
-import android.util.SparseIntArray;
 import android.view.Surface;
 import android.widget.Toast;
 
+import com.dastanapps.CameraHelper;
 import com.dastanapps.camera2.callback.PreviewSessionCallback;
 import com.dastanapps.camera2.listeners.AwbSeekBarChangeListener;
 import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
@@ -62,23 +62,6 @@ public class Camera2 {
     private static final String TAG = "Camera2";
     public static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     public static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
-    public static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
-    public static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
-
-    static {
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 270);
-        DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180);
-    }
-
-    static {
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90);
-        INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
-    }
-
     public static int FLASH_OFF = 0;
     public static int FLASH_ON = 1;
     public static int FLASH_AUTO = 2;
@@ -642,13 +625,13 @@ public class Camera2 {
         int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
         switch (mSensorOrientation) {
             case Camera2.SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                mMediaRecorder.setOrientationHint(Camera2.DEFAULT_ORIENTATIONS.get(rotation));
+                mMediaRecorder.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(rotation));
                 break;
             case Camera2.SENSOR_ORIENTATION_INVERSE_DEGREES:
-                mMediaRecorder.setOrientationHint(Camera2.INVERSE_ORIENTATIONS.get(rotation));
+                mMediaRecorder.setOrientationHint(CameraHelper.INVERSE_ORIENTATIONS.get(rotation));
                 break;
         }
-        mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(screenCurrentRotation));
+        mMediaRecorder.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation));
         mMediaRecorder.prepare();
     }
 

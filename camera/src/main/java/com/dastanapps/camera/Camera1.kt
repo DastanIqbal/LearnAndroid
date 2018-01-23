@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.OrientationEventListener
 import android.view.Surface
 import android.widget.Toast
+import com.dastanapps.CameraHelper
 import com.dastanapps.camera.listeners.Cam1OrientationEventListener
 import com.dastanapps.camera.listeners.Cam1SurfaceTextureListener
 import com.dastanapps.camera.view.Cam1AutoFitTextureView
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit
  * 18/01/2018 6:32
  */
 
-open class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoFitTextureView, private val mCamera1Listener: ICamera1) {
+class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoFitTextureView, private val mCamera1Listener: ICamera1) {
     private val mCameraSurfaceTextureListener: Cam1SurfaceTextureListener
     private val mOrientationEventListener: OrientationEventListener
     private val mActivity: Activity?
@@ -54,6 +55,7 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
      */
     private val mCameraOpenCloseLock = Semaphore(1)
     private var focusImage: FocusImageView? = null
+    private var screenCurrentRotation: Int = 0
     private val mainHandler = object : Handler(Looper.getMainLooper()) {
 
         override fun handleMessage(msg: Message) {
@@ -70,6 +72,10 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
                 }
                 FAILED_FOCUS_VIEW -> if (focusImage != null) {
                     focusImage!!.focusFailed()
+                }
+                3 -> {
+                    screenCurrentRotation = msg.obj as Int
+                    mCamera1Listener.orientationChanged(screenCurrentRotation)
                 }
             }
         }
@@ -99,26 +105,13 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
     }
 
 
-    private var screenCurrentRotation: Int = 0
-    private val mMainHandler: Handler = object : Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message?) {
-            super.handleMessage(msg)
-            when (msg?.what) {
-                1 -> {
-                    screenCurrentRotation = msg.obj as Int
-                    mCamera1Listener.orientationChanged(screenCurrentRotation)
-                }
-            }
-        }
-    }
-
     init {
         this.mActivity = mContext as Activity
         mCameraSurfaceTextureListener = Cam1SurfaceTextureListener(this, mTextureView, mActivity)
         this.mTextureView.surfaceTextureListener = mCameraSurfaceTextureListener
         this.mTextureView.setMainHandler(mainHandler)
 
-        mOrientationEventListener = Cam1OrientationEventListener(mContext, mMainHandler)
+        mOrientationEventListener = Cam1OrientationEventListener(mContext, mainHandler)
         setupManager()
     }
 
@@ -134,7 +127,7 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
         }
     }
 
-    protected fun onPause() {
+    fun onPause() {
         releaseMediaRecorder()
         closeCamera()
         mOrientationEventListener.disable()
@@ -166,7 +159,7 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
             try {
                 val texture = mTextureView.surfaceTexture
                 texture?.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-                mCamera!!.setDisplayOrientation(Camera1Helper.setDisplayOrientation(mActivity!!, mDisplayOrientation))
+                mCamera!!.setDisplayOrientation(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation))
                 mCamera!!.setPreviewTexture(mTextureView.surfaceTexture)
                 mCamera!!.startPreview()
             } catch (ioe: IOException) {
@@ -260,14 +253,14 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
     }
 
     fun toggleRecording() {
-        if (mIsRecordingVideo) {
-            stopRecordingVideo()
-            releaseMediaRecorder()
-            mCamera!!.lock()
-        } else if (prepareMediaRecorder()) {
-            startRecordingVideo()
-        } else {
-            releaseMediaRecorder()
+        when {
+            mIsRecordingVideo -> {
+                stopRecordingVideo()
+                releaseMediaRecorder()
+                mCamera!!.lock()
+            }
+            prepareMediaRecorder() -> startRecordingVideo()
+            else -> releaseMediaRecorder()
         }
     }
 
@@ -284,18 +277,16 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
             return false
         }
         val surface = Surface(mTextureView.surfaceTexture)
-        if (mMediaRecorder == null) {
-            mMediaRecorder = MediaRecorder()
-            mMediaRecorder!!.setOnInfoListener { mr, what, extra ->
-                when (what) {
-                    MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN -> {
-                    }
-                    MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED -> stopRecordingVideo()
-                    MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED -> stopRecordingVideo()
-                    else -> {
-                    }
-                }// NOP
-            }
+        mMediaRecorder = MediaRecorder()
+        mMediaRecorder!!.setOnInfoListener { mr, what, extra ->
+            when (what) {
+                MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN -> {
+                }
+                MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED -> stopRecordingVideo()
+                MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED -> stopRecordingVideo()
+                else -> {
+                }
+            }// NOP
         }
 
         // Step 1: Unlock and set camera to MediaRecorder
@@ -313,16 +304,14 @@ open class Camera1(private val mContext: Context, private val mTextureView: Cam1
         profile.fileFormat = MediaRecorder.OutputFormat.MPEG_4
         profile.videoCodec = MediaRecorder.VideoEncoder.H264
         profile.audioCodec = MediaRecorder.AudioEncoder.AAC
-        val size = Camera1Helper.getSupportedRecordingSize(mCamera!!, 1280, 720)
 
-        profile.videoFrameHeight = size.first as Int
-        profile.videoFrameWidth = size.second as Int
+        profile.videoFrameHeight = mPreviewSize!!.height
+        profile.videoFrameWidth = mPreviewSize!!.width
         profile.videoFrameRate = 30
         profile.videoBitRate = 5000000
         profile.duration = 30
 
-        //mMediaRecorder.setOrientationHint(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation));
-        mMediaRecorder!!.setOrientationHint(rotationCorrection)
+        mMediaRecorder!!.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation))
         mMediaRecorder!!.setProfile(profile)
         //
         if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath!!.isEmpty()) {

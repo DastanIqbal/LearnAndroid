@@ -33,6 +33,6 @@ class Cam1OrientationEventListener(val context: Context, val handler: Handler) :
         }
 
         Log.d("!!!!", "rotation!!! lastOrientation: $orientation mOrientationCompensation: $mOrientationCompensation")
-        CommonUtils.sendMessageToHandler(handler, 1, mOrientationCompensation)
+        CommonUtils.sendMessageToHandler(handler, 3, mOrientationCompensation)
     }
 }
