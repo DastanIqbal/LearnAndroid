@@ -185,14 +185,15 @@ public class Camera2 {
     private CamSurfaceTextureListener mSurfaceTextureListener;
     private AwbSeekBar awbView;
     private PreviewSessionCallback mCaptureCallback;
+    private int screenCurrentRotation;
     private Handler mMainhandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 1:
-                    int rotation = (int) msg.obj;
-                    camera2Listener.orientationChanged(rotation);
+                    screenCurrentRotation = (int) msg.obj;
+                    camera2Listener.orientationChanged(screenCurrentRotation);
                     break;
             }
         }
@@ -647,6 +648,7 @@ public class Camera2 {
                 mMediaRecorder.setOrientationHint(Camera2.INVERSE_ORIENTATIONS.get(rotation));
                 break;
         }
+        mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(screenCurrentRotation));
         mMediaRecorder.prepare();
     }
 
