@@ -5,11 +5,11 @@ import android.content.Context;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.util.Size;
 
+import com.dastanapps.CommonUtils;
 import com.dastanapps.camera2.Camera2Helper;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.view.FaceOverlayView;
@@ -63,11 +63,7 @@ public class Cam2OrientationEventListener extends android.view.OrientationEventL
             }
 
             Log.d("!!!!", "rotation!!! mOrientationCompensation:" + orientationCompensation);
-
-            Message msg = new Message();
-            msg.what = 1;
-            msg.obj = orientationCompensation;
-            mMainhandler.sendMessage(msg);
+            CommonUtils.INSTANCE.sendMessageToHandler(mMainhandler, 1, mOrientationCompensation);
         }
     }
 }

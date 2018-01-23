@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * 18/01/2018 6:32
  */
 
-class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoFitTextureView, private val mCamera1Listener: ICamera1) {
+open class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoFitTextureView, private val mCamera1Listener: ICamera1) {
     private val mCameraSurfaceTextureListener: Cam1SurfaceTextureListener
     private val mOrientationEventListener: OrientationEventListener
     private val mActivity: Activity?
@@ -99,13 +99,26 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
     }
 
 
+    private var screenCurrentRotation: Int = 0
+    private val mMainHandler: Handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message?) {
+            super.handleMessage(msg)
+            when (msg?.what) {
+                1 -> {
+                    screenCurrentRotation = msg.obj as Int
+                    mCamera1Listener.orientationChanged(screenCurrentRotation)
+                }
+            }
+        }
+    }
+
     init {
         this.mActivity = mContext as Activity
         mCameraSurfaceTextureListener = Cam1SurfaceTextureListener(this, mTextureView, mActivity)
         this.mTextureView.surfaceTextureListener = mCameraSurfaceTextureListener
         this.mTextureView.setMainHandler(mainHandler)
 
-        mOrientationEventListener = Cam1OrientationEventListener(mContext)
+        mOrientationEventListener = Cam1OrientationEventListener(mContext, mMainHandler)
         setupManager()
     }
 
@@ -115,7 +128,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         mDisplayOrientation = backCamera.first.orientation
     }
 
-    protected fun onResume() {
+    fun onResume() {
         if (mOrientationEventListener.canDetectOrientation()) {
             mOrientationEventListener.enable()
         }

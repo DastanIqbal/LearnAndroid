@@ -10,6 +10,4 @@ import com.dastanapps.ICamera;
 
 public interface ICamera2 extends ICamera {
     void requestVideoPermissions();
-
-    void orientationChanged(int rotation);
 }
