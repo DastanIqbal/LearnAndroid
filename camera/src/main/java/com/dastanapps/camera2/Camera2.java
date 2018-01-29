@@ -15,6 +15,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.hardware.camera2.params.TonemapCurve;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Handler;
@@ -82,6 +83,11 @@ public class Camera2 {
      * The {@link Size} of camera preview.
      */
     private Size mPreviewSize;
+    private float[][] channels;
+
+    public Size getmVideoSize() {
+        return mVideoSize;
+    }
 
     /**
      * The {@link Size} of video recording.
@@ -691,6 +697,7 @@ public class Camera2 {
                     mPreviewSession = cameraCaptureSession;
                     newSession();
                     updatePreview();
+                    mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 12);
                     if (mIsRecordingVideo) {
                         mPreviewBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_AUTO);
                         mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
@@ -739,15 +746,65 @@ public class Camera2 {
     }
 
     public void setAutoExposure(int autoExposure) {
+        Log.d(TAG, mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP) + " Auto Exposure Steps");
+        Log.d(TAG, " Auto Exposure Steps: " + autoExposure);
         Range<Integer> range1 = mCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
         int maxmax = range1.getUpper();
         int minmin = range1.getLower();
         int all = (-minmin) + maxmax;
         int time = 100 / all;
         int ae = ((autoExposure / time) - maxmax) > maxmax ? maxmax : ((autoExposure / time) - maxmax) < minmin ? minmin : ((autoExposure / time) - maxmax);
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
+        try {
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
         mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, ae);
         try {
-            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), mCaptureCallback, mBackgroundHandler);
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setContrast(int value) {
+        //set def channels (used for contrast)
+        TonemapCurve tc = mPreviewBuilder.get(CaptureRequest.TONEMAP_CURVE);
+        if (tc != null) {
+            channels = new float[3][];
+            for (int chanel = TonemapCurve.CHANNEL_RED; chanel <= TonemapCurve.CHANNEL_BLUE; chanel++) {
+                float[] array = new float[tc.getPointCount(chanel) * 2];
+                tc.copyColorCurve(chanel, array, 0);
+                channels[chanel] = array;
+            }
+        }
+        final int minContrast = 0;
+        final int maxContrast = 1;
+
+        if (channels == null || value > 100 || value < 0) {
+            return;
+        }
+
+        float contrast = minContrast + (maxContrast - minContrast) * (value / 100f);
+
+        float[][] newValues = new float[3][];
+        for (int chanel = TonemapCurve.CHANNEL_RED; chanel <= TonemapCurve.CHANNEL_BLUE; chanel++) {
+            float[] array = new float[channels[chanel].length];
+            System.arraycopy(channels[chanel], 0, array, 0, array.length);
+            for (int i = 0; i < array.length; i++) {
+                array[i] *= contrast;
+            }
+            newValues[chanel] = array;
+        }
+        tc = new TonemapCurve(newValues[TonemapCurve.CHANNEL_RED], newValues[TonemapCurve.CHANNEL_GREEN], newValues[TonemapCurve.CHANNEL_BLUE]);
+        mPreviewBuilder.set(CaptureRequest.TONEMAP_MODE, CaptureRequest.TONEMAP_MODE_CONTRAST_CURVE);
+        mPreviewBuilder.set(CaptureRequest.TONEMAP_CURVE, tc);
+        try {
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -762,16 +819,21 @@ public class Camera2 {
         Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_FULL) + " FULL Capablities");
         Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED) + " Limited Capablities");
         Log.d(TAG, Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) + " Legacy Capablities");
-        if (Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_FULL)) {
-            mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
-            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, INFO_SUPPORTED_HARDWARE_LEVEL_FULL);
-            Range<Integer> range = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
-            if (range != null) {
-                int max1 = range.getUpper();//10000
-                int min1 = range.getLower();//100
-                int iso = ((isoValue * (max1 - min1)) / 100 + min1);
-                mPreviewBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);
-            }
+        // if (Camera2Helper.isHardwareLevelSupported(mCharacteristics, INFO_SUPPORTED_HARDWARE_LEVEL_FULL)) {
+        mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+        mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY);
+        Range<Integer> range = mCharacteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+        if (range != null) {
+            int max1 = range.getUpper();//10000
+            int min1 = range.getLower();//100
+            int iso = ((isoValue * (max1 - min1)) / 100 + min1);
+            mPreviewBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);
+        }
+        //}
+        try {
+            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
+        } catch (CameraAccessException e) {
+            e.printStackTrace();
         }
     }
 
@@ -800,7 +862,9 @@ public class Camera2 {
 
     public void changeFilter() {
         if (mTextureViewGLWrapper != null) {
-           mTextureViewGLWrapper.changeFragmentShader();
+            mTextureViewGLWrapper.changeFragmentShader();
         }
     }
+
+
 }

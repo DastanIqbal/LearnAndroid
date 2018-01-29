@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.dastanapps.camera.Camera1VideoFragment
 import com.dastanapps.camera.R
+import com.dastanapps.camera2.Camera2Helper
 import com.dastanapps.camera2.Camera2VideoFragment
 
 class MainActivity : AppCompatActivity() {
@@ -14,7 +15,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         if (savedInstanceState == null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                fragmentManager.beginTransaction().replace(R.id.container, Camera2VideoFragment.newInstance()).commit()
+                if (Camera2Helper.allowCamera2Support(this, 0)) {
+                    fragmentManager.beginTransaction().replace(R.id.container, Camera2VideoFragment.newInstance()).commit()
+                } else {
+                    fragmentManager.beginTransaction().replace(R.id.container, Camera1VideoFragment.newInstance()).commit()
+                }
             } else {
                 fragmentManager.beginTransaction().replace(R.id.container, Camera1VideoFragment.newInstance()).commit()
             }

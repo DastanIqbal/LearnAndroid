@@ -86,12 +86,15 @@
                     app:buttonTint="@color/colorAccent" />
             </RadioGroup>
 
-            <SeekBar
+            <android.support.v7.widget.AppCompatSeekBar
                 android:id="@+id/seekbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="8dp"
-                android:visibility="visible" />
+                android:visibility="visible"
+                android:thumbTint="#fff"
+                android:progressTint="#fff"
+                android:progressBackgroundTint="#fff" />
 
             <com.dastanapps.camera2.view.AwbSeekBar
                 android:id="@+id/awbSeekbar"

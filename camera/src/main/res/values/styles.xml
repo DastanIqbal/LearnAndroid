@@ -12,4 +12,9 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+
+    <style name="SeekbarTheme" parent="Widget.AppCompat.SeekBar">
+        <item name="colorAccent">#ffffff</item>
+        <item name="colorPrimary">#fff</item>
+    </style>
 </resources>

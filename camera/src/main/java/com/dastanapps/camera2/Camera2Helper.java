@@ -1,9 +1,11 @@
 package com.dastanapps.camera2;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Build;
@@ -456,13 +458,47 @@ public class Camera2Helper {
         }
     }
 
-    // Returns true if the device supports the required hardware level, or better.
-    public static boolean isHardwareLevelSupported(CameraCharacteristics c, int requiredLevel) {
+    /* Returns true if the device supports the required hardware level, or better.
+     * From http://msdx.github.io/androiddoc/docs//reference/android/hardware/camera2/CameraCharacteristics.html#INFO_SUPPORTED_HARDWARE_LEVEL
+	 * From Android N, higher levels than "FULL" are possible, that will have higher integer values.
+	 * Also see https://sourceforge.net/p/opencamera/tickets/141/ .
+	 */
+    static boolean isHardwareLevelSupported(CameraCharacteristics c, int requiredLevel) {
         int deviceLevel = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL);
+        if (deviceLevel == CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY)
+            Log.d(TAG, "Camera has LEGACY Camera2 support");
+        else if (deviceLevel == CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED)
+            Log.d(TAG, "Camera has LIMITED Camera2 support");
+        else if (deviceLevel == CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_FULL)
+            Log.d(TAG, "Camera has FULL Camera2 support");
+        else
+            Log.d(TAG, "Camera has unknown Camera2 support: " + deviceLevel);
         if (deviceLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
             return requiredLevel == deviceLevel;
         }
         // deviceLevel is not LEGACY, can use numerical sort
         return requiredLevel <= deviceLevel;
+    }
+
+    /* Rather than allowing Camera2 API on all Android 5+ devices, we restrict it to cases where all cameras have at least LIMITED support.
+     * (E.g., Nexus 6 has FULL support on back camera, LIMITED support on front camera.)
+     * For now, devices with only LEGACY support should still use the old API.
+     */
+    public static boolean allowCamera2Support(Context context, int cameraId) {
+        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+        try {
+            String cameraIdS = manager.getCameraIdList()[cameraId];
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraIdS);
+            //return isHardwareLevelSupported(characteristics, CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY);
+            return isHardwareLevelSupported(characteristics, CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED);
+        } catch (Throwable e) {
+            // in theory we should only get CameraAccessException, but Google Play shows we can get a variety of exceptions
+            // from some devices, e.g., AssertionError, IllegalArgumentException, RuntimeException, so just catch everything!
+            // We don't want users to experience a crash just because of buggy camera2 drivers - instead the user can switch
+            // back to old camera API.
+            Log.e(TAG, "exception trying to get camera characteristics");
+            e.printStackTrace();
+        }
+        return false;
     }
 }
