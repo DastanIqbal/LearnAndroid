@@ -754,14 +754,6 @@ public class Camera2 {
         int all = (-minmin) + maxmax;
         int time = 100 / all;
         int ae = ((autoExposure / time) - maxmax) > maxmax ? maxmax : ((autoExposure / time) - maxmax) < minmin ? minmin : ((autoExposure / time) - maxmax);
-        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-        mPreviewBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
-        try {
-            mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-
         mPreviewBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON);
         mPreviewBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, ae);
         try {

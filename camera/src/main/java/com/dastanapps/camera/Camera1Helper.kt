@@ -72,7 +72,7 @@ class Camera1Helper : CameraHelper() {
          */
         fun chooseVideoSize(choices: List<Camera.Size>): Camera.Size {
             for (size in choices) {
-                if (size.width == size.height * 4 / 3 && size.width <= 1080) {
+                if (size.width == size.height * 16 / 9 && size.width <= 1080) {
                     return size
                 }
             }

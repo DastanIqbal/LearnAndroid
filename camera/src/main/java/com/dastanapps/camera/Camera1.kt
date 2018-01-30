@@ -294,7 +294,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         mMediaRecorder!!.setCamera(mCamera)
 
         // Step 2: Set sources
-        mMediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.MIC)
+        mMediaRecorder!!.setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
         mMediaRecorder!!.setVideoSource(MediaRecorder.VideoSource.CAMERA)
 
 
@@ -305,14 +305,14 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         profile.videoCodec = MediaRecorder.VideoEncoder.H264
         profile.audioCodec = MediaRecorder.AudioEncoder.AAC
 
-        profile.videoFrameHeight = mPreviewSize!!.height
-        profile.videoFrameWidth = mPreviewSize!!.width
+        profile.videoFrameHeight = mVideoSize!!.height
+        profile.videoFrameWidth = mVideoSize!!.width
         profile.videoFrameRate = 30
         profile.videoBitRate = 5000000
         profile.duration = 30
 
         mMediaRecorder!!.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation))
-        mMediaRecorder!!.setProfile(profile)
+        mMediaRecorder!!.setProfile(profile);//CamcorderProfile.get(CamcorderProfile.QUALITY_720P));//profile)
         //
         if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath!!.isEmpty()) {
             mNextVideoAbsolutePath = getVideoFilePath(mActivity)
