@@ -15,6 +15,25 @@ import com.dastanapps.view.AutoFitTextureView
 import java.util.*
 
 /**
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
  * Created by dastaniqbal on 19/01/2018.
  * dastanIqbal@marvelmedia.com
  * 19/01/2018 11:15
@@ -50,7 +69,7 @@ class Camera1Helper : CameraHelper() {
             return null
         }
 
-        fun setDisplayOrientation(activity: Activity?, orientation: Int): Int {
+        fun setDisplayOrientation(cameraId: Int, activity: Activity?, orientation: Int): Int {
             val rotation = activity?.windowManager?.defaultDisplay?.rotation
             var degrees = 0
             when (rotation) {
@@ -60,7 +79,50 @@ class Camera1Helper : CameraHelper() {
                 Surface.ROTATION_270 -> degrees = 270
             }
 
-            return (orientation - degrees + 360) % 360
+            if (cameraId == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                val displayRotation = (orientation + degrees) % 360
+                return (360 - displayRotation) % 360
+            } else {
+                return (orientation - degrees + 360) % 360
+            }
+        }
+
+        fun getSizeWithClosestRatio(sizes: List<Size>?, width: Int, height: Int): Size? {
+
+            if (sizes == null) return null
+
+            var MIN_TOLERANCE = 100.0
+            val targetRatio = height.toDouble() / width
+            var optimalSize: Size? = null
+            var minDiff = java.lang.Double.MAX_VALUE
+
+            for (size in sizes) {
+                if (size.width == width && size.height == height)
+                    return size
+
+                val ratio = size.height.toDouble() / size.width
+
+                if (Math.abs(ratio - targetRatio) < MIN_TOLERANCE)
+                    MIN_TOLERANCE = ratio
+                else
+                    continue
+
+                if (Math.abs(size.height - height) < minDiff) {
+                    optimalSize = size
+                    minDiff = Math.abs(size.height.toDouble() - height)
+                }
+            }
+
+            if (optimalSize == null) {
+                minDiff = java.lang.Double.MAX_VALUE
+                for (size in sizes) {
+                    if (Math.abs(size.height - height) < minDiff) {
+                        optimalSize = size
+                        minDiff = Math.abs(size.height.toDouble() - height)
+                    }
+                }
+            }
+            return optimalSize
         }
 
         /**
@@ -112,6 +174,27 @@ class Camera1Helper : CameraHelper() {
             }
         }
 
+        fun chooseOptimalSize(choices: List<Camera.Size>, width: Int, height: Int, aspectRatioWidth: Int, aspectRatioHeight: Int): Camera.Size {
+            // Collect the supported resolutions that are at least as big as the preview Surface
+            val bigEnough = ArrayList<Camera.Size>()
+            val w = aspectRatioWidth
+            val h = aspectRatioHeight
+            for (option in choices) {
+                if (option.height == option.width * h / w &&
+                        option.width >= width && option.height >= height) {
+                    bigEnough.add(option)
+                }
+            }
+
+            // Pick the smallest of those, assuming we found any
+            if (bigEnough.size > 0) {
+                return Collections.min(bigEnough, Camera1Helper.CompareSizesByArea())
+            } else {
+                Log.e(CameraHelper.TAG, "Couldn't find any suitable preview size")
+                return choices[0]
+            }
+        }
+
         /**
          * Configures the necessary [Matrix] transformation to `mTextureView`.
          * This method should not to be called until the camera preview size is determined in
@@ -144,50 +227,27 @@ class Camera1Helper : CameraHelper() {
             mTextureView.setTransform(matrix)
         }
 
-        val baseRecordingProfile: CamcorderProfile
-            get() {
-                val returnProfile: CamcorderProfile
-                if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_720P)) {
-                    returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P)
-                } else if (CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_480P)) {
-                    returnProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P)
-                } else {
-                    returnProfile = defaultRecordingProfile
-                }
-                return returnProfile
+        fun baseRecordingProfile(cameraId: Int): CamcorderProfile {
+            return when {
+                CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_1080P) -> CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_1080P)
+                CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_720P) -> CamcorderProfile.get(CamcorderProfile.QUALITY_720P)
+                CamcorderProfile.hasProfile(CamcorderProfile.QUALITY_480P) -> CamcorderProfile.get(CamcorderProfile.QUALITY_480P)
+                else -> defaultRecordingProfile(cameraId)
             }
+        }
 
-        val defaultRecordingProfile: CamcorderProfile
-            get() {
-                val highProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH)
-                if (highProfile != null) {
-                    return highProfile
-                }
-                val lowProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_LOW)
-                if (lowProfile != null) {
-                    return lowProfile
-                }
-                throw RuntimeException("No quality level found")
+        private fun defaultRecordingProfile(cameraId: Int): CamcorderProfile {
+            val highProfile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_HIGH)
+            if (highProfile != null) {
+                return highProfile
             }
+            val lowProfile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_LOW)
+            if (lowProfile != null) {
+                return lowProfile
+            }
+            throw RuntimeException("No quality level found")
+        }
 
-        /**
-         * Copyright (C) 2013 The Android Open Source Project
-         *
-         *
-         * Licensed under the Apache License, Version 2.0 (the "License");
-         * you may not use this file except in compliance with the License.
-         * You may obtain a copy of the License at
-         *
-         *
-         * http://www.apache.org/licenses/LICENSE-2.0
-         *
-         *
-         * Unless required by applicable law or agreed to in writing, software
-         * distributed under the License is distributed on an "AS IS" BASIS,
-         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-         * See the License for the specific language governing permissions and
-         * limitations under the License.
-         */
         fun getOptimalSize(sizes: List<Camera.Size>?, w: Int, h: Int): Size? {
             // Use a very small tolerance because we want an exact match.
             val ASPECT_TOLERANCE = 0.1

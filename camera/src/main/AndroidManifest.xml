@@ -24,12 +24,17 @@
         android:theme="@style/AppTheme.NoActionBar">
         <activity
             android:name="com.dastanapps.app.MainActivity"
-            android:screenOrientation="portrait"
-            android:configChanges="orientation|keyboardHidden">
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="com.dastanapps.app.Main2Activity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
     </application>

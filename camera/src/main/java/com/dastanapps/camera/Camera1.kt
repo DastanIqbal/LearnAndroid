@@ -3,6 +3,7 @@ package com.dastanapps.camera
 import android.app.Activity
 import android.content.Context
 import android.hardware.Camera
+import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Looper
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit
  * dastanIqbal@marvelmedia.com
  * 18/01/2018 6:32
  */
-
+@SuppressWarnings("deprecation")
 class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoFitTextureView, private val mCamera1Listener: ICamera1) {
     private val mCameraSurfaceTextureListener: Cam1SurfaceTextureListener
     private val mOrientationEventListener: OrientationEventListener
@@ -133,6 +134,8 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         mOrientationEventListener.disable()
     }
 
+    private lateinit var camCoderProfile: CamcorderProfile
+
     fun openCamera() {
         closeCamera()
 
@@ -141,11 +144,20 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
                 throw RuntimeException("Time out waiting to lock camera opening.")
             }
             mCamera = Camera.open(cameraId)
-            mTextureView.setCameraSettings(mCamera!!)
             mCharacteristics = mCamera!!.parameters
-            mVideoSize = Camera1Helper.chooseVideoSize(mCharacteristics!!.supportedVideoSizes)
-            mPreviewSize = Camera1Helper.chooseOptimalSize(mCharacteristics!!.supportedPreviewSizes,
-                    mTextureView.width, mTextureView.height, mVideoSize!!)
+            mTextureView.setCameraSettings(mCamera!!)
+
+            camCoderProfile = Camera1Helper.baseRecordingProfile(cameraId)
+
+            val videoSizeList = when {
+                mCharacteristics!!.supportedVideoSizes != null -> mCharacteristics!!.supportedVideoSizes
+                else -> mCharacteristics!!.supportedPreviewSizes
+            }
+
+            mVideoSize = Camera1Helper.getSizeWithClosestRatio(videoSizeList, camCoderProfile.videoFrameWidth, camCoderProfile.videoFrameHeight)
+            mPreviewSize = Camera1Helper.getSizeWithClosestRatio(mCharacteristics!!.supportedPreviewSizes, mVideoSize!!.width, mVideoSize!!.height)
+            //Camera1Helper.chooseOptimalSize(mCharacteristics!!.supportedPreviewSizes, mTextureView.width, mTextureView.height, mVideoSize!!)
+
             val orientation = mContext.resources.configuration.orientation
             //        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             //            mTextureView.setAspectRatio(mPreviewSize.width, mPreviewSize.height);
@@ -153,13 +165,17 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
             //            mTextureView.setAspectRatio(mPreviewSize.height, mPreviewSize.width);
             //        }
             //            Camera1Helper.configureTransform(mActivity, mPreviewSize, mTextureView, mTextureView.getWidth(), mTextureView.getHeight());
-            //            mCharacteristics.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
-            //            mCamera.setParameters(mCharacteristics);
+//            mCharacteristics!!.setPreviewSize(1280, 960)
+//            mCamera!!.parameters = mCharacteristics;
 
             try {
-                val texture = mTextureView.surfaceTexture
-                texture?.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-                mCamera!!.setDisplayOrientation(Camera1Helper.setDisplayOrientation(mActivity, mDisplayOrientation))
+//                val texture = mTextureView.surfaceTexture
+//                if (mPreviewSize != null)
+//                    texture?.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
+                mCamera!!.setDisplayOrientation(Camera1Helper.setDisplayOrientation(cameraId, mActivity, mDisplayOrientation))
+                mCharacteristics!!.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
+                mCharacteristics!!.flashMode = Camera.Parameters.FLASH_MODE_AUTO
+                mCamera!!.parameters = mCharacteristics!!
                 mCamera!!.setPreviewTexture(mTextureView.surfaceTexture)
                 mCamera!!.startPreview()
             } catch (ioe: IOException) {
@@ -169,6 +185,10 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }
+
+    }
+
+    fun startPreview() {
 
     }
 
@@ -265,7 +285,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
     }
 
     fun startRecordingVideo() {
-        if (!mTextureView.isAvailable || null == mPreviewSize) {
+        if (!mTextureView.isAvailable) {
             return
         }
         mMediaRecorder!!.start()
@@ -300,28 +320,46 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
 
         // Step 3: Set a CamcorderProfile (requires API Level 8 or higher)
         // Customise your profile based on a pre-existing profile
-        val profile = Camera1Helper.baseRecordingProfile
-        profile.fileFormat = MediaRecorder.OutputFormat.MPEG_4
-        profile.videoCodec = MediaRecorder.VideoEncoder.H264
-        profile.audioCodec = MediaRecorder.AudioEncoder.AAC
 
-        profile.videoFrameHeight = mVideoSize!!.height
-        profile.videoFrameWidth = mVideoSize!!.width
-        profile.videoFrameRate = 30
-        profile.videoBitRate = 5000000
-        profile.duration = 30
+//        val profile = Camera1Helper.baseRecordingProfile(cameraId)
+//        profile.fileFormat = MediaRecorder.OutputFormat.MPEG_4
+//        profile.videoCodec = MediaRecorder.VideoEncoder.H264
+//        profile.audioCodec = MediaRecorder.AudioEncoder.AAC
+//
+//        if (mVideoSize != null) {
+//            profile.videoFrameHeight = 960 // mVideoSize!!.height
+//            profile.videoFrameWidth = 1280 // mVideoSize!!.width
+//        }
+//        profile.videoFrameRate = 30
+//        profile.videoBitRate = 9000000
+//        profile.duration = 30
+//
+//        if (mVideoSize != null) {
+//            mMediaRecorder!!.setProfile(profile);//CamcorderProfile.get(CamcorderProfile.QUALITY_720P));//profile)
+//        } else {
+//            mMediaRecorder!!.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH))
+//        }
 
-        mMediaRecorder!!.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation))
-        mMediaRecorder!!.setProfile(profile);//CamcorderProfile.get(CamcorderProfile.QUALITY_720P));//profile)
-        //
+        mMediaRecorder!!.setOutputFormat(camCoderProfile.fileFormat)
+        mMediaRecorder!!.setVideoFrameRate(camCoderProfile.videoFrameRate)
+        mMediaRecorder!!.setVideoSize(mVideoSize!!.width, mVideoSize!!.height)
+        mMediaRecorder!!.setVideoEncodingBitRate(camCoderProfile.videoBitRate)
+        mMediaRecorder!!.setVideoEncoder(camCoderProfile.videoCodec)
+
+        mMediaRecorder!!.setAudioEncodingBitRate(camCoderProfile.audioBitRate)
+        mMediaRecorder!!.setAudioChannels(camCoderProfile.audioChannels)
+        mMediaRecorder!!.setAudioSamplingRate(camCoderProfile.audioSampleRate)
+        mMediaRecorder!!.setAudioEncoder(camCoderProfile.audioCodec)
+
         if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath!!.isEmpty()) {
             mNextVideoAbsolutePath = getVideoFilePath(mActivity)
         }
         // Step 4: Set output file
         mMediaRecorder!!.setOutputFile(mNextVideoAbsolutePath)
+        mMediaRecorder!!.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation))
 
         // Step 5: Set the preview output
-        mMediaRecorder!!.setPreviewDisplay(surface)
+        //mMediaRecorder!!.setPreviewDisplay(surface) //Not required for TextureView
 
         // Step 6: Prepare configured MediaRecorder
         try {
