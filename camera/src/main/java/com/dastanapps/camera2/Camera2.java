@@ -16,6 +16,7 @@ import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.Face;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.camera2.params.TonemapCurve;
+import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Handler;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -82,17 +84,18 @@ public class Camera2 {
     /**
      * The {@link Size} of camera preview.
      */
-    private Size mPreviewSize;
+    private com.dastanapps.app.Size mPreviewSize;
     private float[][] channels;
+    private CamcorderProfile camCorderProfile;
 
-    public Size getmVideoSize() {
+    public com.dastanapps.app.Size getmVideoSize() {
         return mVideoSize;
     }
 
     /**
      * The {@link Size} of video recording.
      */
-    private Size mVideoSize;
+    private com.dastanapps.app.Size mVideoSize;
 
     /**
      * An additional thread for running tasks that shouldn't block the UI.
@@ -120,7 +123,7 @@ public class Camera2 {
             mCameraDevice = cameraDevice;
             startPreview();
             mCameraOpenCloseLock.release();
-            camera2Listener.cameraOperned(mPreviewSize);
+          //  camera2Listener.cameraOperned(mPreviewSize);
         }
 
         @Override
@@ -199,7 +202,7 @@ public class Camera2 {
         // Setup a new OrientationEventListener.  This is used to handle rotation events like a
         // 180 degree rotation that do not normally trigger a call to onCreate to do view re-layout
         // or otherwise cause the preview TextureView's size to change.
-        mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize, mMainhandler);
+      //  mOrientationListener = new Cam2OrientationEventListener(context, mTextureView, mPreviewSize, mMainhandler);
         setupManager();
         startBackgroundThread();
         setUpFilters();
@@ -294,38 +297,35 @@ public class Camera2 {
             if (map == null) {
                 throw new RuntimeException("Cannot get available preview/video sizes");
             }
-            mVideoSize = Camera2Helper.chooseVideoSize(map.getOutputSizes(MediaRecorder.class));
-            mPreviewSize = Camera2Helper.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
-                    width, height, mVideoSize);
 
+            camCorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+//            mVideoSize = Camera2Helper.chooseVideoSize(map.getOutputSizes(MediaRecorder.class));
+//            mPreviewSize = Camera2Helper.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+//                    width, height, mVideoSize);
+            mVideoSize = chooseOptimalSize(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(MediaRecorder.class)),
+                    mTextureView.getWidth(), mTextureView.getHeight(), new com.dastanapps.app.Size(camCorderProfile.videoFrameWidth, camCorderProfile.videoFrameHeight));
+            if (mVideoSize == null || mVideoSize.getWidth() > camCorderProfile.videoFrameWidth ||
+                    mVideoSize.getHeight() > camCorderProfile.videoFrameHeight) {
+                mVideoSize = getSizeWithClosestRatio(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(MediaRecorder.class)), camCorderProfile.videoFrameWidth, camCorderProfile.videoFrameHeight);
+            } else if (mVideoSize == null || mVideoSize.getWidth() > camCorderProfile.videoFrameWidth
+                    || mVideoSize.getHeight() > camCorderProfile.videoFrameHeight)
+                mVideoSize = getSizeWithClosestRatio(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(MediaRecorder.class)), camCorderProfile.videoFrameWidth, camCorderProfile.videoFrameHeight);
+
+            if (mTextureView.getHeight() * mTextureView.getWidth() > mVideoSize.getWidth() * mVideoSize.getHeight()) {
+                mPreviewSize = getOptimalPreviewSize(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(SurfaceTexture.class)), mVideoSize.getWidth(), mVideoSize.getHeight());
+            } else {
+                mPreviewSize = getOptimalPreviewSize(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(SurfaceTexture.class)), mTextureView.getWidth(), mTextureView.getHeight());
+            }
+
+            if (mPreviewSize == null)
+                mPreviewSize = getSizeWithClosestRatio(com.dastanapps.app.Size.fromArray2(map.getOutputSizes(SurfaceTexture.class)), mVideoSize.getWidth(), mVideoSize.getHeight());
             int orientation = context.getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView.setAspectRatio(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             } else {
                 mTextureView.setAspectRatio(mPreviewSize.getHeight(), mPreviewSize.getWidth());
             }
-            Camera2Helper.configureTransform(activity, mPreviewSize, mTextureView, width, height);
-            if (mMediaRecorder == null) {
-                mMediaRecorder = new MediaRecorder();
-                mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
-                    @Override
-                    public void onInfo(MediaRecorder mr, int what, int extra) {
-                        switch (what) {
-                            case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
-                                // NOP
-                                break;
-                            case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
-                                stopRecordingVideo();
-                                break;
-                            case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
-                                stopRecordingVideo();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                });
-            }
+           // Camera2Helper.configureTransform(activity, mPreviewSize, mTextureView, width, height);
             manager.openCamera(cameraId, mStateCallback, null);
         } catch (CameraAccessException e) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show();
@@ -365,7 +365,6 @@ public class Camera2 {
             return;
         }
         try {
-            closePreviewSession();
             SurfaceTexture texture = filterTexture;//mTextureView.getSurfaceTexture();
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -486,31 +485,46 @@ public class Camera2 {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
         }
-        try {
-            closePreviewSession();
-            prepareMediaRecorder();
-            SurfaceTexture texture = filterTexture;//mTextureView.getSurfaceTexture();
-            texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-            mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
-            List<Surface> surfaces = new ArrayList<>();
+        closePreviewSession();
+        if (prepareMediaRecorder()) {
+            try {
+                SurfaceTexture texture = filterTexture;//mTextureView.getSurfaceTexture();
+                texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+                List<Surface> surfaces = new ArrayList<>();
 
-            // Set up Surface for the camera preview
-            Surface previewSurface = new Surface(texture);
-            surfaces.add(previewSurface);
-            mPreviewBuilder.addTarget(previewSurface);
+                // Set up Surface for the camera preview
+                Surface previewSurface = new Surface(texture);
+                surfaces.add(previewSurface);
+                mPreviewBuilder.addTarget(previewSurface);
 
-            // Set up Surface for the MediaRecorder
-            Surface recorderSurface = mMediaRecorder.getSurface();
-            surfaces.add(recorderSurface);
-            mPreviewBuilder.addTarget(recorderSurface);
+                // Set up Surface for the MediaRecorder
+                Surface recorderSurface = mMediaRecorder.getSurface();
+                surfaces.add(recorderSurface);
+                mPreviewBuilder.addTarget(recorderSurface);
 
-            mIsRecordingVideo = true;
+                mIsRecordingVideo = true;
 
-            // Start a capture session
-            // Once the session starts, we can update the UI and start recording
-            mCameraDevice.createCaptureSession(surfaces, cameraSessionStateCallback, mBackgroundHandler);
-        } catch (CameraAccessException | IOException e) {
-            e.printStackTrace();
+                // Start a capture session
+                // Once the session starts, we can update the UI and start recording
+                mCameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
+                    @Override
+                    public void onConfigured(@NonNull CameraCaptureSession session) {
+                        mPreviewSession = session;
+                        updatePreview();
+                    }
+
+                    @Override
+                    public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+
+                    }
+                }, mBackgroundHandler);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(context, "Video prepare failed", Toast.LENGTH_LONG).show();
+            Log.e(TAG, "media recorder prepared failed");
         }
 
     }
@@ -604,9 +618,9 @@ public class Camera2 {
         }
     }
 
-    public Size getPreviewSize() {
+    /*public Size getPreviewSize() {
         return mPreviewSize;
-    }
+    }*/
 
     private boolean hasPermissionsGranted(String[] permissions) {
         for (String permission : permissions) {
@@ -618,34 +632,63 @@ public class Camera2 {
         return true;
     }
 
-    private void prepareMediaRecorder() throws IOException {
-        if (null == activity) {
-            return;
+    private boolean prepareMediaRecorder() {
+        try {
+            mMediaRecorder = new MediaRecorder();
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+
+            mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mMediaRecorder.setVideoFrameRate(camCorderProfile.videoFrameRate);
+            mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
+            mMediaRecorder.setVideoEncodingBitRate(camCorderProfile.videoBitRate);
+            mMediaRecorder.setVideoEncoder(camCorderProfile.videoCodec);
+
+            mMediaRecorder.setAudioEncodingBitRate(camCorderProfile.audioBitRate);
+            mMediaRecorder.setAudioChannels(camCorderProfile.audioChannels);
+            mMediaRecorder.setAudioSamplingRate(camCorderProfile.audioSampleRate);
+            mMediaRecorder.setAudioEncoder(camCorderProfile.audioCodec);
+
+            if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
+                mNextVideoAbsolutePath = getVideoFilePath(activity);
+            }
+            mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
+
+            mMediaRecorder.setMaxDuration(30 * 1000);
+            int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+            switch (mSensorOrientation) {
+                case Camera2.SENSOR_ORIENTATION_DEFAULT_DEGREES:
+                    mMediaRecorder.setOrientationHint(CameraHelper.Companion.getDEFAULT_ORIENTATIONS().get(rotation));
+                    break;
+                case Camera2.SENSOR_ORIENTATION_INVERSE_DEGREES:
+                    mMediaRecorder.setOrientationHint(CameraHelper.Companion.getINVERSE_ORIENTATIONS().get(rotation));
+                    break;
+            }
+            mMediaRecorder.setOrientationHint(CameraHelper.Companion.getDEFAULT_ORIENTATIONS().get(screenCurrentRotation));
+            mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+                @Override
+                public void onInfo(MediaRecorder mr, int what, int extra) {
+                    switch (what) {
+                        case MediaRecorder.MEDIA_RECORDER_INFO_UNKNOWN:
+                            // NOP
+                            break;
+                        case MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED:
+                            stopRecordingVideo();
+                            break;
+                        case MediaRecorder.MEDIA_RECORDER_INFO_MAX_FILESIZE_REACHED:
+                            stopRecordingVideo();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            });
+            mMediaRecorder.prepare();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        if (mNextVideoAbsolutePath == null || mNextVideoAbsolutePath.isEmpty()) {
-            mNextVideoAbsolutePath = getVideoFilePath(activity);
-        }
-        mMediaRecorder.setOutputFile(mNextVideoAbsolutePath);
-        mMediaRecorder.setVideoEncodingBitRate(10000000);
-        mMediaRecorder.setVideoFrameRate(30);
-        mMediaRecorder.setMaxDuration(30 * 1000);
-        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        switch (mSensorOrientation) {
-            case Camera2.SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                mMediaRecorder.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(rotation));
-                break;
-            case Camera2.SENSOR_ORIENTATION_INVERSE_DEGREES:
-                mMediaRecorder.setOrientationHint(CameraHelper.INVERSE_ORIENTATIONS.get(rotation));
-                break;
-        }
-        mMediaRecorder.setOrientationHint(CameraHelper.DEFAULT_ORIENTATIONS.get(screenCurrentRotation));
-        mMediaRecorder.prepare();
+        return false;
     }
 
     private String getVideoFilePath(Context context) {
@@ -858,5 +901,106 @@ public class Camera2 {
         }
     }
 
+    public static com.dastanapps.app.Size chooseOptimalSize(com.dastanapps.app.Size[] choices, int width, int height, com.dastanapps.app.Size aspectRatio) {
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<com.dastanapps.app.Size> bigEnough = new ArrayList<>();
+        int w = aspectRatio.getWidth();
+        int h = aspectRatio.getHeight();
+        for (com.dastanapps.app.Size option : choices) {
+            if (option.getHeight() == option.getWidth() * h / w &&
+                    option.getWidth() >= width && option.getHeight() >= height) {
+                bigEnough.add(option);
+            }
+        }
 
+        // Pick the smallest of those, assuming we found any
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea2());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return null;
+        }
+    }
+
+    public static com.dastanapps.app.Size getSizeWithClosestRatio(com.dastanapps.app.Size[] sizes, int width, int height) {
+
+        if (sizes == null) return null;
+
+        double MIN_TOLERANCE = 100;
+        double targetRatio = (double) height / width;
+        com.dastanapps.app.Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = height;
+
+        for (com.dastanapps.app.Size size : sizes) {
+//            if (size.getWidth() == width && size.getHeight() == height)
+//                return size;
+
+            double ratio = (double) size.getHeight() / size.getWidth();
+
+            if (Math.abs(ratio - targetRatio) < MIN_TOLERANCE) MIN_TOLERANCE = ratio;
+            else continue;
+
+            if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.getHeight() - targetHeight);
+            }
+        }
+
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (com.dastanapps.app.Size size : sizes) {
+                if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.getHeight() - targetHeight);
+                }
+            }
+        }
+        return optimalSize;
+    }
+
+    public static com.dastanapps.app.Size getOptimalPreviewSize(com.dastanapps.app.Size[] sizes, int width, int height) {
+
+        if (sizes == null) return null;
+
+        final double ASPECT_TOLERANCE = 0.1;
+        double targetRatio = (double) height / width;
+        com.dastanapps.app.Size optimalSize = null;
+        double minDiff = Double.MAX_VALUE;
+
+        int targetHeight = height;
+
+        for (com.dastanapps.app.Size size : sizes) {
+//            if (size.getWidth() == width && size.getHeight() == height)
+//                return size;
+            double ratio = (double) size.getWidth() / size.getHeight();
+            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+            if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                optimalSize = size;
+                minDiff = Math.abs(size.getHeight() - targetHeight);
+            }
+        }
+
+        if (optimalSize == null) {
+            minDiff = Double.MAX_VALUE;
+            for (com.dastanapps.app.Size size : sizes) {
+                if (Math.abs(size.getHeight() - targetHeight) < minDiff) {
+                    optimalSize = size;
+                    minDiff = Math.abs(size.getHeight() - targetHeight);
+                }
+            }
+        }
+        return optimalSize;
+    }
+
+    private static class CompareSizesByArea2 implements Comparator<com.dastanapps.app.Size> {
+        @Override
+        public int compare(com.dastanapps.app.Size lhs, com.dastanapps.app.Size rhs) {
+            // We cast here to ensure the multiplications won't overflow
+            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
+                    (long) rhs.getWidth() * rhs.getHeight());
+        }
+
+    }
 }

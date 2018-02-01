@@ -14,6 +14,7 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
+import com.dastanapps.MyApp;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 
 import java.util.ArrayList;
@@ -128,6 +129,27 @@ public class Camera2Helper {
         List<Size> bigEnough = new ArrayList<>();
         int w = aspectRatio.getWidth();
         int h = aspectRatio.getHeight();
+        for (Size option : choices) {
+            if (option.getHeight() == option.getWidth() * h / w &&
+                    option.getWidth() >= width && option.getHeight() >= height) {
+                bigEnough.add(option);
+            }
+        }
+
+        // Pick the smallest of those, assuming we found any
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new Camera2Helper.CompareSizesByArea());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
+    }
+
+    public static Size chooseOptimalSize(Size[] choices, int width, int height, int aspectRatioW,int aspectRationH) {
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        List<Size> bigEnough = new ArrayList<>();
+        int w = aspectRatioW;
+        int h = aspectRationH;
         for (Size option : choices) {
             if (option.getHeight() == option.getWidth() * h / w &&
                     option.getWidth() >= width && option.getHeight() >= height) {
@@ -484,13 +506,15 @@ public class Camera2Helper {
      * (E.g., Nexus 6 has FULL support on back camera, LIMITED support on front camera.)
      * For now, devices with only LEGACY support should still use the old API.
      */
-    public static boolean allowCamera2Support(Context context, int cameraId) {
-        CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
+    public static boolean allowCamera2Support() {
+        CameraManager manager = (CameraManager) MyApp.Companion.getInstance().getSystemService(Context.CAMERA_SERVICE);
         try {
-            String cameraIdS = manager.getCameraIdList()[cameraId];
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraIdS);
-            //return isHardwareLevelSupported(characteristics, CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY);
-            return isHardwareLevelSupported(characteristics, CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED);
+            String[] cameraIdS = manager.getCameraIdList();
+            for (String cameraId : cameraIdS) {
+                CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                boolean isSupported = isHardwareLevelSupported(characteristics, CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED);
+                if (isSupported) return true;
+            }
         } catch (Throwable e) {
             // in theory we should only get CameraAccessException, but Google Play shows we can get a variety of exceptions
             // from some devices, e.g., AssertionError, IllegalArgumentException, RuntimeException, so just catch everything!

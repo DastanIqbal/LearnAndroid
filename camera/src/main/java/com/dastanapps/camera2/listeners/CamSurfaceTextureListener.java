@@ -7,7 +7,6 @@ import android.support.annotation.RequiresApi;
 import android.view.TextureView;
 
 import com.dastanapps.camera2.Camera2;
-import com.dastanapps.camera2.Camera2Helper;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
 import com.dastanapps.gles.TextureViewGLWrapper;
 
@@ -40,7 +39,7 @@ public class CamSurfaceTextureListener implements TextureView.SurfaceTextureList
 
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int width, int height) {
-        Camera2Helper.configureTransform(mActivity, camera2.getPreviewSize(), mTextureView, width, height);
+        //Camera2Helper.configureTransform(mActivity, camera2.getPreviewSize(), mTextureView, width, height);
         filterTextureGL.onSurfaceTextureSizeChanged(surfaceTexture, width, height);
     }
 

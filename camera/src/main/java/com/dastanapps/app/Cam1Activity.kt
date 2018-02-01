@@ -15,7 +15,7 @@ import android.widget.Button
 import com.dastanapps.camera.R
 import java.io.IOException
 
-open class Main2Activity : AppCompatActivity(), TextureView.SurfaceTextureListener {
+open class Cam1Activity : AppCompatActivity(), TextureView.SurfaceTextureListener {
     override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture?, width: Int, height: Int) {
 
     }
