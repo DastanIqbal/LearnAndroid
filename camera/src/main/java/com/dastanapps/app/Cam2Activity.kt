@@ -3,7 +3,6 @@ package com.dastanapps.app
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Context
-import android.graphics.Point
 import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.hardware.camera2.*
@@ -15,33 +14,16 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView
-import android.view.WindowManager
 import android.widget.Button
 import com.dastanapps.camera.R
+import com.dastanapps.camera2.Camera2Helper
 import java.io.IOException
 import java.util.*
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListener {
-    override fun onSurfaceTextureSizeChanged(surfaceTexture: SurfaceTexture?, width: Int, height: Int) {
-        if (surfaceTexture != null) startPreview(surfaceTexture)
-    }
-
-    override fun onSurfaceTextureUpdated(surface: SurfaceTexture?) {
-
-    }
-
-    override fun onSurfaceTextureDestroyed(surface: SurfaceTexture?): Boolean {
-        return true
-    }
-
-    override fun onSurfaceTextureAvailable(surfaceTexture: SurfaceTexture?, width: Int, height: Int) {
-        if (surfaceTexture != null) startPreview(surfaceTexture)
-    }
-
+open class Cam2Activity : AppCompatActivity() {
     private var manager: CameraManager? = null
     private var cameraDevice: CameraDevice? = null
-    private var previewRequest: CaptureRequest? = null
     private var previewRequestBuilder: CaptureRequest.Builder? = null
     private var captureSession: CameraCaptureSession? = null
 
@@ -55,23 +37,17 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
 
     private var texture: SurfaceTexture? = null
 
-    private var workingSurface: Surface? = null
-
     private val TAG = "DEBUG"
     var backgroundThread: HandlerThread? = null
     var backgroundHandler: Handler? = null
-    var uiHandler = Handler(Looper.getMainLooper())
-    var photoSize: Size? = null
-    var videoSize: Size? = null
-    var previewSize: Size? = null
-    var windowSize: Size? = null
+    var videoSize: android.util.Size? = null
+    var previewSize: android.util.Size? = null
     private lateinit var camera: Camera
     private var textureView: TextureView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.fragment_camera2_video)
         textureView = findViewById(R.id.texture)
-        textureView?.surfaceTextureListener = this
         startBackgroundThread()
         initializeCameraOptions()
         findViewById<Button>(R.id.video).setOnClickListener {
@@ -91,7 +67,7 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
 
             texture.setDefaultBufferSize(previewSize?.width!!, previewSize?.height!!)
 
-            workingSurface = Surface(texture)
+            val workingSurface = Surface(texture)
 
             previewRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             previewRequestBuilder?.addTarget(workingSurface)
@@ -134,7 +110,8 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
     private val stateCallback = object : CameraDevice.StateCallback() {
         override fun onOpened(cameraDevice1: CameraDevice) {
             Log.d(TAG, "onOpened")
-            cameraDevice = cameraDevice1;
+            cameraDevice = cameraDevice1
+            startPreview(textureView?.surfaceTexture)
         }
 
         override fun onDisconnected(cameraDevice: CameraDevice) {
@@ -211,11 +188,6 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
 
     private fun initializeCameraOptions() {
         this.manager = getSystemService(Context.CAMERA_SERVICE) as CameraManager?
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val display = windowManager.defaultDisplay
-        val size = Point()
-        display.getSize(size)
-        windowSize = Size(size.x, size.y)
     }
 
     override fun onResume() {
@@ -231,8 +203,15 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
     @SuppressLint("MissingPermission")
     fun openCamera() {
         backgroundHandler?.post({
-            prepareCameraOutputs()
             try {
+                val characteristics = manager?.getCameraCharacteristics("0")
+                backCameraStreamConfigurationMap = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+
+                val map = backCameraStreamConfigurationMap
+                camcorderProfile = CamcorderProfile.get(0, CamcorderProfile.QUALITY_HIGH)
+
+                videoSize = Camera2Helper.chooseVideoSize(map!!.getOutputSizes(MediaRecorder::class.java))
+                previewSize = Camera2Helper.chooseOptimalSize(map!!.getOutputSizes(SurfaceTexture::class.java), textureView?.width!!, textureView?.height!!, videoSize)
                 manager?.openCamera("0", stateCallback, backgroundHandler)
             } catch (e: Exception) {
                 Log.e(TAG, "openCamera: ", e)
@@ -265,134 +244,6 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
 
     var videoRecorder: MediaRecorder? = null
     var camcorderProfile: CamcorderProfile? = null
-    val currentCameraId = 0;
-    private var displayRotation = 0
-    fun prepareCameraOutputs() {
-        try {
-            val characteristics = manager?.getCameraCharacteristics("0")
-            backCameraStreamConfigurationMap = characteristics?.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-
-            val map = backCameraStreamConfigurationMap
-            camcorderProfile = CamcorderProfile.get(0, CamcorderProfile.QUALITY_HIGH)
-
-            videoSize = chooseOptimalSize(Size.fromArray2(map?.getOutputSizes(MediaRecorder::class.java)),
-                    windowSize?.width!!, windowSize?.height!!, Size(camcorderProfile?.videoFrameWidth!!, camcorderProfile?.videoFrameHeight!!))
-
-            if (videoSize == null || videoSize?.width!! > camcorderProfile?.videoFrameWidth!!
-                    || videoSize?.height!! > camcorderProfile!!.videoFrameHeight)
-                videoSize = getSizeWithClosestRatio(Size.fromArray2(map?.getOutputSizes(MediaRecorder::class.java)), camcorderProfile?.videoFrameWidth!!, camcorderProfile?.videoFrameHeight!!)
-            else if (videoSize == null || videoSize?.width!! > camcorderProfile?.videoFrameWidth!!
-                    || videoSize?.height!! > camcorderProfile?.videoFrameHeight!!)
-                videoSize = getSizeWithClosestRatio(Size.fromArray2(map?.getOutputSizes(MediaRecorder::class.java)), camcorderProfile?.videoFrameWidth!!, camcorderProfile?.videoFrameHeight!!)
-
-            previewSize = if (windowSize?.height!! * windowSize?.getWidth()!! > videoSize?.width!! * videoSize!!.getHeight()) {
-                getOptimalPreviewSize(Size.fromArray2(map?.getOutputSizes(SurfaceTexture::class.java)), videoSize!!.width, videoSize!!.getHeight())
-            } else {
-                getOptimalPreviewSize(Size.fromArray2(map?.getOutputSizes(SurfaceTexture::class.java)), windowSize!!.getWidth(), windowSize!!.getHeight())
-            }
-
-            if (previewSize == null)
-                previewSize = getSizeWithClosestRatio(Size.fromArray2(map?.getOutputSizes(SurfaceTexture::class.java)), videoSize!!.getWidth(), videoSize!!.getHeight())
-        } catch (e: Exception) {
-            Log.e(TAG, "Error while setup camera sizes.", e)
-        }
-
-
-    }
-
-
-    fun getOptimalPreviewSize(sizes: Array<Size>?, width: Int, height: Int): Size? {
-
-        if (sizes == null) return null
-
-        val ASPECT_TOLERANCE = 0.1
-        val targetRatio = height.toDouble() / width
-        var optimalSize: Size? = null
-        var minDiff = java.lang.Double.MAX_VALUE
-
-        for (size in sizes) {
-            //            if (size.getWidth() == width && size.getHeight() == height)
-            //                return size;
-            val ratio = size.width.toDouble() / size.height.toDouble()
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue
-            if (Math.abs(size.height - height) < minDiff) {
-                optimalSize = size
-                minDiff = Math.abs(size.height - height).toDouble()
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = java.lang.Double.MAX_VALUE
-            for (size in sizes) {
-                if (Math.abs(size.height - height) < minDiff) {
-                    optimalSize = size
-                    minDiff = Math.abs(size.height - height).toDouble()
-                }
-            }
-        }
-        return optimalSize
-    }
-
-    fun chooseOptimalSize(choices: Array<Size>, width: Int, height: Int, aspectRatio: Size): Size? {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        val w = aspectRatio.width
-        val h = aspectRatio.height
-        val bigEnough = choices.filter { it.height == it.width * h / w && it.width >= width && it.height >= height }
-
-        // Pick the smallest of those, assuming we found any
-        return if (bigEnough.isNotEmpty()) {
-            Collections.min(bigEnough, CompareSizesByArea2())
-        } else {
-            Log.e(TAG, "Couldn't find any suitable preview size")
-            null
-        }
-    }
-
-    private class CompareSizesByArea2 : Comparator<Size> {
-        override fun compare(lhs: Size, rhs: Size): Int {
-            // We cast here to ensure the multiplications won't overflow
-            return java.lang.Long.signum(lhs.width.toLong() * lhs.height - rhs.width.toLong() * rhs.height)
-        }
-
-    }
-
-    fun getSizeWithClosestRatio(sizes: Array<Size>?, width: Int, height: Int): Size? {
-
-        if (sizes == null) return null
-
-        var MIN_TOLERANCE = 100.0
-        val targetRatio = height.toDouble() / width
-        var optimalSize: Size? = null
-        var minDiff = java.lang.Double.MAX_VALUE
-
-        for (size in sizes) {
-            //            if (size.getWidth() == width && size.getHeight() == height)
-            //                return size;
-
-            val ratio = size.height.toDouble() / size.width.toDouble()
-
-            if (Math.abs(ratio - targetRatio) < MIN_TOLERANCE)
-                MIN_TOLERANCE = ratio
-            else
-                continue
-
-            if (Math.abs(size.height - height) < minDiff) {
-                optimalSize = size
-                minDiff = Math.abs(size.height - height).toDouble()
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = java.lang.Double.MAX_VALUE
-            for (size in sizes) {
-                if (Math.abs(size.height - height) < minDiff) {
-                    optimalSize = size
-                    minDiff = Math.abs(size.height - height).toDouble()
-                }
-            }
-        }
-        return optimalSize
-    }
 
     protected fun prepareVideoRecorder(): Boolean {
         videoRecorder = MediaRecorder()
@@ -400,7 +251,7 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
             videoRecorder?.setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
             videoRecorder?.setVideoSource(MediaRecorder.VideoSource.SURFACE)
 
-            videoRecorder?.setOutputFormat(camcorderProfile!!.fileFormat)
+            videoRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             videoRecorder?.setVideoFrameRate(camcorderProfile!!.videoFrameRate)
             videoRecorder?.setVideoSize(videoSize?.getWidth()!!, videoSize!!.getHeight())
             videoRecorder?.setVideoEncodingBitRate(camcorderProfile!!.videoBitRate)
@@ -445,11 +296,11 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
                     previewRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
                     val surfaces = ArrayList<Surface>()
 
-                    val previewSurface = workingSurface
+                    val previewSurface = Surface(textureView?.surfaceTexture)
                     surfaces.add(previewSurface!!)
                     previewRequestBuilder?.addTarget(previewSurface)
 
-                    workingSurface = videoRecorder?.getSurface()
+                    val workingSurface = videoRecorder?.surface
                     surfaces.add(workingSurface!!)
                     previewRequestBuilder?.addTarget(workingSurface)
 
@@ -488,10 +339,11 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
         })
     }
 
-    fun stopVideoRecord() {
+    private fun stopVideoRecord() {
         if (isVideoRecording) {
             backgroundHandler?.post({
                 try {
+                    closePreviewSession()
                     if (videoRecorder != null) videoRecorder!!.stop()
                 } catch (ignore: Exception) {
                     // ignore illegal state.
@@ -503,7 +355,7 @@ open class Cam2Activity : AppCompatActivity(), TextureView.SurfaceTextureListene
         }
     }
 
-    protected fun releaseVideoRecorder() {
+    private fun releaseVideoRecorder() {
         try {
             if (videoRecorder != null) {
                 videoRecorder!!.reset()
