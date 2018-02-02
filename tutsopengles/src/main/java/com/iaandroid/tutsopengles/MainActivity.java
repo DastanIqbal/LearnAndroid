@@ -2,11 +2,10 @@ package com.iaandroid.tutsopengles;
 
 import android.app.Activity;
 import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import com.iaandroid.tutsopengles.gles.GLTextureView;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -14,7 +13,7 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MainActivity extends Activity implements GLSurfaceView.Renderer {
+public class MainActivity extends Activity implements GLTextureView.Renderer {
 
     private int _program;
     private float _animate;
@@ -22,20 +21,11 @@ public class MainActivity extends Activity implements GLSurfaceView.Renderer {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        GLSurfaceView glSurfaceView = new GLSurfaceView(this);
+        GLTextureView glSurfaceView = new GLTextureView(this);
         glSurfaceView.setEGLContextClientVersion(2);
         glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         glSurfaceView.setRenderer(this);
         setContentView(glSurfaceView);
-        BufferedReader bufferedReader = null;
-        String line=null;
-        try {
-            while((line=bufferedReader.readLine())!=null){
-
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -103,5 +93,10 @@ public class MainActivity extends Activity implements GLSurfaceView.Renderer {
         GLES20.glVertexAttribPointer(0, 4, GLES20.GL_FLOAT, false, 4 * 4, floatBuffer);
         GLES20.glEnableVertexAttribArray(0);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3);
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
     }
 }
