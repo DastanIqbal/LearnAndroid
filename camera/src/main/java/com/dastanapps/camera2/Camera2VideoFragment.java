@@ -167,7 +167,8 @@ public class Camera2VideoFragment extends Fragment
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.video: {
-                camera2.toggleRecording();
+                //camera2.toggleRecording();
+                toggleRecording();
                 break;
             }
             case R.id.btn_flash:
@@ -310,6 +311,18 @@ public class Camera2VideoFragment extends Fragment
 
     }
 
+    boolean isRecording = false;
+
+    void toggleRecording() {
+        if (isRecording) {
+            stopRecording();
+            isRecording = false;
+        } else {
+            startRecording();
+            isRecording = true;
+        }
+    }
+
     /**
      * start resorcing
      * This is a sample project and call this on UI thread to avoid being complicated
@@ -354,15 +367,15 @@ public class Camera2VideoFragment extends Fragment
         @Override
         public void onPrepared(final MediaEncoder encoder) {
             Log.v(TAG, "onPrepared:encoder=" + encoder);
-//            if (encoder instanceof MediaVideoEncoder)
-//                camera2.setVideoEncoder((MediaVideoEncoder) encoder);
+            if (encoder instanceof MediaVideoEncoder)
+                camera2.setVideoEncoder((MediaVideoEncoder) encoder);
         }
 
         @Override
         public void onStopped(final MediaEncoder encoder) {
             Log.v(TAG, "onStopped:encoder=" + encoder);
-//            if (encoder instanceof MediaVideoEncoder)
-//                camera2.setVideoEncoder(null);
+            if (encoder instanceof MediaVideoEncoder)
+                camera2.setVideoEncoder(null);
         }
     };
 }

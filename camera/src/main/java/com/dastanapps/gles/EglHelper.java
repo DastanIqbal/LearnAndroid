@@ -70,7 +70,7 @@ class EglHelper {
 
         //Create eglTextures
         GLES20.glGenTextures(eglTextures.length, eglTextures, 0);
-        GLUtils.INSTANCE.checkGLError("Texture bind");
+        GLUtils.Companion.checkGLError("Texture bind");
         eglSurfaceTexture = new SurfaceTexture(eglTextures[0]);
 
         return eglSurfaceTexture;

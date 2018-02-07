@@ -14,6 +14,7 @@ public class DefaultCameraRenderer implements TextureViewGLWrapper.GLRenderer {
     private CameraFilter cameraFilter;
     private int surfaceWidth;
     private int surfaceHeight;
+    private int texId;
 
     public DefaultCameraRenderer(Context context) {
         this.context = context;
@@ -24,6 +25,7 @@ public class DefaultCameraRenderer implements TextureViewGLWrapper.GLRenderer {
         this.surfaceWidth = surfaceWidth;
         this.surfaceHeight = surfaceHeight;
         cameraFilter = new NoneFilter();
+        texId = GLUtils.Companion.initTexture();
     }
 
     @Override
@@ -35,7 +37,7 @@ public class DefaultCameraRenderer implements TextureViewGLWrapper.GLRenderer {
     @Override
     public void onFrameAvailable(SurfaceTexture eglSurfaceTexture) {
         //Update camera parameters
-        cameraFilter.draw(surfaceWidth, surfaceHeight, eglSurfaceTexture);
+        cameraFilter.draw(surfaceWidth, surfaceHeight, eglSurfaceTexture, texId);
     }
 
     @Override

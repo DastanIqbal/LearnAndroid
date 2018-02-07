@@ -39,8 +39,9 @@ import com.dastanapps.camera2.listeners.Cam2OrientationEventListener;
 import com.dastanapps.camera2.listeners.CamSurfaceTextureListener;
 import com.dastanapps.camera2.view.AwbSeekBar;
 import com.dastanapps.camera2.view.Cam2AutoFitTextureView;
+import com.dastanapps.camera2.view.CameraSurfaceRenderer;
 import com.dastanapps.camera2.view.FocusImageView;
-import com.dastanapps.gles.DefaultCameraRenderer;
+import com.dastanapps.encoder.MediaVideoEncoder;
 import com.dastanapps.gles.TextureViewGLWrapper;
 import com.dastanapps.view.FaceOverlayView;
 
@@ -232,7 +233,7 @@ public class Camera2 {
         if (mTextureView.isAvailable()) {
             openCamera(mTextureView.getWidth(), mTextureView.getHeight());
         } else {
-            mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
+            //   mTextureView.setSurfaceTextureListener(mSurfaceTextureListener);
         }
         if (mOrientationListener != null && mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
@@ -866,10 +867,29 @@ public class Camera2 {
 
     private TextureViewGLWrapper mTextureViewGLWrapper;
     private SurfaceTexture filterTexture;
+    private CameraSurfaceRenderer cameraSurfaceRenderer;
+
+    void setVideoEncoder(final MediaVideoEncoder encoder) {
+        cameraSurfaceRenderer.setVideoEnocder(mTextureView,encoder);
+    }
 
     private void setUpFilters() {
-        mTextureViewGLWrapper = new TextureViewGLWrapper(new DefaultCameraRenderer(context));
-        mTextureViewGLWrapper.setListener(new TextureViewGLWrapper.EGLSurfaceTextureListener() {
+//        mTextureViewGLWrapper = new TextureViewGLWrapper(new DefaultCameraRenderer(context));
+//        mTextureViewGLWrapper.setListener(new TextureViewGLWrapper.EGLSurfaceTextureListener() {
+//            @Override
+//            public void onSurfaceTextureReady(SurfaceTexture surfaceTexture) {
+//                filterTexture = surfaceTexture;
+//                new Handler(Looper.getMainLooper()).post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+//                    }
+//                });
+//            }
+//        }, mBackgroundHandler);
+
+        cameraSurfaceRenderer = new CameraSurfaceRenderer();
+        cameraSurfaceRenderer.setListener(new CameraSurfaceRenderer.EGLSurfaceTextureListener() {
             @Override
             public void onSurfaceTextureReady(SurfaceTexture surfaceTexture) {
                 filterTexture = surfaceTexture;
@@ -880,7 +900,8 @@ public class Camera2 {
                     }
                 });
             }
-        }, mBackgroundHandler);
+        });
+        mTextureView.setRenderer(cameraSurfaceRenderer);
     }
 
     public void changeFilter() {

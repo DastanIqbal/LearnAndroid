@@ -25,7 +25,7 @@ import android.view.View;
 /**
  * A {@link TextureView} that can be adjusted to a specified aspect ratio.
  */
-public abstract class AutoFitTextureView extends TextureView implements View.OnTouchListener {
+public abstract class AutoFitTextureView extends GLTextureView implements View.OnTouchListener {
 
     private static String TAG = AutoFitTextureView.class.getSimpleName();
     private int mRatioWidth = 0;
@@ -46,6 +46,8 @@ public abstract class AutoFitTextureView extends TextureView implements View.OnT
     }
 
     private void init() {
+        setEGLContextClientVersion(2);    // GLES 2.0, API >= 8
+        setEGLConfigChooser(8, 8, 8, 8, 0, 0);
         setOnTouchListener(this);
     }
 
@@ -105,5 +107,6 @@ public abstract class AutoFitTextureView extends TextureView implements View.OnT
     }
 
     protected abstract void touchToFocus(MotionEvent event);
+
     protected abstract void pinchToZoom(MotionEvent event);
 }

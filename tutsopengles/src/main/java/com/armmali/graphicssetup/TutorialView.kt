@@ -1,8 +1,8 @@
 package com.armmali.graphicssetup
 
 import android.content.Context
-import android.opengl.GLSurfaceView
 import com.armmali.firstnative.NativeLibrary
+import com.iaandroid.tutsopengles.gles.GLTextureView
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
@@ -15,7 +15,7 @@ import javax.microedition.khronos.opengles.GL10
  * dastanIqbal@marvelmedia.com
  * 06/01/2018 4:52
  */
-class TutorialView(context: Context) : GLSurfaceView(context) {
+class TutorialView(context: Context) : GLTextureView(context) {
     protected var redSize = 8
     protected var greenSize = 8
     protected var blueSize = 8
@@ -31,7 +31,7 @@ class TutorialView(context: Context) : GLSurfaceView(context) {
         setRenderer(MyRenderer())
     }
 
-    inner class ContextFactory : GLSurfaceView.EGLContextFactory {
+    inner class ContextFactory : GLTextureView.EGLContextFactory {
         override fun createContext(egl: EGL10, display: EGLDisplay?, eglConfig: EGLConfig?): EGLContext {
             val EGL_CONTEXT_CLIENT_VERSION = 0x3098
             val attrib_list = intArrayOf(EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE)
@@ -44,7 +44,7 @@ class TutorialView(context: Context) : GLSurfaceView(context) {
 
     }
 
-    inner class ConfigChooser : GLSurfaceView.EGLConfigChooser {
+    inner class ConfigChooser : GLTextureView.EGLConfigChooser {
         override fun chooseConfig(egl: EGL10, display: EGLDisplay?): EGLConfig? {
             val EGL_OPENGL_ES2_BIT = 4
             val configAttributes = intArrayOf(EGL10.EGL_RED_SIZE, redSize,
@@ -87,7 +87,7 @@ class TutorialView(context: Context) : GLSurfaceView(context) {
 
     }
 
-    inner class MyRenderer : GLSurfaceView.Renderer {
+    inner class MyRenderer : GLTextureView.Renderer {
         override fun onDrawFrame(gl: GL10?) {
             NativeLibrary.step()
         }

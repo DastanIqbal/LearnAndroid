@@ -1,7 +1,6 @@
 package com.dastanapps.gles.filters
 
 import android.graphics.SurfaceTexture
-import com.dastanapps.gles.GLUtils
 
 /**
  * Created by dastaniqbal on 23/01/2018.
@@ -23,11 +22,11 @@ class NoneFilter : CameraFilter() {
             "}"
 
     init {
-        program = GLUtils.buildProgram(sSimpleFS)
+        program = glUtils.buildProgram(sSimpleFS)
         if (program == 0) throw IllegalStateException("Failed to create program")
     }
 
-    override fun onDraw(surfaceWidth: Int, surfaceHeight: Int, eglSurfaceTexture: SurfaceTexture) {
-        setupShaders(program, surfaceWidth, surfaceHeight, eglSurfaceTexture)
+    override fun onDraw(surfaceWidth: Int, surfaceHeight: Int, eglSurfaceTexture: SurfaceTexture, texId: Int) {
+        setupShaders(program, surfaceWidth, surfaceHeight, eglSurfaceTexture, texId)
     }
 }
