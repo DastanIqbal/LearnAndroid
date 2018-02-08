@@ -335,7 +335,7 @@ public class Camera2VideoFragment extends Fragment
             mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
             if (true) {
                 // for video capturing
-                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, camera2.getmVideoSize().getWidth(), camera2.getmVideoSize().getHeight());
+                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720,1280);
             }
             if (true) {
                 // for audio capturing

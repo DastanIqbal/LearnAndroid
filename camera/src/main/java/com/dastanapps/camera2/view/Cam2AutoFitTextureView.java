@@ -58,11 +58,11 @@ public class Cam2AutoFitTextureView extends AutoFitTextureView {
     boolean mManualFocusEngaged = false;
 
     public Cam2AutoFitTextureView(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public Cam2AutoFitTextureView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public Cam2AutoFitTextureView(Context context, AttributeSet attrs, int defStyle) {

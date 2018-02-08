@@ -1,4 +1,4 @@
-package com.dastanapps.encoder;
+package com.dastanapps.gles;
 /*
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
@@ -24,7 +24,6 @@ package com.dastanapps.encoder;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
-import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.text.TextUtils;
 import android.util.Log;
@@ -176,11 +175,8 @@ public final class RenderHandler implements Runnable {
         	if (localRequestDraw) {
         		if ((mEgl != null) && mTexId >= 0) {
             		mInputSurface.makeCurrent();
-					// clear screen with yellow color so that you can see rendering rectangle
-					GLES20.glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
-					GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 					mDrawer.setMatrix(mMatrix, 16);
-            		mDrawer.draw(mTexId, mMatrix);
+            		mDrawer.draw(mTexId,mMatrix);
             		mInputSurface.swap();
         		}
         	} else {

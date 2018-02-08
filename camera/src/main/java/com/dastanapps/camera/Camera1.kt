@@ -2,6 +2,7 @@ package com.dastanapps.camera
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.media.CamcorderProfile
 import android.media.MediaRecorder
@@ -18,6 +19,8 @@ import com.dastanapps.camera.listeners.Cam1OrientationEventListener
 import com.dastanapps.camera.listeners.Cam1SurfaceTextureListener
 import com.dastanapps.camera.view.Cam1AutoFitTextureView
 import com.dastanapps.camera.view.FocusImageView
+import com.dastanapps.camera2.view.CameraSurfaceRenderer
+import com.dastanapps.encoder.MediaVideoEncoder
 import java.io.IOException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -40,7 +43,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
     private var mVideoSize: Camera.Size? = null
     private var mPreviewSize: Camera.Size? = null
     private var mNextVideoAbsolutePath: String? = null
-
+    private var filterTexture: SurfaceTexture? = null
     /**
      * MediaRecorder
      */
@@ -114,6 +117,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
 
         mOrientationEventListener = Cam1OrientationEventListener(mContext, mainHandler)
         setupManager()
+        setUpFilters()
     }
 
     private fun setupManager() {
@@ -403,6 +407,23 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         }
         mNextVideoAbsolutePath = null
         mCamera1Listener.cameraRecordingStopped()
+    }
+
+    private var cameraSurfaceRenderer: CameraSurfaceRenderer? = null
+
+    fun setVideoEncoder(encoder: MediaVideoEncoder) {
+        cameraSurfaceRenderer!!.setVideoEnocder(mTextureView, encoder)
+    }
+
+    private fun setUpFilters() {
+        cameraSurfaceRenderer = CameraSurfaceRenderer()
+        cameraSurfaceRenderer?.setListener({ surfaceTexture ->
+            filterTexture = surfaceTexture
+            Handler(Looper.getMainLooper()).post {
+                //openCamera()
+            }
+        })
+        mTextureView.setRenderer(cameraSurfaceRenderer)
     }
 
     companion object {

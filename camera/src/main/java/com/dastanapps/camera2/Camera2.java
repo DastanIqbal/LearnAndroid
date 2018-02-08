@@ -298,7 +298,7 @@ public class Camera2 {
                 throw new RuntimeException("Cannot get available preview/video sizes");
             }
 
-            camCorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH);
+            camCorderProfile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P);
             mVideoSize = Camera2Helper.chooseVideoSize(map.getOutputSizes(MediaRecorder.class));
             mPreviewSize = Camera2Helper.chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                     width, height, mVideoSize);
@@ -870,7 +870,7 @@ public class Camera2 {
     private CameraSurfaceRenderer cameraSurfaceRenderer;
 
     void setVideoEncoder(final MediaVideoEncoder encoder) {
-        cameraSurfaceRenderer.setVideoEnocder(mTextureView,encoder);
+        cameraSurfaceRenderer.setVideoEnocder(mTextureView, encoder);
     }
 
     private void setUpFilters() {

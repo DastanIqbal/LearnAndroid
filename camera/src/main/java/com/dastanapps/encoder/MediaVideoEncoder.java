@@ -8,6 +8,8 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
+import com.dastanapps.gles.RenderHandler;
+
 import java.io.IOException;
 
 public class MediaVideoEncoder extends MediaEncoder {

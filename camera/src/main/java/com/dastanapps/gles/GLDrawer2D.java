@@ -1,4 +1,4 @@
-package com.dastanapps.encoder;
+package com.dastanapps.gles;
 /*
  * AudioVideoRecordingSample
  * Sample project to cature audio and video from internal mic/camera and save as MPEG4 file.
@@ -72,6 +72,7 @@ public class GLDrawer2D {
     int muMVPMatrixLoc;
     int muTexMatrixLoc;
     private final float[] mMvpMatrix = new float[16];
+    public final float[] mStMatrix = new float[16];
 
     private static final int FLOAT_SZ = Float.SIZE / 8;
     private static final int VERTEX_NUM = 4;
@@ -105,6 +106,8 @@ public class GLDrawer2D {
         GLES20.glVertexAttribPointer(maTextureCoordLoc, 2, GLES20.GL_FLOAT, false, VERTEX_SZ, pTexCoord);
         GLES20.glEnableVertexAttribArray(maPositionLoc);
         GLES20.glEnableVertexAttribArray(maTextureCoordLoc);
+
+        setMatrix(mMvpMatrix, 0);
     }
 
     /**
@@ -123,6 +126,9 @@ public class GLDrawer2D {
      * @param tex_matrix texture matrix、if this is null, the last one use(we don't check size of this array and needs at least 16 of float)
      */
     public void draw(final int tex_id, final float[] tex_matrix) {
+        // clear screen with yellow color so that you can see rendering rectangle
+        GLES20.glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glUseProgram(hProgram);
         if (tex_matrix != null)
             GLES20.glUniformMatrix4fv(muTexMatrixLoc, 1, false, tex_matrix, 0);
@@ -218,4 +224,12 @@ public class GLDrawer2D {
         return program;
     }
 
+    public void surfaceCreated(int surfaceWidth, int surfaceHeight) {
+        float[] mMvpMatrix = new float[16];
+        GLES20.glViewport(0, 0, surfaceWidth, surfaceHeight);
+        Log.v(TAG, String.format("size(%d,%d)", surfaceWidth, surfaceHeight));
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        Matrix.setIdentityM(mMvpMatrix, 0);
+        setMatrix(mMvpMatrix, 0);
+    }
 }

@@ -21,6 +21,7 @@ import android.app.Fragment;
 import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.support.v13.app.FragmentCompat;
+import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -32,6 +33,12 @@ import android.widget.SeekBar;
 
 import com.dastanapps.camera.view.Cam1AutoFitTextureView;
 import com.dastanapps.camera.view.FocusImageView;
+import com.dastanapps.encoder.MediaAudioEncoder;
+import com.dastanapps.encoder.MediaEncoder;
+import com.dastanapps.encoder.MediaMuxerWrapper;
+import com.dastanapps.encoder.MediaVideoEncoder;
+
+import java.io.IOException;
 
 
 public class Camera1VideoFragment extends Fragment implements
@@ -130,7 +137,8 @@ public class Camera1VideoFragment extends Fragment implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.video: {
-                camera1.toggleRecording();
+                //camera1.toggleRecording();
+                toggleRecording();
                 break;
             }
             case R.id.btn_flash:
@@ -224,4 +232,73 @@ public class Camera1VideoFragment extends Fragment implements
         else if (rotation == 0 || rotation == 180)
             mFlashButton.setRotation(0);
     }
+
+    boolean isRecording = false;
+    private MediaMuxerWrapper mMuxer;
+
+    void toggleRecording() {
+        if (isRecording) {
+            stopRecording();
+            isRecording = false;
+        } else {
+            startRecording();
+            isRecording = true;
+        }
+    }
+
+    /**
+     * start resorcing
+     * This is a sample project and call this on UI thread to avoid being complicated
+     * but basically this should be called on private thread because prepareing
+     * of encoder is heavy work
+     */
+    private void startRecording() {
+        Log.v(TAG, "startRecording:");
+        try {
+            mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
+            if (true) {
+                // for video capturing
+                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720, 1280);
+            }
+            if (true) {
+                // for audio capturing
+                new MediaAudioEncoder(mMuxer, mMediaEncoderListener);
+            }
+            mMuxer.prepare();
+            mMuxer.startRecording();
+        } catch (final IOException e) {
+            Log.e(TAG, "startCapture:", e);
+        }
+    }
+
+    /**
+     * request stop recording
+     */
+    private void stopRecording() {
+        Log.v(TAG, "stopRecording:mMuxer=" + mMuxer);
+        if (mMuxer != null) {
+            mMuxer.stopRecording();
+            mMuxer = null;
+            // you should not wait here
+        }
+    }
+
+    /**
+     * callback methods from encoder
+     */
+    private final MediaEncoder.MediaEncoderListener mMediaEncoderListener = new MediaEncoder.MediaEncoderListener() {
+        @Override
+        public void onPrepared(final MediaEncoder encoder) {
+            Log.v(TAG, "onPrepared:encoder=" + encoder);
+            if (encoder instanceof MediaVideoEncoder)
+                camera1.setVideoEncoder((MediaVideoEncoder) encoder);
+        }
+
+        @Override
+        public void onStopped(final MediaEncoder encoder) {
+            Log.v(TAG, "onStopped:encoder=" + encoder);
+            if (encoder instanceof MediaVideoEncoder)
+                camera1.setVideoEncoder(null);
+        }
+    };
 }
