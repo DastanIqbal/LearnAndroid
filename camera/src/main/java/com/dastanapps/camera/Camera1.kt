@@ -112,7 +112,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
     init {
         this.mActivity = mContext as Activity
         mCameraSurfaceTextureListener = Cam1SurfaceTextureListener(this, mTextureView, mActivity)
-        this.mTextureView.surfaceTextureListener = mCameraSurfaceTextureListener
+        // this.mTextureView.surfaceTextureListener = mCameraSurfaceTextureListener
         this.mTextureView.setMainHandler(mainHandler)
 
         mOrientationEventListener = Cam1OrientationEventListener(mContext, mainHandler)
@@ -180,7 +180,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
                 mCharacteristics!!.focusMode = Camera.Parameters.FOCUS_MODE_AUTO
                 mCharacteristics!!.flashMode = Camera.Parameters.FLASH_MODE_AUTO
                 mCamera!!.parameters = mCharacteristics!!
-                mCamera!!.setPreviewTexture(mTextureView.surfaceTexture)
+                mCamera!!.setPreviewTexture(filterTexture);//mTextureView.surfaceTexture)
                 mCamera!!.startPreview()
             } catch (ioe: IOException) {
                 // Something bad happened
@@ -420,7 +420,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         cameraSurfaceRenderer?.setListener({ surfaceTexture ->
             filterTexture = surfaceTexture
             Handler(Looper.getMainLooper()).post {
-                //openCamera()
+                openCamera()
             }
         })
         mTextureView.setRenderer(cameraSurfaceRenderer)

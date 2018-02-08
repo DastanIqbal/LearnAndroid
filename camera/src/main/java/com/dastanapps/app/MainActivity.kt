@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
             if (CameraHelper.isCamera2Supported()) {
                 fragmentManager.beginTransaction().replace(R.id.container, Camera2VideoFragment.newInstance()).commit()
             } else {
-                fragmentManager.beginTransaction().replace(R.id.container, Camera2VideoFragment.newInstance()).commit()
+                fragmentManager.beginTransaction().replace(R.id.container, Camera1VideoFragment.newInstance()).commit()
             }
         }
     }

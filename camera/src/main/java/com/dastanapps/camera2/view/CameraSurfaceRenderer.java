@@ -1,6 +1,7 @@
 package com.dastanapps.camera2.view;
 
 import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.util.Log;
 
 import com.dastanapps.encoder.MediaVideoEncoder;
@@ -21,6 +22,7 @@ public final class CameraSurfaceRenderer implements GLTextureView.Renderer, Surf
     private int surfaceHeight;
     private MediaVideoEncoder mVideoEncoder;
     private GLDrawer2D mDrawer;
+    private Camera mCamera;
 
     public CameraSurfaceRenderer() {
     }

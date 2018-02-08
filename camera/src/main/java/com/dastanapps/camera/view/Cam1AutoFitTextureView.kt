@@ -36,11 +36,11 @@ class Cam1AutoFitTextureView : AutoFitTextureView {
     internal var mDist = 0f
     private var mainHandler: Handler? = null
 
-    constructor(context: Context) : super(context) {}
+    constructor(context: Context) : this(context, null) {}
 
-    constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {}
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0) {}
 
-    constructor(context: Context, attrs: AttributeSet, defStyle: Int) : super(context, attrs, defStyle) {}
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle) {}
 
     fun setCameraSettings(camera: Camera) {
         this.mCamera = camera
