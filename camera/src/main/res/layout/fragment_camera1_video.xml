@@ -137,6 +137,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="White Balance" />
+
+            <Button
+                android:id="@+id/customFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Custom Filter" />
+
         </LinearLayout>
     </LinearLayout>
 

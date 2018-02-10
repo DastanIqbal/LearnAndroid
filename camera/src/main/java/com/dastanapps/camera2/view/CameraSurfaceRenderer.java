@@ -1,13 +1,20 @@
 package com.dastanapps.camera2.view;
 
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.dastanapps.encoder.MediaVideoEncoder;
 import com.dastanapps.gles.GLDrawer2D;
+import com.dastanapps.gles.filters2.BlackNWhiteFilter;
+import com.dastanapps.gles.filters2.NegateFilter;
+import com.dastanapps.gles.filters2.NoneFilter;
+import com.dastanapps.gles.filters2.WobbleFilter;
 import com.dastanapps.view.AutoFitTextureView;
 import com.dastanapps.view.GLTextureView;
+
+import java.util.concurrent.Semaphore;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -22,7 +29,7 @@ public final class CameraSurfaceRenderer implements GLTextureView.Renderer, Surf
     private int surfaceHeight;
     private MediaVideoEncoder mVideoEncoder;
     private GLDrawer2D mDrawer;
-    private Camera mCamera;
+    private RenderThread renderThread;
 
     public CameraSurfaceRenderer() {
     }
@@ -43,7 +50,9 @@ public final class CameraSurfaceRenderer implements GLTextureView.Renderer, Surf
         mCameraSurfaceTexture.setOnFrameAvailableListener(this);
         if (listener != null)
             listener.onSurfaceTextureReady(mCameraSurfaceTexture);
-        mDrawer = new GLDrawer2D();
+        mDrawer = new WobbleFilter();
+        renderThread = new RenderThread();
+        renderThread.start();
     }
 
     @Override
@@ -70,7 +79,7 @@ public final class CameraSurfaceRenderer implements GLTextureView.Renderer, Surf
             // get texture matrix
             mCameraSurfaceTexture.getTransformMatrix(mDrawer.mStMatrix);
         }
-        mDrawer.draw(mCameraSurfaceGlTexture,mDrawer.mStMatrix);
+        mDrawer.draw(mCameraSurfaceGlTexture, mDrawer.mStMatrix);
         synchronized (this) {
             if (mVideoEncoder != null) {
                 mVideoEncoder.frameAvailableSoon();
@@ -109,7 +118,50 @@ public final class CameraSurfaceRenderer implements GLTextureView.Renderer, Surf
         void onSurfaceTextureReady(SurfaceTexture surfaceTexture);
     }
 
-//    public void changeFilter(final CameraFilter filter) {
-//        cameraFilter = filter;
-//    }
+    private int i = 0;
+
+    public void changeFilter() {
+        renderThread.blockingHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                switch (i) {
+                    case 0:
+                        mDrawer = new NegateFilter();
+                        break;
+                    case 1:
+                        mDrawer = new BlackNWhiteFilter();
+                        break;
+                    case 2:
+                        mDrawer = new NoneFilter();
+                        break;
+
+                }
+                if (i >= 2) {
+                    i = 0;
+                } else {
+                    i++;
+                }
+            }
+        });
+    }
+
+    private class RenderThread extends Thread {
+        private Semaphore eglContextReadyLock = new Semaphore(0);
+        private Handler handler;
+
+        @Override
+        public void run() {
+            Looper.prepare();
+            handler = new Handler();
+            eglContextReadyLock.release();
+            Looper.loop();
+        }
+
+        Handler blockingHandler() {
+            //Block until the EGL context is ready to accept messages
+            eglContextReadyLock.acquireUninterruptibly();
+            eglContextReadyLock.release();
+            return this.handler;
+        }
+    }
 }

@@ -119,6 +119,13 @@ public class Camera1VideoFragment extends Fragment implements
 //        camera1.setFaceView(mFaceView);
         camera1.setFocusImage(mFocusImage);
 
+        view.findViewById(R.id.customFilter).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                camera1.changeFilter();
+            }
+        });
+
     }
 
     @Override

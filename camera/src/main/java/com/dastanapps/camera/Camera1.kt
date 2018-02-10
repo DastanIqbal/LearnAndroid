@@ -426,6 +426,12 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         mTextureView.setRenderer(cameraSurfaceRenderer)
     }
 
+    fun changeFilter() {
+        if (cameraSurfaceRenderer != null) {
+            cameraSurfaceRenderer?.changeFilter()
+        }
+    }
+
     companion object {
         private val TAG = "Camera1"
         val FOCUSING_FOCUS_VIEW = 0

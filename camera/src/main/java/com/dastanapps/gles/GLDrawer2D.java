@@ -49,24 +49,38 @@ public class GLDrawer2D {
             + "	gl_Position = uMVPMatrix * aPosition;\n"
             + "	vTextureCoord = (uTexMatrix * aTextureCoord).xy;\n"
             + "}\n";
-    private static final String fss
-            = "#extension GL_OES_EGL_image_external : require\n"
-            + "precision mediump float;\n"
-            + "uniform samplerExternalOES sTexture;\n"
-            + "varying highp vec2 vTextureCoord;\n"
-            + "void main() {\n" +
-            "    vec4 color = texture2D(sTexture, vTextureCoord);\n" +
-            "    float colorR = (1.0 - color.r) / 1.0;\n" +
-            "    float colorG = (1.0 - color.g) / 1.0;\n" +
-            "    float colorB = (1.0 - color.b) / 1.0;\n" +
-            "    gl_FragColor = vec4(colorR, colorG, colorB, color.a);\n" +
-            "}";
+
+    protected static String fss = constructShader(
+            "gl_FragColor = color;\n"
+    );
+
+    protected static String constructShader(String mainCode) {
+        return "#extension GL_OES_EGL_image_external : require\n"
+                + "precision mediump float;\n"
+                + "uniform samplerExternalOES sTexture;\n"
+                + "varying highp vec2 vTextureCoord;\n"
+                + "void main() {\n"
+                + "    vec4 color = texture2D(sTexture, vTextureCoord);\n"
+                + mainCode
+                + "}";
+    }
+
+    protected static String constructShaderExecuteMain(String mainCode) {
+        return "#extension GL_OES_EGL_image_external : require\n"
+                + "precision mediump float;\n"
+                + "uniform samplerExternalOES sTexture;\n"
+                + "varying highp vec2 vTextureCoord;\n"
+                + "void main() {\n"
+                + mainCode
+                + "}";
+    }
+
     private static final float[] VERTICES = {1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f};
     private static final float[] TEXCOORD = {1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f};
 
     private final FloatBuffer pVertex;
     private final FloatBuffer pTexCoord;
-    private int hProgram;
+    protected int hProgram;
     int maPositionLoc;
     int maTextureCoordLoc;
     int muMVPMatrixLoc;
@@ -92,7 +106,11 @@ public class GLDrawer2D {
         pTexCoord.put(TEXCOORD);
         pTexCoord.flip();
 
-        hProgram = loadShader(vss, fss);
+//        hProgram = loadShader(vss, fss);
+//        bindShaderValues(hProgram);
+    }
+
+    protected void bindShaderValues(int hProgram) {
         GLES20.glUseProgram(hProgram);
         maPositionLoc = GLES20.glGetAttribLocation(hProgram, "aPosition");
         maTextureCoordLoc = GLES20.glGetAttribLocation(hProgram, "aTextureCoord");
@@ -117,6 +135,11 @@ public class GLDrawer2D {
         if (hProgram >= 0)
             GLES20.glDeleteProgram(hProgram);
         hProgram = -1;
+    }
+
+    public void draw(int program, final int tex_id, final float[] tex_matrix) {
+        hProgram = program;
+        draw(tex_id, tex_matrix);
     }
 
     /**
@@ -160,7 +183,7 @@ public class GLDrawer2D {
      * @return texture ID
      */
     public static int initTex() {
-        if (DEBUG) Log.v(TAG, "initTex:");
+        Log.v(TAG, "initTex:");
         final int[] tex = new int[1];
         GLES20.glGenTextures(1, tex, 0);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, tex[0]);
@@ -179,9 +202,13 @@ public class GLDrawer2D {
      * delete specific texture
      */
     public static void deleteTex(final int hTex) {
-        if (DEBUG) Log.v(TAG, "deleteTex:");
+        Log.v(TAG, "deleteTex:");
         final int[] tex = new int[]{hTex};
         GLES20.glDeleteTextures(1, tex, 0);
+    }
+
+    public static int loadShader(String fss) {
+        return loadShader(vss, fss);
     }
 
     /**
@@ -192,14 +219,14 @@ public class GLDrawer2D {
      * @return
      */
     public static int loadShader(final String vss, final String fss) {
-        if (DEBUG) Log.v(TAG, "loadShader:");
+        Log.v(TAG, "loadShader:");
         int vs = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
         GLES20.glShaderSource(vs, vss);
         GLES20.glCompileShader(vs);
         final int[] compiled = new int[1];
         GLES20.glGetShaderiv(vs, GLES20.GL_COMPILE_STATUS, compiled, 0);
         if (compiled[0] == 0) {
-            if (DEBUG) Log.e(TAG, "Failed to compile vertex shader:"
+            Log.e(TAG, "Failed to compile vertex shader:"
                     + GLES20.glGetShaderInfoLog(vs));
             GLES20.glDeleteShader(vs);
             vs = 0;
@@ -210,7 +237,7 @@ public class GLDrawer2D {
         GLES20.glCompileShader(fs);
         GLES20.glGetShaderiv(fs, GLES20.GL_COMPILE_STATUS, compiled, 0);
         if (compiled[0] == 0) {
-            if (DEBUG) Log.w(TAG, "Failed to compile fragment shader:"
+            Log.w(TAG, "Failed to compile fragment shader:"
                     + GLES20.glGetShaderInfoLog(fs));
             GLES20.glDeleteShader(fs);
             fs = 0;
