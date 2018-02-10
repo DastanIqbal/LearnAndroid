@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">Camera2</string>
+    <string name="seconds_abbreviation">s</string> <!-- short for seconds -->
+    <string name="iso">ISO</string>
+    <string name="exposure_compensation">Exposure compensation</string>
+    <string name="cancelled_timer">Cancelled timer</string>
+    <string name="cancelled_burst_mode">Cancelled burst mode</string>
+    <string name="location_not_available">GPS location not available</string>
+    <!-- the permission names such as Microphone should match what Android calls them in the App permission settings -->
+    <string name="permission_record_audio_not_available">Microphone permission is not available</string>
+    <string name="permission_location_not_available">Location permission is not available</string>
+    <string name="video_no_free_space">Not enough free space to record video</string>
+    <string name="video_power_critical">Video stopped\nBattery level critically low</string>
+    <string name="video_pause">Video paused</string>
+    <string name="video_resume">Video resumed</string>
+    <string name="pause_video">Pause video recording</string>
+    <string name="resume_video">Resume video recording</string>
+    <string name="repeats_to_go">repeats to go</string> <!--  intentionally starts lower case -->
+    <!-- for accessibility, these strings for face detection will typically be spoken, e.g., through Google Talkback -->
+    <string name="face_detected">face</string>
+    <string name="faces_detected">faces</string>
+    <string name="left_of_screen">at left of screen</string>
+    <string name="right_of_screen">at right of screen</string>
+    <string name="top_of_screen">at top of screen</string>
+    <string name="bottom_of_screen">at bottom of screen</string>
+    <string name="centre_of_screen">at centre</string>
+    <string name="metres_abbreviation">m</string> <!-- symbol short for metres -->
+    <string name="focus_distance">Focus distance</string>
+    <string name="infinite">Infinite</string>
+    <string name="white_balance">White balance</string>
+</resources>
