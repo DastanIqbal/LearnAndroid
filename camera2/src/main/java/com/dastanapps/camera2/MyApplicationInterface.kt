@@ -29,6 +29,10 @@ import java.util.*
  */
 class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceState: Bundle?) : ApplicationInterface {
 
+    init {
+        CameraUtils.setWindowFlagsForCamera(mainActivity)
+    }
+
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivity);
     private val cameraId: Int = 0;
     override fun getContext(): Context {
@@ -515,7 +519,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun isVideoPref(): Boolean {
-        return sharedPreferences.getBoolean(PreferenceKeys.IsVideoPreferenceKey, false)
+        return sharedPreferences.getBoolean(PreferenceKeys.IsVideoPreferenceKey, true)
     }
 
     override fun getSceneModePref(): String? {
