@@ -145,7 +145,7 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun layoutUI() {
-
+        mainActivity.reLayoutUI();
     }
 
     override fun multitouchZoom(new_zoom: Int) {
@@ -226,28 +226,29 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
         return if (using_saf) VIDEOMETHOD_SAF else VIDEOMETHOD_FILE
     }
 
+    private var last_video_file: File? = null
+
     override fun createOutputVideoFile(): File {
-        return File("/sdcard")
+        last_video_file = storageUtils.createOutputMediaFile(StorageUtils.MEDIA_TYPE_VIDEO, "", "mp4", Date())
+        return last_video_file!!
     }
 
-    private var last_video_file_saf: Uri? = null
-
     override fun createOutputVideoSAF(): Uri? {
-        last_video_file_saf = storageUtils.createOutputMediaFileSAF(StorageUtils.MEDIA_TYPE_VIDEO, "", "mp4", Date())
+        val last_video_file_saf = storageUtils.createOutputMediaFileSAF(StorageUtils.MEDIA_TYPE_VIDEO, "", "mp4", Date())
         return last_video_file_saf
     }
 
     override fun createOutputVideoUri(): Uri? {
-        val action = mainActivity.getIntent().getAction()
+        val action = mainActivity.intent.action
         if (MediaStore.ACTION_VIDEO_CAPTURE == action) {
             if (MyDebug.LOG)
                 Log.d(TAG, "from video capture intent")
-            val myExtras = mainActivity.getIntent().getExtras()
+            val myExtras = mainActivity.intent.extras
             if (myExtras != null) {
                 val intent_uri = myExtras.getParcelable<Uri>(MediaStore.EXTRA_OUTPUT)
                 if (intent_uri != null) {
                     if (MyDebug.LOG)
-                        Log.d(TAG, "save to: " + intent_uri!!)
+                        Log.d(TAG, "save to: " + intent_uri)
                     return intent_uri
                 }
             }
@@ -940,6 +941,7 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
         }
         return -1
     }
+
     // note, okay to change the order of enums in future versions, as getPhotoMode() does not rely on the order for the saved photo mode
     enum class PhotoMode {
         Standard,

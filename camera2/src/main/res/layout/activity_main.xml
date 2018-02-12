@@ -12,11 +12,22 @@
         android:layout_centerInParent="true" />
 
     <ImageView
+        android:id="@+id/imv_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:onClick="clickRecordVideo"
+        android:padding="16dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_media_play" />
+
+    <ImageView
         android:id="@+id/imv_setting"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/imv_play"
+        android:onClick="clickOpenSettings"
         android:padding="16dp"
-        android:layout_alignParentEnd="true"
-        android:src="@android:drawable/ic_dialog_info"
-        android:layout_alignParentRight="true" />
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_dialog_info" />
 </RelativeLayout>

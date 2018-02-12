@@ -260,8 +260,8 @@ object CameraUtils {
     }
 
 
-    fun openSettings(preview: Preview,context: Context) {
-        val activity:Activity=context as Activity
+    fun openSettings(preview: Preview, context: Context) {
+        val activity: Activity = context as Activity
         if (MyDebug.LOG)
             Log.d(TAG, "openSettings")
         // waitUntilImageQueueEmpty() // in theory not needed as we could continue running in the background, but best to be safe
@@ -395,6 +395,10 @@ object CameraUtils {
 
     private val preferencesListener = PreferencesListener()
 
+    fun stopListeningPreferenceFragment(context: Context) {
+        preferencesListener.stopListening(context)
+    }
+
     /** Keeps track of changes to SharedPreferences.
      */
     class PreferencesListener : SharedPreferences.OnSharedPreferenceChangeListener {
@@ -440,7 +444,7 @@ object CameraUtils {
     }
 
     private val switch_video_toast = ToastBoxer()
-    fun showPhotoVideoToast(always_show: Boolean,preview: Preview,context: Context,applicationInterface: MyApplicationInterface) {
+    fun showPhotoVideoToast(always_show: Boolean, preview: Preview, context: Context, applicationInterface: MyApplicationInterface) {
         if (MyDebug.LOG) {
             Log.d(TAG, "showPhotoVideoToast")
             Log.d(TAG, "always_show? " + always_show)
@@ -658,7 +662,7 @@ object CameraUtils {
 
     private var saf_dialog_from_preferences: Boolean = false
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    fun openFolderChooserDialogSAF(activity: Activity,from_preferences: Boolean) {
+    fun openFolderChooserDialogSAF(activity: Activity, from_preferences: Boolean) {
         if (MyDebug.LOG)
             Log.d(TAG, "openFolderChooserDialogSAF: " + from_preferences)
         this.saf_dialog_from_preferences = from_preferences
@@ -669,7 +673,7 @@ object CameraUtils {
     }
 
 
-    fun updateSaveFolder(new_save_location: String?,applicationInterface: MyApplicationInterface,preview: Preview,context:Context) {
+    fun updateSaveFolder(new_save_location: String?, applicationInterface: MyApplicationInterface, preview: Preview, context: Context) {
         if (MyDebug.LOG)
             Log.d(TAG, "updateSaveFolder: " + new_save_location!!)
         if (new_save_location != null) {

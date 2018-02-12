@@ -89,7 +89,7 @@ import java.util.concurrent.TimeoutException;
  *  We could probably do with decoupling this class into separate components!
  */
 public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextureListener {
-	private static final String TAG = "Preview";
+	private static final String TAG = "DEBUG:Preview";
 
 	private final boolean using_android_l;
 

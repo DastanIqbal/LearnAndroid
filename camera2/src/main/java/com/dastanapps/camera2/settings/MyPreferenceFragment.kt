@@ -782,7 +782,7 @@ class MyPreferenceFragment : PreferenceFragment(), OnSharedPreferenceChangeListe
 
                         about_string.append("\nUsing SAF?: ")
                         about_string.append(sharedPreferences.getBoolean(PreferenceKeys.getUsingSAFPreferenceKey(), false))
-                        val save_location = sharedPreferences.getString(PreferenceKeys.getSaveLocationPreferenceKey(), "OpenCamera")
+                        val save_location = sharedPreferences.getString(PreferenceKeys.getSaveLocationPreferenceKey(), "Kruso")
                         about_string.append("\nSave Location: ")
                         about_string.append(save_location)
                         val save_location_saf = sharedPreferences.getString(PreferenceKeys.getSaveLocationSAFPreferenceKey(), "")
