@@ -17,22 +17,19 @@ import java.io.InputStreamReader
 
 object GLUtils {
     fun loadProgram(strVSource: String, strFSource: String): Int {
-        val iVShader: Int
-        val iFShader: Int
-        val iProgId: Int
+        val iVShader: Int = loadShader(strVSource, GLES20.GL_VERTEX_SHADER)
+        val iFShader: Int = loadShader(strFSource, GLES20.GL_FRAGMENT_SHADER)
+        val iProgId: Int = GLES20.glCreateProgram()
         val link = IntArray(1)
-        iVShader = loadShader(strVSource, GLES20.GL_VERTEX_SHADER)
         if (iVShader == 0) {
             Log.d("Load Program", "Vertex Shader Failed")
             return 0
         }
-        iFShader = loadShader(strFSource, GLES20.GL_FRAGMENT_SHADER)
         if (iFShader == 0) {
             Log.d("Load Program", "Fragment Shader Failed")
             return 0
         }
 
-        iProgId = GLES20.glCreateProgram()
         GLES20.glAttachShader(iProgId, iVShader)
         GLES20.glAttachShader(iProgId, iFShader)
         GLES20.glLinkProgram(iProgId)
