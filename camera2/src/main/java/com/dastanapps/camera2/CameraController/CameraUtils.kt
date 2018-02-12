@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.util.Log
@@ -21,6 +22,7 @@ import com.dastanapps.camera2.settings.PreferenceKeys
 
 object CameraUtils {
     internal val TAG = "DEBUG:CameraUtils"
+    var supports_camera2: Boolean = false
 
     /**
      * Determine whether we support Camera2 API.
@@ -28,7 +30,7 @@ object CameraUtils {
     fun initCamera2Support(context: Context): Boolean {
         if (MyDebug.LOG)
             Log.d(TAG, "initCamera2Support")
-        var supports_camera2 = false
+        supports_camera2 = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val manager2 = CameraControllerManager2(context)
             supports_camera2 = true
@@ -178,5 +180,36 @@ object CameraUtils {
         // ->CameraController2.runFakePrecapture->Preview/onFrontScreenTurnOn->MyApplicationInterface.turnFrontScreenFlashOn
         // -> this.setBrightnessForCamera
         activity.runOnUiThread { activity.window.attributes = layout }
+    }
+
+    /** Sets the window flags for when the settings window is open.
+     */
+    fun setWindowFlagsForSettings(activity: Activity) {
+        // allow screen rotation
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        // revert to standard screen blank behaviour
+        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // settings should still be protected by screen lock
+        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+
+        run {
+            val layout = activity.window.attributes
+            layout.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            activity.window.attributes = layout
+        }
+
+        setImmersiveMode(false, activity)
+    }
+
+    fun putBundleExtra(bundle: Bundle, key: String, values: List<String>?) {
+        if (values != null) {
+            val values_arr = arrayOfNulls<String>(values.size)
+            var i = 0
+            for (value in values) {
+                values_arr[i] = value
+                i++
+            }
+            bundle.putStringArray(key, values_arr)
+        }
     }
 }

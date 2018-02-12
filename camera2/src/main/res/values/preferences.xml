@@ -248,4 +248,27 @@
     <string name="duration_30m">30 minutes</string>
     <string name="duration_45m">45 minutes</string>
     <string name="duration_1h">1 hour</string>
+
+    <string name="auto_stabilise_info">Auto-level will automatically rotate photos so that they appear level.\n\nNote that this means images will come out a slightly lower resolution (due to the rotation and cropping that\'s required).</string>
+    <string name="raw_info">DNG files contain the full uncompressed and unprocessed information from your camera.\n\nMost gallery apps won\'t recognise DNG, instead they should be used with specialised apps like Snapseed or Lightroom.\n\nNote that various processing options such as "Stamp photos" and "Auto-level" will only apply to the JPEG images, and not the DNG images.\n\nDNG files take up a lot of space; a file explorer app may be useful for transferring or deleting them.\n\nDNG files are only saved in Standard or DRO photo modes.</string>
+    <string name="hdr_info">HDR mode is useful for shots with a large variation in brightness. It works by taking multiple shots at different exposures, and combining them to create the final image.\n\nNote that HDR is not suitable for scenes with fast movement, and may result in less accurate colour reproduction.\n\nTaking photos in HDR mode will be slower.</string>
+
+    <string name="dont_show_again">Don\'t show again</string>
+
+    <string name="saf_select_save_location">Select a save location</string>
+    <string name="saf_cancelled">Storage Access Framework cancelled</string>
+    <string name="saf_permission_failed">Unable to save to this folder</string>
+    <string name="about_available">Available</string>
+    <string name="about_not_available">Not available</string>
+    <string name="about_copy_to_clipboard">Copy to clipboard</string>
+
+    <string name="parent_folder">Parent Folder</string>
+    <string name="new_folder">New Folder</string>
+    <string name="cant_write_folder">Can\'t write to this folder</string>
+    <string name="cant_access_folder">Can\'t access this folder</string>
+    <string name="enter_new_folder">Enter new folder name</string>
+    <string name="failed_create_folder">Failed to create folder</string>
+    <string name="folder_exists">Folder already exists</string>
+
+    <string name="changed_save_location">Changed save location to:</string>
 </resources>

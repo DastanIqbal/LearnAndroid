@@ -28,4 +28,27 @@
     <string name="focus_distance">Focus distance</string>
     <string name="infinite">Infinite</string>
     <string name="white_balance">White balance</string>
+
+
+    <string name="auto_stabilise_not_supported">Sorry, auto-level not supported\non this device</string>
+    <string name="audio_disabled">Audio disabled</string>
+    <string name="max_duration">Max duration</string>
+    <string name="color_effect">Color effect</string>
+    <string name="scene_mode">Scene mode</string>
+
+    <string name="max_filesize">Max file size</string>
+    <string name="mb_abbreviation">MB</string> <!-- symbol short for megabytes -->
+    <string name="gb_abbreviation">GB</string> <!-- symbol short for gigabytes -->
+    <string name="photo">Photo</string>
+    <string name="video">Video</string>
+    <string name="photo_mode_dro">DRO</string>
+    <string name="photo_mode_hdr">HDR</string>
+    <string name="photo_mode_expo_bracketing">Expo {}</string>
+    <string name="photo_mode_expo_bracketing_full">Exposure Bracketing</string>
+    <string name="photo_mode_noise_reduction">NR</string>
+    <string name="photo_mode">Photo Mode</string>
+    <string name="high_speed">High Speed</string> <!-- in the sense of high speed video frame rates -->
+    <string name="fps">FPS</string>
+
+
 </resources>

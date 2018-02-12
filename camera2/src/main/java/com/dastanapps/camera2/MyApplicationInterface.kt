@@ -9,6 +9,7 @@ import android.location.Location
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.preference.PreferenceManager
 import android.provider.MediaStore
 import android.util.Log
@@ -17,6 +18,7 @@ import android.view.MotionEvent
 import com.dastanapps.camera2.CameraController.CameraController
 import com.dastanapps.camera2.CameraController.CameraUtils
 import com.dastanapps.camera2.Preview.ApplicationInterface
+import com.dastanapps.camera2.Preview.ApplicationInterface.*
 import com.dastanapps.camera2.Preview.VideoProfile
 import com.dastanapps.camera2.settings.PreferenceKeys
 import java.io.File
@@ -28,19 +30,41 @@ import java.util.*
  * 10/02/2018 5:15
  */
 class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceState: Bundle?) : ApplicationInterface {
+    private val storageUtils: StorageUtils
+    private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivity);
+    private var cameraId: Int = 0;
+    private var zoom_factor = 0
+    private var focus_distance = 0.0f
 
     init {
         CameraUtils.setWindowFlagsForCamera(mainActivity)
+        this.storageUtils = StorageUtils(mainActivity)
+        if (savedInstanceState != null) {
+            // load the things we saved in onSaveInstanceState().
+            if (MyDebug.LOG)
+                Log.d(TAG, "read from savedInstanceState")
+            cameraId = savedInstanceState.getInt("cameraId", 0)
+            if (MyDebug.LOG)
+                Log.d(TAG, "found cameraId: " + cameraId)
+            zoom_factor = savedInstanceState.getInt("zoom_factor", 0)
+            if (MyDebug.LOG)
+                Log.d(TAG, "found zoom_factor: " + zoom_factor)
+            focus_distance = savedInstanceState.getFloat("focus_distance", 0.0f)
+            if (MyDebug.LOG)
+                Log.d(TAG, "found focus_distance: " + focus_distance)
+        }
     }
 
-    private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivity);
-    private val cameraId: Int = 0;
     override fun getContext(): Context {
         return mainActivity
     }
 
     override fun useCamera2(): Boolean {
-        return CameraUtils.initCamera2Support(mainActivity)
+//        return if (CameraUtils.initCamera2Support(mainActivity)) {
+//            sharedPreferences.getBoolean(PreferenceKeys.UseCamera2PreferenceKey, false)
+//            return true
+//        } else false
+        return true;//CameraUtils.initCamera2Support(mainActivity)
     }
 
     override fun cameraSetup() {
@@ -160,24 +184,79 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         return null
     }
 
+    /** Here we save states which aren't saved in preferences (we don't want them to be saved if the
+     * application is restarted from scratch), but we do want to preserve if Android has to recreate
+     * the application (e.g., configuration change, or it's destroyed while in background).
+     */
+    internal fun onSaveInstanceState(state: Bundle) {
+        if (MyDebug.LOG)
+            Log.d(TAG, "onSaveInstanceState")
+        if (MyDebug.LOG)
+            Log.d(TAG, "save cameraId: " + cameraId)
+        state.putInt("cameraId", cameraId)
+        if (MyDebug.LOG)
+            Log.d(TAG, "save zoom_factor: " + zoom_factor)
+        state.putInt("zoom_factor", zoom_factor)
+        if (MyDebug.LOG)
+            Log.d(TAG, "save focus_distance: " + focus_distance)
+        state.putFloat("focus_distance", focus_distance)
+    }
+
     override fun createOutputVideoMethod(): Int {
-        return 0;
+        val action = mainActivity.getIntent().getAction()
+        if (MediaStore.ACTION_VIDEO_CAPTURE == action) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "from video capture intent")
+            val myExtras = mainActivity.getIntent().getExtras()
+            if (myExtras != null) {
+                val intent_uri = myExtras!!.getParcelable<Uri>(MediaStore.EXTRA_OUTPUT)
+                if (intent_uri != null) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "save to: " + intent_uri!!)
+                    return VIDEOMETHOD_URI
+                }
+            }
+            // if no EXTRA_OUTPUT, we should save to standard location, and will pass back the Uri of that location
+            if (MyDebug.LOG)
+                Log.d(TAG, "intent uri not specified")
+            // note that SAF URIs don't seem to work for calling applications (tested with Grabilla and "Photo Grabber Image From Video" (FreezeFrame)), so we use standard folder with non-SAF method
+            return VIDEOMETHOD_FILE
+        }
+        val using_saf = storageUtils.isUsingSAF
+        return if (using_saf) VIDEOMETHOD_SAF else VIDEOMETHOD_FILE
     }
 
     override fun createOutputVideoFile(): File {
         return File("/sdcard")
     }
 
+    private var last_video_file_saf: Uri? = null
+
     override fun createOutputVideoSAF(): Uri? {
-        return null;
+        last_video_file_saf = storageUtils.createOutputMediaFileSAF(StorageUtils.MEDIA_TYPE_VIDEO, "", "mp4", Date())
+        return last_video_file_saf
     }
 
     override fun createOutputVideoUri(): Uri? {
-        return null;
+        val action = mainActivity.getIntent().getAction()
+        if (MediaStore.ACTION_VIDEO_CAPTURE == action) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "from video capture intent")
+            val myExtras = mainActivity.getIntent().getExtras()
+            if (myExtras != null) {
+                val intent_uri = myExtras.getParcelable<Uri>(MediaStore.EXTRA_OUTPUT)
+                if (intent_uri != null) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "save to: " + intent_uri!!)
+                    return intent_uri
+                }
+            }
+        }
+        throw RuntimeException() // programming error if we arrived here
     }
 
     override fun getCameraIdPref(): Int {
-        return 0;
+        return cameraId;
     }
 
     override fun getVideoFlashPref(): Boolean {
@@ -211,11 +290,10 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun getPausePreviewPref(): Boolean {
-//        return if (mainActivity.getPreview().isVideoRecording()) {
-//            // don't pause preview when taking photos while recording video!
-//            false
-//        } else sharedPreferences.getBoolean(PreferenceKeys.PausePreviewPreferenceKey, false)
-        return false;
+        return if (mainActivity.preview.isVideoRecording()) {
+            // don't pause preview when taking photos while recording video!
+            false
+        } else sharedPreferences.getBoolean(PreferenceKeys.PausePreviewPreferenceKey, false)
     }
 
     override fun getShowToastsPref(): Boolean {
@@ -294,9 +372,9 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
 
 
     override fun getZoomPref(): Int {
-        //if (MyDebug.LOG)
-        //  Log.d(TAG, "getZoomPref: " + zoom_factor)
-        return 0;//zoom_factor
+        if (MyDebug.LOG)
+            Log.d(TAG, "getZoomPref: " + zoom_factor)
+        return zoom_factor
     }
 
     override fun getCalibratedLevelAngle(): Double {
@@ -308,30 +386,28 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun getFocusDistancePref(): Float {
-        return 0f;//focus_distance
+        return focus_distance
     }
 
     override fun isExpoBracketingPref(): Boolean {
-//        val photo_mode = getPhotoMode()
-//        return if (photo_mode == PhotoMode.HDR || photo_mode == PhotoMode.ExpoBracketing) true else false
-        return false
+        val photo_mode = getPhotoMode()
+        return if (photo_mode == PhotoMode.HDR || photo_mode == PhotoMode.ExpoBracketing) true else false
     }
 
     override fun isCameraBurstPref(): Boolean {
-//        val photo_mode = getPhotoMode()
-//        return if (photo_mode == PhotoMode.NoiseReduction) true else false
-        return false
+        val photo_mode = getPhotoMode()
+        return if (photo_mode == PhotoMode.NoiseReduction) true else false
     }
 
     override fun getExpoBracketingNImagesPref(): Int {
         if (MyDebug.LOG)
             Log.d(TAG, "getExpoBracketingNImagesPref")
         var n_images: Int = 0
-        /*val photo_mode = getPhotoMode()
+        val photo_mode = getPhotoMode()
         if (photo_mode == PhotoMode.HDR) {
             // always set 3 images for HDR
             n_images = 3
-        } else*/run {
+        } else {
             val n_images_s = sharedPreferences.getString(PreferenceKeys.ExpoBracketingNImagesPreferenceKey, "3")
             try {
                 n_images = Integer.parseInt(n_images_s)
@@ -351,12 +427,11 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         if (MyDebug.LOG)
             Log.d(TAG, "getExpoBracketingStopsPref")
         var n_stops: Double = 0.0
-        //val photo_mode = getPhotoMode()
-        /*if (photo_mode == PhotoMode.HDR) {
+        val photo_mode = getPhotoMode()
+        if (photo_mode == PhotoMode.HDR) {
             // always set 2 stops for HDR
             n_stops = 2.0
-        } else*/
-        run {
+        } else {
             val n_stops_s = sharedPreferences.getString(PreferenceKeys.ExpoBracketingStopsPreferenceKey, "2")
             try {
                 n_stops = java.lang.Double.parseDouble(n_stops_s)
@@ -372,28 +447,27 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         return n_stops
     }
 
-//    fun getPhotoMode(): PhotoMode {
-//        // Note, this always should return the true photo mode - if we're in video mode and taking a photo snapshot while
-//        // video recording, the caller should override. We don't override here, as this preference may be used to affect how
-//        // the CameraController is set up, and we don't always re-setup the camera when switching between photo and video modes.
-//        val photo_mode_pref = sharedPreferences.getString(PreferenceKeys.PhotoModePreferenceKey, "preference_photo_mode_std")
-//        val dro = photo_mode_pref == "preference_photo_mode_dro"
-//        if (dro && main_activity.supportsDRO())
-//            return PhotoMode.DRO
-//        val hdr = photo_mode_pref == "preference_photo_mode_hdr"
-//        if (hdr && main_activity.supportsHDR())
-//            return PhotoMode.HDR
-//        val expo_bracketing = photo_mode_pref == "preference_photo_mode_expo_bracketing"
-//        if (expo_bracketing && main_activity.supportsExpoBracketing())
-//            return PhotoMode.ExpoBracketing
-//        val noise_reduction = photo_mode_pref == "preference_photo_mode_noise_reduction"
-//        return if (noise_reduction && main_activity.supportsNoiseReduction()) PhotoMode.NoiseReduction else PhotoMode.Standard
-//    }
+    fun getPhotoMode(): PhotoMode {
+        // Note, this always should return the true photo mode - if we're in video mode and taking a photo snapshot while
+        // video recording, the caller should override. We don't override here, as this preference may be used to affect how
+        // the CameraController is set up, and we don't always re-setup the camera when switching between photo and video modes.
+        val photo_mode_pref = sharedPreferences.getString(PreferenceKeys.PhotoModePreferenceKey, "preference_photo_mode_std")
+        val dro = photo_mode_pref == "preference_photo_mode_dro"
+        if (dro && mainActivity.supportsDRO())
+            return PhotoMode.DRO
+        val hdr = photo_mode_pref == "preference_photo_mode_hdr"
+        if (hdr && mainActivity.supportsHDR())
+            return PhotoMode.HDR
+        val expo_bracketing = photo_mode_pref == "preference_photo_mode_expo_bracketing"
+        if (expo_bracketing && mainActivity.supportsExpoBracketing())
+            return PhotoMode.ExpoBracketing
+        val noise_reduction = photo_mode_pref == "preference_photo_mode_noise_reduction"
+        return if (noise_reduction && mainActivity.supportsNoiseReduction()) PhotoMode.NoiseReduction else PhotoMode.Standard
+    }
 
     override fun getOptimiseAEForDROPref(): Boolean {
-        // val photo_mode = getPhotoMode()
-        //return photo_mode == PhotoMode.DRO
-        return false;
+        val photo_mode = getPhotoMode()
+        return photo_mode == PhotoMode.DRO
     }
 
     override fun isRawPref(): Boolean {
@@ -414,75 +488,115 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
 
 
     override fun setCameraIdPref(cameraId: Int) {
-
+        this.cameraId = cameraId
     }
 
-    override fun setFlashPref(flash_value: String?) {
-
+    override fun setFlashPref(flash_value: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.getFlashPreferenceKey(cameraId), flash_value)
+        editor.apply()
     }
 
-    override fun setFocusPref(focus_value: String?, is_video: Boolean) {
-
+    override fun setFocusPref(focus_value: String, is_video: Boolean) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.getFocusPreferenceKey(cameraId, is_video), focus_value)
+        editor.apply()
+        // focus may be updated by preview (e.g., when switching to/from video mode)
+//        val visibility = if (mainActivity.preview.currentFocusValue != null && mainActivity.preview.currentFocusValue.equals("focus_mode_manual2")) View.VISIBLE else View.INVISIBLE
+//        val focusSeekBar = mainActivity.findViewById(R.id.focus_seekbar)
+//        focusSeekBar.setVisibility(visibility)
     }
 
     override fun setVideoPref(is_video: Boolean) {
-
+        val editor = sharedPreferences.edit()
+        editor.putBoolean(PreferenceKeys.IsVideoPreferenceKey, is_video)
+        editor.apply()
     }
 
-    override fun setSceneModePref(scene_mode: String?) {
-
+    override fun setSceneModePref(scene_mode: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.SceneModePreferenceKey, scene_mode)
+        editor.apply()
     }
 
     override fun clearSceneModePref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.SceneModePreferenceKey)
+        editor.apply()
     }
 
-    override fun setColorEffectPref(color_effect: String?) {
-
+    override fun setColorEffectPref(color_effect: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.ColorEffectPreferenceKey, color_effect)
+        editor.apply()
     }
 
     override fun clearColorEffectPref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.ColorEffectPreferenceKey)
+        editor.apply()
     }
 
-    override fun setWhiteBalancePref(white_balance: String?) {
-
+    override fun setWhiteBalancePref(white_balance: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.WhiteBalancePreferenceKey, white_balance)
+        editor.apply()
     }
 
     override fun clearWhiteBalancePref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.WhiteBalancePreferenceKey)
+        editor.apply()
     }
 
     override fun setWhiteBalanceTemperaturePref(white_balance_temperature: Int) {
-
+        val editor = sharedPreferences.edit()
+        editor.putInt(PreferenceKeys.WhiteBalanceTemperaturePreferenceKey, white_balance_temperature)
+        editor.apply()
     }
 
-    override fun setISOPref(iso: String?) {
-
+    override fun setISOPref(iso: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.ISOPreferenceKey, iso)
+        editor.apply()
     }
 
     override fun clearISOPref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.ISOPreferenceKey)
+        editor.apply()
     }
 
     override fun setExposureCompensationPref(exposure: Int) {
-
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.ExposurePreferenceKey, "" + exposure)
+        editor.apply()
     }
 
     override fun clearExposureCompensationPref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.ExposurePreferenceKey)
+        editor.apply()
     }
 
     override fun setCameraResolutionPref(width: Int, height: Int) {
-
+        val resolution_value = width.toString() + " " + height
+        if (MyDebug.LOG) {
+            Log.d(TAG, "save new resolution_value: " + resolution_value)
+        }
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.getResolutionPreferenceKey(cameraId), resolution_value)
+        editor.apply()
     }
 
-    override fun setVideoQualityPref(video_quality: String?) {
-
+    override fun setVideoQualityPref(video_quality: String) {
+        val editor = sharedPreferences.edit()
+        editor.putString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId), video_quality)
+        editor.apply()
     }
 
     override fun setZoomPref(zoom: Int) {
-
+        zoom_factor = zoom;
     }
 
     override fun requestCameraPermission() {
@@ -498,15 +612,19 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun setExposureTimePref(exposure_time: Long) {
-
+        val editor = sharedPreferences.edit()
+        editor.putLong(PreferenceKeys.ExposureTimePreferenceKey, exposure_time)
+        editor.apply()
     }
 
     override fun clearExposureTimePref() {
-
+        val editor = sharedPreferences.edit()
+        editor.remove(PreferenceKeys.ExposureTimePreferenceKey)
+        editor.apply()
     }
 
     override fun setFocusDistancePref(focus_distance: Float) {
-
+        this.focus_distance = focus_distance;
     }
 
 
@@ -616,16 +734,16 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun getImageQualityPref(): Int {
-//        if (MyDebug.LOG)
-//            Log.d(TAG, "getImageQualityPref")
-//        // see documentation for getSaveImageQualityPref(): in DRO mode we want to take the photo
-//        // at 100% quality for post-processing, the final image will then be saved at the user requested
-//        // setting
-//        val photo_mode = getPhotoMode()
-//        if (photo_mode == PhotoMode.DRO)
-//            return 100
-//        else if (photo_mode == PhotoMode.NoiseReduction)
-//            return 100
+        if (MyDebug.LOG)
+            Log.d(TAG, "getImageQualityPref")
+        // see documentation for getSaveImageQualityPref(): in DRO mode we want to take the photo
+        // at 100% quality for post-processing, the final image will then be saved at the user requested
+        // setting
+        val photo_mode = getPhotoMode()
+        if (photo_mode == PhotoMode.DRO)
+            return 100
+        else if (photo_mode == PhotoMode.NoiseReduction)
+            return 100
         return getSaveImageQualityPref()
     }
 
@@ -642,10 +760,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun getForce4KPref(): Boolean {
-//        return if (cameraId == 0 && sharedPreferences.getBoolean(PreferenceKeys.getForceVideo4KPreferenceKey(), false) && main_activity.supportsForceVideo4K()) {
-//            true
-//        } else false
-        return false;
+        return cameraId == 0 && sharedPreferences.getBoolean(PreferenceKeys.getForceVideo4KPreferenceKey(), false) && mainActivity.supportsForceVideo4K()
     }
 
     override fun getVideoBitratePref(): String {
@@ -690,6 +805,8 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         return sharedPreferences.getBoolean(PreferenceKeys.getVideoRestartMaxFileSizePreferenceKey(), true)
     }
 
+    var test_set_available_memory = false
+    var test_available_memory: Long = 0
     override fun getVideoMaxFileSizePref(): ApplicationInterface.VideoMaxFileSize {
         if (MyDebug.LOG)
             Log.d(TAG, "getVideoMaxFileSizePref")
@@ -704,7 +821,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
 		   If using storage access framework, in theory we could check if this was on internal storage, but risk of getting it wrong...
 		   so seems safest to leave (the main reason for using SAF is for SD cards, anyway).
 		   */
-        /*if (!storageUtils.isUsingSAF()) {
+        if (!storageUtils.isUsingSAF()) {
             val folder_name = storageUtils.getSaveLocation()
             if (MyDebug.LOG)
                 Log.d(TAG, "saving to: " + folder_name)
@@ -722,7 +839,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
             if (is_internal) {
                 if (MyDebug.LOG)
                     Log.d(TAG, "using internal storage")
-                val free_memory = main_activity.freeMemory() * 1024 * 1024
+                val free_memory = mainActivity.freeMemory() * 1024 * 1024
                 val min_free_memory: Long = 50000000 // how much free space to leave after video
                 // min_free_filesize is the minimum value to set for max file size:
                 //   - no point trying to create a really short video
@@ -738,7 +855,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
                     Log.d(TAG, "available_memory: " + available_memory)
                 }
                 if (available_memory > min_free_filesize) {
-                    if (video_max_filesize.max_filesize === 0 || video_max_filesize.max_filesize > available_memory) {
+                    if (video_max_filesize.max_filesize == 0L || video_max_filesize.max_filesize > available_memory) {
                         video_max_filesize.max_filesize = available_memory
                         // still leave auto_restart set to true - because even if we set a max filesize for running out of storage, the video may still hit a maximum limit before hand, if there's a device max limit set (typically ~2GB)
                         if (MyDebug.LOG)
@@ -750,7 +867,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
                     throw ApplicationInterface.NoFreeStorageException()
                 }
             }
-        }*/
+        }
 
         return video_max_filesize
     }
@@ -783,6 +900,10 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
             image_capture_intent = true
         }
         return image_capture_intent
+    }
+
+    internal fun getStorageUtils(): StorageUtils {
+        return storageUtils
     }
 
     // note, okay to change the order of enums in future versions, as getPhotoMode() does not rely on the order for the saved photo mode
