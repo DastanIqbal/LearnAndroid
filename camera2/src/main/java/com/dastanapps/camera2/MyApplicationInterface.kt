@@ -10,6 +10,7 @@ import android.media.Image
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.StatFs
 import android.preference.PreferenceManager
 import android.provider.MediaStore
 import android.util.Log
@@ -29,7 +30,7 @@ import java.util.*
  * dastanIqbal@marvelmedia.com
  * 10/02/2018 5:15
  */
-class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceState: Bundle?) : ApplicationInterface {
+class MyApplicationInterface(private val mainActivity: MainActivity, private val savedInstanceState: Bundle?) : ApplicationInterface {
     private val storageUtils: StorageUtils
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivity);
     private var cameraId: Int = 0;
@@ -60,11 +61,10 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun useCamera2(): Boolean {
-//        return if (CameraUtils.initCamera2Support(mainActivity)) {
-//            sharedPreferences.getBoolean(PreferenceKeys.UseCamera2PreferenceKey, false)
-//            return true
-//        } else false
-        return true;//CameraUtils.initCamera2Support(mainActivity)
+        return if (CameraUtils.initCamera2Support(mainActivity)) {
+            sharedPreferences.getBoolean(PreferenceKeys.UseCamera2PreferenceKey, false)
+            return true
+        } else false
     }
 
     override fun cameraSetup() {
@@ -453,16 +453,16 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         // the CameraController is set up, and we don't always re-setup the camera when switching between photo and video modes.
         val photo_mode_pref = sharedPreferences.getString(PreferenceKeys.PhotoModePreferenceKey, "preference_photo_mode_std")
         val dro = photo_mode_pref == "preference_photo_mode_dro"
-        if (dro && mainActivity.supportsDRO())
+        if (dro && CameraUtils.supportsDRO())
             return PhotoMode.DRO
         val hdr = photo_mode_pref == "preference_photo_mode_hdr"
-        if (hdr && mainActivity.supportsHDR())
+        if (hdr && CameraUtils.supportsHDR(mainActivity.preview))
             return PhotoMode.HDR
         val expo_bracketing = photo_mode_pref == "preference_photo_mode_expo_bracketing"
-        if (expo_bracketing && mainActivity.supportsExpoBracketing())
+        if (expo_bracketing && CameraUtils.supportsExpoBracketing(mainActivity.preview))
             return PhotoMode.ExpoBracketing
         val noise_reduction = photo_mode_pref == "preference_photo_mode_noise_reduction"
-        return if (noise_reduction && mainActivity.supportsNoiseReduction()) PhotoMode.NoiseReduction else PhotoMode.Standard
+        return if (noise_reduction && CameraUtils.supportsNoiseReduction()) PhotoMode.NoiseReduction else PhotoMode.Standard
     }
 
     override fun getOptimiseAEForDROPref(): Boolean {
@@ -760,7 +760,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
     }
 
     override fun getForce4KPref(): Boolean {
-        return cameraId == 0 && sharedPreferences.getBoolean(PreferenceKeys.getForceVideo4KPreferenceKey(), false) && mainActivity.supportsForceVideo4K()
+        return cameraId == 0 && sharedPreferences.getBoolean(PreferenceKeys.getForceVideo4KPreferenceKey(), false) && CameraUtils.supportsForceVideo4K()
     }
 
     override fun getVideoBitratePref(): String {
@@ -839,7 +839,7 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
             if (is_internal) {
                 if (MyDebug.LOG)
                     Log.d(TAG, "using internal storage")
-                val free_memory = mainActivity.freeMemory() * 1024 * 1024
+                val free_memory = freeMemory() * 1024 * 1024
                 val min_free_memory: Long = 50000000 // how much free space to leave after video
                 // min_free_filesize is the minimum value to set for max file size:
                 //   - no point trying to create a really short video
@@ -906,6 +906,40 @@ class MyApplicationInterface(val mainActivity: MainActivity, val savedInstanceSt
         return storageUtils
     }
 
+    fun freeMemory(): Long { // return free memory in MB
+        if (MyDebug.LOG)
+            Log.d(TAG, "freeMemory")
+        try {
+            val folder = getStorageUtils()?.imageFolder
+                    ?: throw IllegalArgumentException() // so that we fall onto the backup
+            val statFs = StatFs(folder.absolutePath)
+            // cast to long to avoid overflow!
+            val blocks = statFs.availableBlocks.toLong()
+            val size = statFs.blockSize.toLong()
+            return blocks * size / 1048576
+        } catch (e: IllegalArgumentException) {
+            // this can happen if folder doesn't exist, or don't have read access
+            // if the save folder is a subfolder of DCIM, we can just use that instead
+            try {
+                if (!getStorageUtils().isUsingSAF) {
+                    // StorageUtils.getSaveLocation() only valid if !isUsingSAF()
+                    val folder_name = getStorageUtils()?.saveLocation
+                    if (!folder_name!!.startsWith("/")) {
+                        val folder = StorageUtils.getBaseFolder()
+                        val statFs = StatFs(folder.absolutePath)
+                        // cast to long to avoid overflow!
+                        val blocks = statFs.availableBlocks.toLong()
+                        val size = statFs.blockSize.toLong()
+                        return blocks * size / 1048576
+                    }
+                }
+            } catch (e2: IllegalArgumentException) {
+                // just in case
+            }
+
+        }
+        return -1
+    }
     // note, okay to change the order of enums in future versions, as getPhotoMode() does not rely on the order for the saved photo mode
     enum class PhotoMode {
         Standard,
