@@ -3,6 +3,7 @@ package com.android
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import android.os.SystemClock
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -16,15 +17,26 @@ class MyGLRenderer : GLSurfaceView.Renderer {
     private val mMVPMatrix = FloatArray(16)//MVP Matrix
     private val mProjectionMatrix = FloatArray(16) //Map OpenGL coordinate systems to Device Coordinate system
     private val mViewMatrix = FloatArray(16) //CameraView
+    private val mRotationMatrix = FloatArray(16) //Rotation Matrix
     override fun onDrawFrame(p0: GL10?) {
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mViewMatrix, 0, 0f, 0.5f, -5f, 0f, 0f, 0f, 0f, 0f, 0f)
+        Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, -6f, 0f, 0f, 0f, 0f, 1f, 0f)
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0)
 
+        // Create a rotation transformation for the triangle
+        val time = SystemClock.uptimeMillis() % 4000L
+        val angle = 0.90f * time
+        Matrix.setRotateM(mRotationMatrix, 0, angle, 0f, 0f, -1f)
+        val scratch = FloatArray(16)
+        // Combine the rotation matrix with the projection and camera view
+        // Note that the mMVPMatrix factor *must be first* in order
+        // for the matrix multiplication product to be correct.
+        Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0)
+
         //Draw Shape
-        mTriangle?.draw(mMVPMatrix)
+        mTriangle?.draw(scratch)
     }
 
     override fun onSurfaceChanged(p0: GL10?, width: Int, height: Int) {

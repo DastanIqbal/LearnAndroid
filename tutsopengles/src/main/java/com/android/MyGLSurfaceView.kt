@@ -14,7 +14,7 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
         setEGLContextClientVersion(2)
         setEGLConfigChooser(8, 8, 8, 8, 8, 8)
         setRenderer(MyGLRenderer())
-        renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+       // renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
     }
 
 }
