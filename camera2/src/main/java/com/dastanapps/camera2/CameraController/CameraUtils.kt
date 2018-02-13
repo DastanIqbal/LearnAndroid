@@ -692,4 +692,28 @@ object CameraUtils {
             }
         }
     }
+
+    fun getEntryForWhiteBalance(context: Context,value: String): String {
+        var id = -1
+        when (value) {
+            CameraController.WHITE_BALANCE_DEFAULT -> id = R.string.white_balance_auto
+            "cloudy-daylight" -> id = R.string.white_balance_cloudy
+            "daylight" -> id = R.string.white_balance_daylight
+            "fluorescent" -> id = R.string.white_balance_fluorescent
+            "incandescent" -> id = R.string.white_balance_incandescent
+            "shade" -> id = R.string.white_balance_shade
+            "twilight" -> id = R.string.white_balance_twilight
+            "warm-fluorescent" -> id = R.string.white_balance_warm
+            //"manual" -> id = R.string.white_balance_manual
+            else -> {
+            }
+        }
+        val entry: String
+        if (id != -1) {
+            entry = context.getResources().getString(id)
+        } else {
+            entry = value
+        }
+        return entry
+    }
 }

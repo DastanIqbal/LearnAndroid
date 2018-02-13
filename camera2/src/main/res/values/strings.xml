@@ -51,4 +51,15 @@
     <string name="fps">FPS</string>
 
 
+    <string name="white_balance_auto">Auto</string>
+    <string name="white_balance_cloudy">Cloudy</string>
+    <string name="white_balance_daylight">Daylight</string>
+    <string name="white_balance_fluorescent">Fluorescent</string>
+    <string name="white_balance_incandescent">Incandescent</string>
+    <string name="white_balance_shade">Shade</string>
+    <string name="white_balance_twilight">Twilight</string>
+    <string name="white_balance_warm">Warm</string>
+    <string name="white_balance_manual">Manual</string>
+
+
 </resources>

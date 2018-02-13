@@ -19,6 +19,7 @@ import com.dastanapps.camera2.CameraController.CameraUtils.supports_force_video_
 import com.dastanapps.camera2.Preview.Preview
 import com.dastanapps.camera2.settings.MyPreferenceFragment
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 
 class MainActivity : Activity() {
     private val TAG: String = "DEBUG:MainActivity"
@@ -38,6 +39,8 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
         applicationInterface = MyApplicationInterface(this, savedInstanceState)
         preview = Preview(applicationInterface, this.findViewById(R.id.preview) as ViewGroup)
+        preview.updateFocus("focus_mode_auto", false, true)
+
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false) // initialise any unset preferences to their default values
 
         val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
@@ -89,6 +92,14 @@ class MainActivity : Activity() {
                 }
             }
         }
+
+
+
+        switch_camera.setOnClickListener { v -> clickedSwitchCamera(v) }
+        exp.setOnClickListener { v -> clickedExposure(v) }
+        flash.setOnClickListener { v -> clickedFlash(v) }
+        wb.setOnClickListener { v -> clickedWhiteBalance(v) }
+        imv_play.setOnClickListener { v -> clickedRecordVideo(v) }
     }
 
     fun reLayoutUI() {
@@ -194,11 +205,96 @@ class MainActivity : Activity() {
         return this.applicationInterface.getStorageUtils()
     }
 
-    fun clickRecordVideo(view: View) {
+    fun clickedRecordVideo(view: View) {
         preview.takePicturePressed(false)
     }
 
-    fun clickOpenSettings(view: View) {
+    fun clickedOpenSettings(view: View) {
         CameraUtils.openSettings(preview, this)
+    }
+
+    var supported_flash_values = ArrayList<String>()
+    fun loadFlashValues() {
+        supported_flash_values.clear()
+        supported_flash_values = preview.supportedFlashValues as ArrayList<String>
+        if (preview.isVideo && supported_flash_values != null) {
+            // filter flash modes we don't want to show
+            val filter = ArrayList<String>()
+            for (flash_value in supported_flash_values) {
+                if (Preview.isFlashSupportedForVideo(flash_value))
+                    filter.add(flash_value)
+            }
+            supported_flash_values = filter
+        }
+    }
+
+    fun clickedFlash(view: View) {
+        if (supported_flash_values.size == 0) {
+            loadFlashValues()
+        }
+        val n = (Math.random() * supported_flash_values.size).toInt()
+        preview.updateFlash(supported_flash_values[n])
+    }
+
+    var exposure = -3;
+    fun clickedExposure(view: View) {
+        preview.setExposure(exposure)
+        exposure += 1
+        if (exposure > preview.maximumExposure) {
+            exposure = preview.minimumExposure;
+        }
+    }
+
+    /* Returns the cameraId that the "Switch camera" button will switch to.
+     */
+    fun getNextCameraId(): Int {
+        if (MyDebug.LOG)
+            Log.d(TAG, "getNextCameraId")
+        var cameraId = preview.cameraId
+        if (MyDebug.LOG)
+            Log.d(TAG, "current cameraId: " + cameraId)
+        if (this.preview.canSwitchCamera()) {
+            val n_cameras = preview.cameraControllerManager.numberOfCameras
+            cameraId = (cameraId + 1) % n_cameras
+        }
+        if (MyDebug.LOG)
+            Log.d(TAG, "next cameraId: " + cameraId)
+        return cameraId
+    }
+
+    fun clickedSwitchCamera(view: View) {
+        if (MyDebug.LOG)
+            Log.d(TAG, "clickedSwitchCamera")
+        if (preview.isOpeningCamera) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "already opening camera in background thread")
+            return
+        }
+        if (this.preview.canSwitchCamera()) {
+            val cameraId = getNextCameraId()
+            this.preview.setCamera(cameraId)
+        }
+    }
+
+    var supported_white_balances = ArrayList<String>()
+    fun loadWhiteBalance() {
+        supported_white_balances = preview.supportedWhiteBalances as ArrayList<String>
+        if (supported_white_balances != null) {
+            val supported_white_balances_entries = ArrayList<String>()
+            supported_white_balances
+                    .map { CameraUtils.getEntryForWhiteBalance(this, it) }
+                    .filterNot { it.isEmpty() }
+                    .forEach { supported_white_balances_entries.add(it) }
+        }
+    }
+
+    fun clickedWhiteBalance(view: View) {
+        if (supported_white_balances.size == 0) {
+            loadWhiteBalance()
+        }
+        if (preview.cameraController != null) {
+            val n = (Math.random() * supported_white_balances.size).toInt()
+            preview.cameraController.whiteBalance = supported_white_balances[n]
+        }
     }
 }

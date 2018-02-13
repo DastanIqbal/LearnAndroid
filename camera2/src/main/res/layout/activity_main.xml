@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:onClick="clickRecordVideo"
+        android:onClick="clickedRecordVideo"
         android:padding="16dp"
         android:scaleType="fitCenter"
         android:src="@android:drawable/ic_media_play" />
@@ -26,8 +26,45 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/imv_play"
-        android:onClick="clickOpenSettings"
+        android:onClick="clickedOpenSettings"
         android:padding="16dp"
         android:scaleType="fitCenter"
         android:src="@android:drawable/ic_dialog_info" />
+
+    <TextView
+        android:id="@+id/switch_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clickedSwitchCamera"
+        android:padding="16dp"
+        android:text="Switch" />
+
+    <TextView
+        android:id="@+id/flash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/switch_camera"
+        android:onClick="clickedFlash"
+        android:padding="16dp"
+        android:text="Flash" />
+
+    <TextView
+        android:id="@+id/wb"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/flash"
+        android:onClick="clickedWhiteBalance"
+        android:padding="16dp"
+        android:text="White Balance" />
+
+    <TextView
+        android:id="@+id/exp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/wb"
+        android:onClick="clickedExposure"
+        android:padding="16dp"
+        android:text="Exposure" />
+
+
 </RelativeLayout>
