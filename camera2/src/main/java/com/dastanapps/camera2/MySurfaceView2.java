@@ -13,6 +13,7 @@ import com.dastanapps.camera2.CameraController.CameraController;
 import com.dastanapps.camera2.CameraController.CameraControllerException;
 import com.dastanapps.camera2.Preview.CameraSurface.CameraSurface;
 import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
+import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
 
 /**
  * Provides support for the surface used for the preview, using a SurfaceView.
@@ -91,5 +92,10 @@ public class MySurfaceView2 extends GLSurfaceView implements CameraSurface {
     @Override
     public void setEGLSurfaceTextureListener(CameraSurfaceRenderer.EGLSurfaceTextureListener eglSurfaceTextureListener) {
         mRenderer.setListener(eglSurfaceTextureListener);
+    }
+
+    @Override
+    public void setVideoEncoder(MediaVideoEncoder encoder) {
+       // mRenderer.setVideoEnocder(this, encoder);
     }
 }

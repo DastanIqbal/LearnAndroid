@@ -66,6 +66,10 @@ import com.dastanapps.camera2.R;
 import com.dastanapps.camera2.TakePhoto;
 import com.dastanapps.camera2.ToastBoxer;
 import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
+import com.dastanapps.camera2.opengles.encoder.MediaAudioEncoder;
+import com.dastanapps.camera2.opengles.encoder.MediaEncoder;
+import com.dastanapps.camera2.opengles.encoder.MediaMuxerWrapper;
+import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -503,7 +507,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
         applicationInterface.touchEvent(event);
         /*if( MyDebug.LOG ) {
-			Log.d(TAG, "touch event: " + event.getAction());
+            Log.d(TAG, "touch event: " + event.getAction());
 		}*/
         if (event.getPointerCount() != 1) {
             //multitouch_time = System.currentTimeMillis();
@@ -4475,6 +4479,64 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (MyDebug.LOG)
             Log.d(TAG, "takePicture exit");
     }
+
+    MediaMuxerWrapper mMuxer;
+
+    /**
+     * start resorcing
+     * This is a sample project and call this on UI thread to avoid being complicated
+     * but basically this should be called on private thread because prepareing
+     * of encoder is heavy work
+     */
+    public void startRecording() {
+        Log.v(TAG, "startRecording:");
+        try {
+            mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
+            if (true) {
+                // for video capturing
+                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720, 1280);
+            }
+            if (true) {
+                // for audio capturing
+                new MediaAudioEncoder(mMuxer, mMediaEncoderListener);
+            }
+            mMuxer.prepare();
+            mMuxer.startRecording();
+        } catch (final IOException e) {
+            Log.e(TAG, "startCapture:", e);
+        }
+    }
+
+    /**
+     * request stop recording
+     */
+    public void stopRecording() {
+        Log.v(TAG, "stopRecording:mMuxer=" + mMuxer);
+        if (mMuxer != null) {
+            mMuxer.stopRecording();
+            mMuxer = null;
+            // you should not wait here
+        }
+    }
+
+    /**
+     * callback methods from encoder
+     */
+    private final MediaEncoder.MediaEncoderListener mMediaEncoderListener = new MediaEncoder.MediaEncoderListener() {
+        @Override
+        public void onPrepared(final MediaEncoder encoder) {
+            Log.v(TAG, "onPrepared:encoder=" + encoder);
+            if (encoder instanceof MediaVideoEncoder)
+                cameraSurface.setVideoEncoder((MediaVideoEncoder) encoder);
+        }
+
+        @Override
+        public void onStopped(final MediaEncoder encoder) {
+            Log.v(TAG, "onStopped:encoder=" + encoder);
+            if (encoder instanceof MediaVideoEncoder)
+                cameraSurface.setVideoEncoder(null);
+        }
+    };
 
     /**
      * Start video recording.

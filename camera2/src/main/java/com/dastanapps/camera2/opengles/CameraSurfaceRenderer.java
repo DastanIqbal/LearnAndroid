@@ -6,6 +6,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.dastanapps.camera2.Preview.CameraSurface.MySurfaceView;
+import com.dastanapps.camera2.Preview.CameraSurface.MyTextureView;
 import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
 import com.dastanapps.camera2.opengles.filters.BlackNWhiteFilter;
 import com.dastanapps.camera2.opengles.filters.NegateFilter;
@@ -98,7 +100,19 @@ public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTe
         GLDrawer2D.deleteTex(mCameraSurfaceGlTexture);
     }
 
-    public void setVideoEnocder(GLSurfaceView mTextureView, final MediaVideoEncoder videoEnocder) {
+    public void setVideoEnocder(MySurfaceView mTextureView, final MediaVideoEncoder videoEnocder) {
+        mTextureView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                if (videoEnocder != null) {
+                    videoEnocder.setEglContext(mCameraSurfaceGlTexture);
+                    mVideoEncoder = videoEnocder;
+                }
+            }
+        });
+    }
+
+    public void setVideoEnocder(MyTextureView mTextureView, final MediaVideoEncoder videoEnocder) {
         mTextureView.queueEvent(new Runnable() {
             @Override
             public void run() {

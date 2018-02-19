@@ -14,6 +14,7 @@ import com.dastanapps.camera2.MyDebug;
 import com.dastanapps.camera2.Preview.Preview;
 import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
 import com.dastanapps.camera2.opengles.GLTextureView;
+import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
 
 
 /**
@@ -100,5 +101,10 @@ public class MyTextureView extends GLTextureView implements CameraSurface {
     @Override
     public void setEGLSurfaceTextureListener(CameraSurfaceRenderer.EGLSurfaceTextureListener eglSurfaceTextureListener) {
         mRenderer.setListener(eglSurfaceTextureListener);
+    }
+
+    @Override
+    public void setVideoEncoder(MediaVideoEncoder encoder) {
+        mRenderer.setVideoEnocder(this, encoder);
     }
 }
