@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/camera/camera.iml" filepath="$PROJECT_DIR$/camera/camera.iml" />
       <module fileurl="file://$PROJECT_DIR$/camera2/camera2.iml" filepath="$PROJECT_DIR$/camera2/camera2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/removeorientationtest/removeorientationtest.iml" filepath="$PROJECT_DIR$/removeorientationtest/removeorientationtest.iml" />
       <module fileurl="file://$PROJECT_DIR$/tutsopengles/tutsopengles.iml" filepath="$PROJECT_DIR$/tutsopengles/tutsopengles.iml" />
     </modules>
   </component>
