@@ -60,8 +60,6 @@ public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, Surf
         this.surfaceWidth = width;
         this.surfaceHeight = height;
         updateViewport(width, height);
-        if (listener != null)
-            listener.onSurfaceChanged(width, height);
     }
 
 
@@ -117,8 +115,6 @@ public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, Surf
          * Underlying EGL Context is ready.
          */
         void onSurfaceTextureReady(SurfaceTexture surfaceTexture);
-
-        void onSurfaceChanged(int width, int height);
     }
 
     private int i = 0;
