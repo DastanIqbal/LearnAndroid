@@ -634,7 +634,7 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun getFocusPref(is_video: Boolean): String {
-        return sharedPreferences.getString(PreferenceKeys.getFocusPreferenceKey(cameraId, is_video), "")
+        return sharedPreferences.getString(PreferenceKeys.getFocusPreferenceKey(cameraId, is_video), "focus_mode_auto")
     }
 
     override fun isVideoPref(): Boolean {

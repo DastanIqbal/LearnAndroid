@@ -1,62 +1,49 @@
-package com.dastanapps.camera2.Preview.CameraSurface;
+package com.dastanapps.camera2;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.media.MediaRecorder;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
+import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 
 import com.dastanapps.camera2.CameraController.CameraController;
 import com.dastanapps.camera2.CameraController.CameraControllerException;
-import com.dastanapps.camera2.MyDebug;
-import com.dastanapps.camera2.Preview.Preview;
+import com.dastanapps.camera2.Preview.CameraSurface.CameraSurface;
 import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
 import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
 
 /**
  * Provides support for the surface used for the preview, using a SurfaceView.
  */
-public class MySurfaceView extends GLSurfaceView implements CameraSurface {
+public class MySurfaceView2 extends GLSurfaceView implements CameraSurface {
     private static final String TAG = "MySurfaceView";
 
-    private Preview preview;
     private int[] measure_spec = new int[2];
     private Handler handler = new Handler();
     private Runnable tick;
     private CameraSurfaceRenderer mRenderer;
 
-    @SuppressWarnings("deprecation")
-    public MySurfaceView(Context context, final Preview preview) {
-        super(context);
-        this.preview = preview;
-        if (MyDebug.LOG) {
-            Log.d(TAG, "new MySurfaceView");
-        }
 
-        // Install a SurfaceHolder.Callback so we get notified when the
-        // underlying surface is created and destroyed.
-        // getHolder().addCallback(preview);
-        // deprecated setting, but required on Android versions prior to 3.0
-        // getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS); // deprecated
+    public MySurfaceView2(final Context context) {
+        this(context, null, 0);
+    }
 
-        tick = new Runnable() {
-            public void run() {
-                /*if( MyDebug.LOG )
-                    Log.d(TAG, "invalidate()");*/
-                preview.test_ticker_called = true;
-                invalidate();
-                handler.postDelayed(this, preview.getFrameRate());
-            }
-        };
+    public MySurfaceView2(final Context context, final AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
 
+    public MySurfaceView2(final Context context, final AttributeSet attrs, final int defStyle) {
+        super(context, attrs);
+        Log.v(TAG, "CameraGLView:");
         mRenderer = new CameraSurfaceRenderer();
         setEGLContextClientVersion(2);    // GLES 2.0, API >= 8
         setRenderer(mRenderer);
+/*		// the frequency of refreshing of camera preview is at most 15 fps
+        // and RENDERMODE_WHEN_DIRTY is better to reduce power consumption
+		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY); */
     }
 
     @Override
@@ -79,25 +66,6 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
     @Override
     public void setVideoRecorder(MediaRecorder video_recorder) {
         video_recorder.setPreviewDisplay(this.getHolder().getSurface());
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        return preview.touchEvent(event);
-    }
-
-    @Override
-    public void onDraw(Canvas canvas) {
-        preview.draw(canvas);
-    }
-
-    @Override
-    protected void onMeasure(int widthSpec, int heightSpec) {
-        if (MyDebug.LOG)
-            Log.d(TAG, "onMeasure: " + widthSpec + " x " + heightSpec);
-        preview.getMeasureSpec(measure_spec, widthSpec, heightSpec);
-        super.onMeasure(measure_spec[0], measure_spec[1]);
     }
 
     @Override
@@ -128,6 +96,6 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
 
     @Override
     public void setVideoEncoder(MediaVideoEncoder encoder) {
-        mRenderer.setVideoEnocder(this,encoder);
+       // mRenderer.setVideoEnocder(this, encoder);
     }
 }

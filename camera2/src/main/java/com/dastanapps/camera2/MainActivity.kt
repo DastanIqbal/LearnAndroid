@@ -205,8 +205,16 @@ class MainActivity : Activity() {
         return this.applicationInterface.getStorageUtils()
     }
 
+    var isRecording = false
     fun clickedRecordVideo(view: View) {
-        preview.takePicturePressed(false)
+        isRecording = if (isRecording) {
+            preview.stopRecording()
+            false
+        } else {
+            preview.startRecording()
+            true
+        }
+        //preview.takePicturePressed(false)
     }
 
     fun clickedOpenSettings(view: View) {
