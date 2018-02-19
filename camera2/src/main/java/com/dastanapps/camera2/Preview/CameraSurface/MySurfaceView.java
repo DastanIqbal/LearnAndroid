@@ -58,10 +58,6 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
         setRenderer(mRenderer);
     }
 
-    public void setRendererListener(CameraSurfaceRenderer.EGLSurfaceTextureListener eglSurfaceTextureListener) {
-        mRenderer.setListener(eglSurfaceTextureListener);
-    }
-
     @Override
     public View getView() {
         return this;
@@ -122,5 +118,10 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
         if (MyDebug.LOG)
             Log.d(TAG, "onResume()");
         tick.run();
+    }
+
+    @Override
+    public void setEGLSurfaceTextureListener(CameraSurfaceRenderer.EGLSurfaceTextureListener eglSurfaceTextureListener) {
+        mRenderer.setListener(eglSurfaceTextureListener);
     }
 }

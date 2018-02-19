@@ -1,7 +1,6 @@
 package com.dastanapps.camera2
 
 import android.app.Activity
-import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.os.Bundle
 import com.dastanapps.camera2.opengles.CameraSurfaceRenderer
@@ -18,8 +17,8 @@ class CameraActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mySurfaceView = MySurfaceView2(this)
-        mySurfaceView.setRendererListener(object : CameraSurfaceRenderer.EGLSurfaceTextureListener {
-            override fun onSurfaceTextureReady(surfaceTexture: SurfaceTexture?) {
+        mySurfaceView.setEGLSurfaceTextureListener {
+            CameraSurfaceRenderer.EGLSurfaceTextureListener { surfaceTexture ->
                 val mCamera = Camera.open(0)
                 try {
                     mCamera.setDisplayOrientation(90)
@@ -29,9 +28,8 @@ class CameraActivity : Activity() {
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
-
             }
-        })
+        }
         setContentView(mySurfaceView)
     }
 }

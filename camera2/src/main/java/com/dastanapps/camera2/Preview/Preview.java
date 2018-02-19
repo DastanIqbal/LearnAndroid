@@ -30,6 +30,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
 import android.support.v4.content.ContextCompat;
@@ -335,22 +336,22 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         } else {
             this.cameraSurface = new MySurfaceView(getContext(), this);
             camera_controller_manager = new CameraControllerManager1();
-            MySurfaceView mySurfaceView = (MySurfaceView) cameraSurface;
-            mySurfaceView.setRendererListener(new CameraSurfaceRenderer.EGLSurfaceTextureListener() {
-                @Override
-                public void onSurfaceTextureReady(final SurfaceTexture surfaceTexture) {
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            filterTexture = surfaceTexture;
-                            mySurfaceCreated();
-                        }
-                    });
-                }
-            });
         }
+
+        this.cameraSurface.setEGLSurfaceTextureListener(new CameraSurfaceRenderer.EGLSurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureReady(final SurfaceTexture surfaceTexture) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        filterTexture = surfaceTexture;
+                        mySurfaceCreated();
+                    }
+                });
+            }
+        });
         /*{
-			FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
 			layoutParams.gravity = Gravity.CENTER;
 			cameraSurface.getView().setLayoutParams(layoutParams);
 		}*/
@@ -367,14 +368,14 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
 	/*private void previewToCamera(float [] coords) {
-		float alpha = coords[0] / (float)this.getWidth();
+        float alpha = coords[0] / (float)this.getWidth();
 		float beta = coords[1] / (float)this.getHeight();
 		coords[0] = 2000.0f * alpha - 1000.0f;
 		coords[1] = 2000.0f * beta - 1000.0f;
 	}*/
 
 	/*private void cameraToPreview(float [] coords) {
-		float alpha = (coords[0] + 1000.0f) / 2000.0f;
+        float alpha = (coords[0] + 1000.0f) / 2000.0f;
 		float beta = (coords[1] + 1000.0f) / 2000.0f;
 		coords[0] = alpha * (float)this.getWidth();
 		coords[1] = beta * (float)this.getHeight();
@@ -445,7 +446,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
 	/*Matrix getPreviewToCameraMatrix() {
-		calculatePreviewToCameraMatrix();
+        calculatePreviewToCameraMatrix();
 		return preview_to_camera_matrix;
 	}*/
 
@@ -501,7 +502,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             return true;
         }
         applicationInterface.touchEvent(event);
-		/*if( MyDebug.LOG ) {
+        /*if( MyDebug.LOG ) {
 			Log.d(TAG, "touch event: " + event.getAction());
 		}*/
         if (event.getPointerCount() != 1) {

@@ -18,7 +18,7 @@ import java.util.concurrent.Semaphore;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
+public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTextureView.Renderer, SurfaceTexture.OnFrameAvailableListener {
     private static String TAG = CameraSurfaceRenderer.class.getSimpleName();
     private volatile boolean requesrUpdateTex = false;
     private EGLSurfaceTextureListener listener;
