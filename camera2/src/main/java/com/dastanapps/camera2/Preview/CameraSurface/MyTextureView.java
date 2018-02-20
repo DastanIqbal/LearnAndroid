@@ -107,4 +107,9 @@ public class MyTextureView extends GLTextureView implements CameraSurface {
     public void setVideoEncoder(MediaVideoEncoder encoder) {
         mRenderer.setVideoEnocder(this, encoder);
     }
+
+    @Override
+    public void changeFilter() {
+
+    }
 }

@@ -66,5 +66,13 @@
         android:padding="16dp"
         android:text="Exposure" />
 
+    <TextView
+        android:id="@+id/filters"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/exp"
+        android:onClick="clickedFilters"
+        android:padding="16dp"
+        android:text="Filters" />
 
 </RelativeLayout>

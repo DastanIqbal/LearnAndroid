@@ -21,4 +21,6 @@ public interface CameraSurface {
 	void onResume();
 	void setEGLSurfaceTextureListener(CameraSurfaceRenderer.EGLSurfaceTextureListener eglSurfaceTextureListener);
     void setVideoEncoder(MediaVideoEncoder encoder);
+
+    void changeFilter();
 }

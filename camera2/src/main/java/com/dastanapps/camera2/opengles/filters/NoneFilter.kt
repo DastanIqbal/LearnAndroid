@@ -14,5 +14,6 @@ class NoneFilter : GLDrawer2D() {
         release()
         hProgram = loadShader(fss)
         if (hProgram == 0) throw IllegalStateException("Failed to create program")
+        bindShaderValues(hProgram)
     }
 }

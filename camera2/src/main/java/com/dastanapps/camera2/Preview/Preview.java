@@ -122,6 +122,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private CameraController camera_controller;
     private SurfaceTexture filterTexture;
 
+    public void changeFilter() {
+        cameraSurface.changeFilter();
+    }
+
     enum CameraOpenState {
         CAMERAOPENSTATE_CLOSED, // have yet to attempt to open the camera (either at all, or since the camera was closed)
         CAMERAOPENSTATE_OPENING, // the camera is currently being opened (on a background thread)

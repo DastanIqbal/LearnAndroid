@@ -253,6 +253,10 @@ class MainActivity : Activity() {
         }
     }
 
+    fun clickedFilters(view: View){
+        preview.changeFilter()
+    }
+
     /* Returns the cameraId that the "Switch camera" button will switch to.
      */
     fun getNextCameraId(): Int {
