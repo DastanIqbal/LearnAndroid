@@ -50,7 +50,7 @@ object GLUtils {
         GLES20.glCompileShader(iShader)
         GLES20.glGetShaderiv(iShader, GLES20.GL_COMPILE_STATUS, compiled, 0)
         if (compiled[0] == 0) {
-            Log.e("Load Shader Failed", "Compilation\n" + GLES20.glGetShaderInfoLog(iShader))
+            Log.e("Load Shader Failed", "Compilation\n $strSource" + GLES20.glGetShaderInfoLog(iShader))
             return 0
         }
         return iShader
@@ -62,7 +62,7 @@ object GLUtils {
     fun checkGlError(op: String) {
         val error = GLES20.glGetError()
         if (error != GLES20.GL_NO_ERROR) {
-            val msg = op + ": glError 0x" + Integer.toHexString(error)
+            val msg = op + ": glError 0x" + Integer.toHexString(error) + EGLLogWrapper.getErrorString(error)
             Log.e("OpenGlUtils", msg)
             throw RuntimeException(msg)
         }
