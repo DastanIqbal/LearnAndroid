@@ -50,7 +50,7 @@ public class GLDrawer2D {
             + "	vTextureCoord = (uTexMatrix * aTextureCoord).xy;\n"
             + "}\n";
 
-    public static String fss = constructShader(
+    protected static String fss = constructShader(
             "gl_FragColor = color;\n"
     );
 

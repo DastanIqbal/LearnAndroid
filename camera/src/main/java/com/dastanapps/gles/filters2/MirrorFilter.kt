@@ -28,8 +28,5 @@ class MirrorFilter : GLDrawer2D() {
                         "   gl_FragColor = texture2D(sTexture,vec2(1.0 - vTextureCoord.x, " +
                         "   vTextureCoord.y));\n" +
                         "}\n");
-//        hProgram = loadShader(fss)
-//        if (hProgram == 0) throw IllegalStateException("Failed to create program")
-//        bindShaderValues(hProgram)
     }
 }

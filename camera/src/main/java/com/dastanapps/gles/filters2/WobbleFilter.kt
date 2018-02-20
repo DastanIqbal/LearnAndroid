@@ -18,10 +18,6 @@ class WobbleFilter : GLDrawer2D() {
                 "    vec2 texcoord = vTextureCoord;\n" +
                 "    texcoord.x += sin(texcoord.y * 4.0 * 2.0 * 3.14159 + offset) / 100.0;\n" +
                 "    gl_FragColor = texture2D(sTexture, texcoord);\n"
-                + "}");
-
-//        hProgram = loadShader(fss)
-//        if (hProgram == 0) throw IllegalStateException("Failed to create program")
-//        bindShaderValues(hProgram)
+                + "}")
     }
 }
