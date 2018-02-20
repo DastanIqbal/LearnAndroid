@@ -7,10 +7,8 @@ import android.util.Log;
 import com.dastanapps.camera2.Preview.CameraSurface.MySurfaceView;
 import com.dastanapps.camera2.Preview.CameraSurface.MyTextureView;
 import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
-import com.dastanapps.camera2.opengles.filters.BlackNWhiteFilter;
-import com.dastanapps.camera2.opengles.filters.NegateFilter;
+import com.dastanapps.camera2.opengles.filters.FilterFactory;
 import com.dastanapps.camera2.opengles.filters.NoneFilter;
-import com.dastanapps.camera2.opengles.filters.WobbleFilter;
 import com.dastanapps.camera2.opengles.utils.GLDrawer2D;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -47,6 +45,7 @@ public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTe
         if (listener != null)
             listener.onSurfaceTextureReady(mCameraSurfaceTexture);
         mDrawer = new NoneFilter();
+        mDrawer.setupShader();
     }
 
     @Override
@@ -127,25 +126,19 @@ public final class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTe
     private int i = 0;
 
     public void changeFilter() {
-        switch (i) {
-            case 0:
-                mDrawer = new WobbleFilter();
-                break;
-            case 1:
-                mDrawer = new BlackNWhiteFilter();
-                break;
-            case 2:
-                mDrawer = new NegateFilter();
-                break;
-            case 3:
-                mDrawer = new NoneFilter();
-                break;
-
-        }
-        if (i >= 3) {
+        if (i >= 5) {
             i = 0;
         } else {
             i++;
         }
+
+        if (i <= 5) {
+            mDrawer = FilterFactory.INSTANCE.getFilter(i);
+            mDrawer.setupShader();
+        }
+    }
+
+    public int getCurrentFilter() {
+        return i;
     }
 }

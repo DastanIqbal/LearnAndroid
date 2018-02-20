@@ -23,4 +23,5 @@ public interface CameraSurface {
     void setVideoEncoder(MediaVideoEncoder encoder);
 
     void changeFilter();
+	int currentFilter();
 }

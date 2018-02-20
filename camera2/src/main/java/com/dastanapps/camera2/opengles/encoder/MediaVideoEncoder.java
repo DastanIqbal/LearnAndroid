@@ -8,6 +8,8 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
+import com.dastanapps.camera2.opengles.filters.FilterFactory;
+
 import java.io.IOException;
 
 public class MediaVideoEncoder extends MediaEncoder {
@@ -91,6 +93,10 @@ public class MediaVideoEncoder extends MediaEncoder {
 
     public void setEglContext(final int tex_id) {
         mRenderHandler.setEglContext(EGL14.eglGetCurrentContext(), tex_id, mSurface, true);
+    }
+
+    public void setFilterEffect(int glDrawer2D) {
+        mRenderHandler.setFilterEffect(FilterFactory.INSTANCE.getFilter(glDrawer2D));
     }
 
     @Override

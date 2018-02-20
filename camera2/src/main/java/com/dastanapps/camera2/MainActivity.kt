@@ -100,6 +100,7 @@ class MainActivity : Activity() {
         flash.setOnClickListener { v -> clickedFlash(v) }
         wb.setOnClickListener { v -> clickedWhiteBalance(v) }
         imv_play.setOnClickListener { v -> clickedRecordVideo(v) }
+        filters.setOnClickListener { v-> clickedFilters(v) }
     }
 
     fun reLayoutUI() {

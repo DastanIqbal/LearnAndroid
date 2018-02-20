@@ -140,4 +140,9 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
             }
         });
     }
+
+    @Override
+    public int currentFilter() {
+        return mRenderer.getCurrentFilter();
+    }
 }

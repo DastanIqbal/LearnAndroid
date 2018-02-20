@@ -110,6 +110,16 @@ public class MyTextureView extends GLTextureView implements CameraSurface {
 
     @Override
     public void changeFilter() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mRenderer.changeFilter();
+            }
+        });
+    }
 
+    @Override
+    public int currentFilter() {
+        return mRenderer.getCurrentFilter();
     }
 }

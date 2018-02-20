@@ -2,7 +2,6 @@ package com.dastanapps.camera2.opengles.filters
 
 import com.dastanapps.camera2.opengles.utils.GLDrawer2D
 
-
 /**
  * Created by dastaniqbal on 08/02/2018.
  * dastanIqbal@marvelmedia.com
@@ -10,7 +9,6 @@ import com.dastanapps.camera2.opengles.utils.GLDrawer2D
  */
 class MirrorFilter : GLDrawer2D() {
     init {
-        release()
         fss = constructShaderExecuteMain(
                 "float gate = 0.01;\n" +
                         "if(vTextureCoord.x < 0.5-gate)\n" +
@@ -30,7 +28,5 @@ class MirrorFilter : GLDrawer2D() {
                         "   gl_FragColor = texture2D(sTexture,vec2(1.0 - vTextureCoord.x, " +
                         "   vTextureCoord.y));\n" +
                         "}\n");
-        hProgram = loadShader(fss)
-        if (hProgram == 0) throw IllegalStateException("Failed to create program")
     }
 }

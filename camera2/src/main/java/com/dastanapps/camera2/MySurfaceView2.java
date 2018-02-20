@@ -103,4 +103,9 @@ public class MySurfaceView2 extends GLSurfaceView implements CameraSurface {
     public void changeFilter() {
 
     }
+
+    @Override
+    public int currentFilter() {
+        return 0;
+    }
 }
