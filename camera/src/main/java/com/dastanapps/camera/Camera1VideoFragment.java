@@ -265,7 +265,8 @@ public class Camera1VideoFragment extends Fragment implements
             mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
             if (true) {
                 // for video capturing
-                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720, 1280);
+                MediaVideoEncoder mediaVideoEncoder = new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720, 1280);
+                mediaVideoEncoder.setFilterEffect(camera1.getCameraSurfaceRenderer().getCurrentFilter());
             }
             if (true) {
                 // for audio capturing
@@ -297,8 +298,9 @@ public class Camera1VideoFragment extends Fragment implements
         @Override
         public void onPrepared(final MediaEncoder encoder) {
             Log.v(TAG, "onPrepared:encoder=" + encoder);
-            if (encoder instanceof MediaVideoEncoder)
+            if (encoder instanceof MediaVideoEncoder) {
                 camera1.setVideoEncoder((MediaVideoEncoder) encoder);
+            }
         }
 
         @Override

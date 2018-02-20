@@ -50,7 +50,7 @@ public class GLDrawer2D {
             + "	vTextureCoord = (uTexMatrix * aTextureCoord).xy;\n"
             + "}\n";
 
-    protected static String fss = constructShader(
+    public static String fss = constructShader(
             "gl_FragColor = color;\n"
     );
 
@@ -105,9 +105,13 @@ public class GLDrawer2D {
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         pTexCoord.put(TEXCOORD);
         pTexCoord.flip();
+    }
 
-//        hProgram = loadShader(vss, fss);
-//        bindShaderValues(hProgram);
+    public void setupShader() {
+        release();
+        hProgram = loadShader(vss, fss);
+        if (hProgram == 0) throw new IllegalStateException("Failed to create program");
+        bindShaderValues(hProgram);
     }
 
     protected void bindShaderValues(int hProgram) {

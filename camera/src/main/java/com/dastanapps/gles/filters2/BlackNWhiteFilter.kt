@@ -15,8 +15,9 @@ class BlackNWhiteFilter : GLDrawer2D() {
                         "   float colorB = (color.r + color.g + color.b) / 3.0;\n" +
                         "   gl_FragColor = vec4(colorR, colorG, colorB, color.a);\n"
         )
-        release()
-        hProgram = loadShader(fss)
-        if (hProgram == 0) throw IllegalStateException("Failed to create program")
+//        release()
+//        hProgram = loadShader(fss)
+//        if (hProgram == 0) throw IllegalStateException("Failed to create program")
+//        bindShaderValues(hProgram)
     }
 }

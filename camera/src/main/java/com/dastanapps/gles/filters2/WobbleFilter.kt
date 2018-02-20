@@ -9,7 +9,6 @@ import com.dastanapps.gles.GLDrawer2D
  */
 class WobbleFilter : GLDrawer2D() {
     init {
-        release()
         fss = ("#extension GL_OES_EGL_image_external : require\n"
                 + "precision mediump float;\n"
                 + "uniform samplerExternalOES sTexture;\n"
@@ -21,8 +20,8 @@ class WobbleFilter : GLDrawer2D() {
                 "    gl_FragColor = texture2D(sTexture, texcoord);\n"
                 + "}");
 
-        hProgram = loadShader(fss)
-        if (hProgram == 0) throw IllegalStateException("Failed to create program")
-        bindShaderValues(hProgram)
+//        hProgram = loadShader(fss)
+//        if (hProgram == 0) throw IllegalStateException("Failed to create program")
+//        bindShaderValues(hProgram)
     }
 }
