@@ -122,6 +122,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private CameraController camera_controller;
     private SurfaceTexture filterTexture;
 
+    public void changeFilter() {
+        cameraSurface.changeFilter();
+    }
+
     enum CameraOpenState {
         CAMERAOPENSTATE_CLOSED, // have yet to attempt to open the camera (either at all, or since the camera was closed)
         CAMERAOPENSTATE_OPENING, // the camera is currently being opened (on a background thread)
@@ -1205,8 +1209,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (MyDebug.LOG) {
             Log.d(TAG, "pausePreview: about to call cameraInOperation: " + (System.currentTimeMillis() - debug_time));
         }
-		/*applicationInterface.cameraInOperation(false, false);
-		if( is_video )
+        /*applicationInterface.cameraInOperation(false, false);
+        if( is_video )
 			applicationInterface.cameraInOperation(false, true);*/
         if (MyDebug.LOG) {
             Log.d(TAG, "pausePreview: total time: " + (System.currentTimeMillis() - debug_time));
@@ -1339,7 +1343,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         has_permissions = true;
 
 		/*{
-			// debug
+            // debug
 			if( debug_count_opencamera++ == 0 ) {
 				if( MyDebug.LOG )
 					Log.d(TAG, "debug: don't open camera yet");
@@ -1359,7 +1363,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         //final boolean use_background_thread = false;
         //final boolean use_background_thread = true;
         final boolean use_background_thread = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
-		/* Opening camera on background thread is important so that we don't block the UI thread:
+        /* Opening camera on background thread is important so that we don't block the UI thread:
 		 *   - For old Camera API, this is recommended behaviour by Google for Camera.open().
 		     - For Camera2, the manager.openCamera() call is asynchronous, but CameraController2
 		       waits for it to open, so it's still important that we run that in a background thread.
@@ -4493,8 +4497,16 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         try {
             mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
             if (true) {
+                final VideoProfile profile = getVideoProfile();
+                int width = 1280;//profile.videoFrameWidth;
+                int height = 720;//profile.videoFrameHeight;
+                if (current_rotation == 90 || current_rotation == 270) {
+                    width = 720;//profile.videoFrameHeight;
+                    height = 1280;//profile.videoFrameWidth;
+                }
                 // for video capturing
-                new MediaVideoEncoder(mMuxer, mMediaEncoderListener, 720, 1280);
+                MediaVideoEncoder mediaVideoEncoder = new MediaVideoEncoder(mMuxer, mMediaEncoderListener, width, height);
+                mediaVideoEncoder.setFilterEffect(cameraSurface.currentFilter());
             }
             if (true) {
                 // for audio capturing

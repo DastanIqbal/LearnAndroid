@@ -130,4 +130,19 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
     public void setVideoEncoder(MediaVideoEncoder encoder) {
         mRenderer.setVideoEnocder(this,encoder);
     }
+
+    @Override
+    public void changeFilter() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mRenderer.changeFilter();
+            }
+        });
+    }
+
+    @Override
+    public int currentFilter() {
+        return mRenderer.getCurrentFilter();
+    }
 }

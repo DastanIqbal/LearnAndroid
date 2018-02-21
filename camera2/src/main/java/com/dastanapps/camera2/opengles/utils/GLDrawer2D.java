@@ -105,9 +105,13 @@ public class GLDrawer2D {
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
         pTexCoord.put(TEXCOORD);
         pTexCoord.flip();
+    }
 
-//        hProgram = loadShader(vss, fss);
-//        bindShaderValues(hProgram);
+    public void setupShader() {
+        release();
+        hProgram = loadShader(vss, fss);
+        if (hProgram == 0) throw new IllegalStateException("Failed to create program");
+        bindShaderValues(hProgram);
     }
 
     protected void bindShaderValues(int hProgram) {
@@ -149,8 +153,7 @@ public class GLDrawer2D {
      * @param tex_matrix texture matrix、if this is null, the last one use(we don't check size of this array and needs at least 16 of float)
      */
     public void draw(final int tex_id, final float[] tex_matrix) {
-        // clear screen with yellow color so that you can see rendering rectangle
-        GLES20.glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glUseProgram(hProgram);
         if (tex_matrix != null)
@@ -258,5 +261,19 @@ public class GLDrawer2D {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         Matrix.setIdentityM(mMvpMatrix, 0);
         setMatrix(mMvpMatrix, 0);
+    }
+
+    boolean negative = false;
+    String currentFss = "";
+
+    public void updateFs(String fss2) {
+        if (negative) {
+            currentFss = fss;
+            negative = false;
+        } else {
+            currentFss = fss2;
+            negative = true;
+        }
+        hProgram = loadShader(vss, currentFss);
     }
 }

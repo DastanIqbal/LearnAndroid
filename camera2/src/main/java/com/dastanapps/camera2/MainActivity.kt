@@ -100,6 +100,7 @@ class MainActivity : Activity() {
         flash.setOnClickListener { v -> clickedFlash(v) }
         wb.setOnClickListener { v -> clickedWhiteBalance(v) }
         imv_play.setOnClickListener { v -> clickedRecordVideo(v) }
+        filters.setOnClickListener { v-> clickedFilters(v) }
     }
 
     fun reLayoutUI() {
@@ -251,6 +252,10 @@ class MainActivity : Activity() {
         if (exposure > preview.maximumExposure) {
             exposure = preview.minimumExposure;
         }
+    }
+
+    fun clickedFilters(view: View){
+        preview.changeFilter()
     }
 
     /* Returns the cameraId that the "Switch camera" button will switch to.

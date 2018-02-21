@@ -409,7 +409,7 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
         mCamera1Listener.cameraRecordingStopped()
     }
 
-    private var cameraSurfaceRenderer: CameraSurfaceRenderer? = null
+    var cameraSurfaceRenderer: CameraSurfaceRenderer? = null
 
     fun setVideoEncoder(encoder: MediaVideoEncoder) {
         cameraSurfaceRenderer!!.setVideoEnocder(mTextureView, encoder)
@@ -428,7 +428,9 @@ class Camera1(private val mContext: Context, private val mTextureView: Cam1AutoF
 
     fun changeFilter() {
         if (cameraSurfaceRenderer != null) {
-            cameraSurfaceRenderer?.changeFilter()
+            mTextureView.queueEvent {
+                cameraSurfaceRenderer?.changeFilter()
+            }
         }
     }
 

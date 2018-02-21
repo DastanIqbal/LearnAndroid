@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.dastanapps.gles.RenderHandler;
+import com.dastanapps.gles.filters2.FilterFactory;
 
 import java.io.IOException;
 
@@ -93,6 +94,10 @@ public class MediaVideoEncoder extends MediaEncoder {
 
     public void setEglContext(final int tex_id) {
         mRenderHandler.setEglContext(EGL14.eglGetCurrentContext(), tex_id, mSurface, true);
+    }
+
+    public void setFilterEffect(int glDrawer2D) {
+        mRenderHandler.setFilterEffect(FilterFactory.INSTANCE.getFilter(glDrawer2D));
     }
 
     @Override

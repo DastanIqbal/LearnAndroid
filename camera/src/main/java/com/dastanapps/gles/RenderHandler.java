@@ -148,7 +148,11 @@ public final class RenderHandler implements Runnable {
 //********************************************************************************
     private EGLBase mEgl;
     private EGLBase.EglSurface mInputSurface;
-    private GLDrawer2D mDrawer;
+    private GLDrawer2D mDrawer, localDrawer;
+
+    public void setFilterEffect(GLDrawer2D drawer2D) {
+        this.localDrawer = drawer2D;
+    }
 
     @Override
     public final void run() {
@@ -205,7 +209,8 @@ public final class RenderHandler implements Runnable {
         mInputSurface = mEgl.createFromSurface(mSurface);
 
         mInputSurface.makeCurrent();
-        mDrawer = new GLDrawer2D();
+        mDrawer = localDrawer;
+        mDrawer.setupShader();
         mSurface = null;
         mSync.notifyAll();
     }

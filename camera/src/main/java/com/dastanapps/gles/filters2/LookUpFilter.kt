@@ -9,13 +9,10 @@ import com.dastanapps.gles.GLDrawer2D
  */
 class LookUpFilter:GLDrawer2D(){
     init {
-        release()
         fss = constructShader(
                 "    float colorR = (1.0 - color.r) / 1.0;\n" +
                         "    float colorG = (1.0 - color.g) / 1.0;\n" +
                         "    float colorB = (1.0 - color.b) / 1.0;\n" +
                         "    gl_FragColor = vec4(colorR, colorG, colorB, color.a);\n")
-        hProgram = loadShader(fss)
-        if (hProgram == 0) throw IllegalStateException("Failed to create program")
     }
 }

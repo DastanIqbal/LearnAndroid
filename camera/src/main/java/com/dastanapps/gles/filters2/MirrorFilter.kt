@@ -9,7 +9,6 @@ import com.dastanapps.gles.GLDrawer2D
  */
 class MirrorFilter : GLDrawer2D() {
     init {
-        release()
         fss = constructShaderExecuteMain(
                 "float gate = 0.01;\n" +
                         "if(vTextureCoord.x < 0.5-gate)\n" +
@@ -29,7 +28,5 @@ class MirrorFilter : GLDrawer2D() {
                         "   gl_FragColor = texture2D(sTexture,vec2(1.0 - vTextureCoord.x, " +
                         "   vTextureCoord.y));\n" +
                         "}\n");
-        hProgram = loadShader(fss)
-        if (hProgram == 0) throw IllegalStateException("Failed to create program")
     }
 }
