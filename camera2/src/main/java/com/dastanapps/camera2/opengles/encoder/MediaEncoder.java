@@ -4,6 +4,8 @@ import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.util.Log;
 
+import com.dastanapps.camera2.Preview.VideoProfile;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
@@ -155,7 +157,7 @@ public abstract class MediaEncoder implements Runnable {
     * @throws IOException
     */
    /*package*/
-    abstract void prepare() throws IOException;
+    abstract void prepare(VideoProfile profile) throws IOException;
 
     /*package*/ void startRecording() {
         Log.v(TAG, "startRecording");

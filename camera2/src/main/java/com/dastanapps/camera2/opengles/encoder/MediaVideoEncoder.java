@@ -8,6 +8,7 @@ import android.opengl.EGL14;
 import android.util.Log;
 import android.view.Surface;
 
+import com.dastanapps.camera2.Preview.VideoProfile;
 import com.dastanapps.camera2.opengles.filters.FilterFactory;
 
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class MediaVideoEncoder extends MediaEncoder {
     }
 
     @Override
-    protected void prepare() throws IOException {
+    protected void prepare(VideoProfile profile) throws IOException {
         Log.i(TAG, "prepare: ");
         mTrackIndex = -1;
         mMuxerStarted = mIsEOS = false;
@@ -60,10 +61,10 @@ public class MediaVideoEncoder extends MediaEncoder {
         }
         Log.i(TAG, "selected codec: " + videoCodecInfo.getName());
 
-        final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, align16(mWidth), align16(mHeight));
+        final MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE,profile.videoFrameWidth, profile.videoFrameHeight);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);    // API >= 18
-        format.setInteger(MediaFormat.KEY_BIT_RATE, (int) (0.2 * FRAME_RATE * mWidth * mHeight));
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, profile.videoBitRate);
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, profile.videoFrameRate);
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, I_FRAME_INTERVAL);
         Log.i(TAG, "format: " + format);
 

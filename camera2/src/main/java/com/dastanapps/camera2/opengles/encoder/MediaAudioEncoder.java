@@ -9,6 +9,8 @@ import android.media.MediaFormat;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import com.dastanapps.camera2.Preview.VideoProfile;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -27,7 +29,7 @@ public class MediaAudioEncoder extends MediaEncoder {
     }
 
     @Override
-    protected void prepare() throws IOException {
+    protected void prepare(VideoProfile profile) throws IOException {
         Log.v(TAG, "prepare:");
         mTrackIndex = -1;
         mMuxerStarted = mIsEOS = false;
@@ -39,11 +41,11 @@ public class MediaAudioEncoder extends MediaEncoder {
         }
         Log.i(TAG, "selected codec: " + audioCodecInfo.getName());
 
-        final MediaFormat audioFormat = MediaFormat.createAudioFormat(MIME_TYPE, SAMPLE_RATE, 2);
+        final MediaFormat audioFormat = MediaFormat.createAudioFormat(MIME_TYPE, profile.audioSampleRate, profile.audioChannels);
         audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
         audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_STEREO);
-        audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
-        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 2);
+        audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, profile.audioBitRate);
+        audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, profile.audioChannels);
 //		audioFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, inputFile.length());
 //      audioFormat.setLong(MediaFormat.KEY_DURATION, (long)durationInMs );
         Log.i(TAG, "format: " + audioFormat);

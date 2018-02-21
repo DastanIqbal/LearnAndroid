@@ -29,6 +29,8 @@ import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.dastanapps.camera2.Preview.VideoProfile;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -62,6 +64,7 @@ public class MediaMuxerWrapper {
 			throw new RuntimeException("This app has no permission of writing external storage");
 		}
 		mMediaMuxer = new MediaMuxer(mOutputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+		mMediaMuxer.setOrientationHint(90);
 		mEncoderCount = mStatredCount = 0;
 		mIsStarted = false;
 	}
@@ -70,11 +73,11 @@ public class MediaMuxerWrapper {
 		return mOutputPath;
 	}
 
-	public void prepare() throws IOException {
+	public void prepare(VideoProfile profile) throws IOException {
 		if (mVideoEncoder != null)
-			mVideoEncoder.prepare();
+			mVideoEncoder.prepare(profile);
 		if (mAudioEncoder != null)
-			mAudioEncoder.prepare();
+			mAudioEncoder.prepare(profile);
 	}
 
 	public void startRecording() {

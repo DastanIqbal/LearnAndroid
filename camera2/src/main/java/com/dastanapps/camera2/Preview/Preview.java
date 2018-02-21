@@ -4496,14 +4496,14 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         Log.v(TAG, "startRecording:");
         try {
             mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
+            final VideoProfile profile = getVideoProfile();
             if (true) {
-                final VideoProfile profile = getVideoProfile();
-                int width = 1280;//profile.videoFrameWidth;
-                int height = 720;//profile.videoFrameHeight;
-                if (current_rotation == 90 || current_rotation == 270) {
-                    width = 720;//profile.videoFrameHeight;
-                    height = 1280;//profile.videoFrameWidth;
-                }
+                int width = profile.videoFrameWidth;
+                int height = profile.videoFrameHeight;
+//                if (current_rotation == 90 || current_rotation == 270) {
+//                    width = 720;//profile.videoFrameHeight;
+//                    height = 1280;//profile.videoFrameWidth;
+//                }
                 // for video capturing
                 MediaVideoEncoder mediaVideoEncoder = new MediaVideoEncoder(mMuxer, mMediaEncoderListener, width, height);
                 mediaVideoEncoder.setFilterEffect(cameraSurface.currentFilter());
@@ -4512,7 +4512,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 // for audio capturing
                 new MediaAudioEncoder(mMuxer, mMediaEncoderListener);
             }
-            mMuxer.prepare();
+            mMuxer.prepare(profile);
             mMuxer.startRecording();
         } catch (final IOException e) {
             Log.e(TAG, "startCapture:", e);
