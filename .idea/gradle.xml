@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/camera" />
             <option value="$PROJECT_DIR$/camera2" />
             <option value="$PROJECT_DIR$/tutsopengles" />
+            <option value="$PROJECT_DIR$/verticaledittext" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

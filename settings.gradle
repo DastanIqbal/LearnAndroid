@@ -1,6 +1,6 @@
 //include ':shadersNfilters'
 //include  ':mediaeffectswithopengles'
-include  ':tutsopengles', ':camera2'
+include  ':tutsopengles', ':camera2', ':verticaledittext'
 include ':camera'
 //include ':webviewfeatures'
 //include ':players'
