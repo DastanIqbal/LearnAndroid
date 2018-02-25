@@ -62,7 +62,7 @@ object GLUtils {
     fun checkGlError(op: String) {
         val error = GLES20.glGetError()
         if (error != GLES20.GL_NO_ERROR) {
-            val msg = op + ": glError 0x" + Integer.toHexString(error) + EGLLogWrapper.getErrorString(error)
+            val msg = op + ": glError 0x" + Integer.toHexString(error) + " " + EGLLogWrapper.getErrorString(error)
             Log.e("OpenGlUtils", msg)
             throw RuntimeException(msg)
         }
