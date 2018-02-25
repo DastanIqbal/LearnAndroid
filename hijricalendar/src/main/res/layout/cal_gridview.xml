@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.dastanapps.ui.CalendarGridView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cal_gv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:drawSelectorOnTop="true"
+    android:listSelector="@android:color/transparent"
+    android:numColumns="7">
+
+</com.dastanapps.ui.CalendarGridView>
