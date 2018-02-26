@@ -2,10 +2,12 @@ package com.dastanapps.adapter
 
 import android.content.Context
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ImageView
 import android.widget.TextView
 import com.dastanapps.hijricalendar.R
 import com.dastanapps.utils.DateUtils
@@ -16,7 +18,7 @@ import java.util.*
  * dastanIqbal@marvelmedia.com
  * 25/02/2018 6:49
  */
-class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: ArrayList<DayItemB>, pageMonth: Int) : ArrayAdapter<DayItemB>(context, resId, dayItemList) {
+class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: ArrayList<DayItemB>, pageMonth: Int, private val eventsList: ArrayList<Calendar>) : ArrayAdapter<DayItemB>(context, resId, dayItemList) {
     private var mPageMonth = 0
     private val todaysDay = DateUtils.getCalendar()
 
@@ -39,18 +41,31 @@ class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: 
         }
         val dayItemB = getItem(position)
         val dayLabel: TextView? = view?.findViewById(R.id.dayLabel)
+        val dayIcon: ImageView? = view?.findViewById(R.id.dayIcon)
         val day = GregorianCalendar()
         day.time = dayItemB.date
+
+
         if (isCurrentMonthDay(day)) {
+            setEvent(day, dayIcon);
+            if (DateUtils.isTodaysDate(todaysDay, day)) {
+                dayLabel?.setTextColor(Color.RED)
+            }
             dayLabel?.text = day.get(Calendar.DAY_OF_MONTH).toString()
         } else {
-            dayLabel?.text = ""
-        }
-
-        if (DateUtils.isTodaysDate(todaysDay,day)) {
-            dayLabel?.setTextColor(Color.RED)
+            dayLabel?.text=""
+            dayIcon?.setImageBitmap(null)
         }
         return view
+    }
+
+    private fun setEvent(day: Calendar, dayIcon: ImageView?) {
+        eventsList.forEach {
+            if (day.equals(it)) {
+                Log.d("DEBUG", "Setting Events ${day.get(Calendar.DAY_OF_MONTH)} ${it.get(Calendar.DAY_OF_MONTH)}")
+                dayIcon?.setImageResource(android.R.drawable.ic_delete)
+            }
+        }
     }
 
     private fun isCurrentMonthDay(day: Calendar): Boolean {
