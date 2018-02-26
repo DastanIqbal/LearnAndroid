@@ -7,9 +7,17 @@
     <TextView
         android:id="@+id/dayLabel"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/hijriLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/colorAccent"
+        android:textSize="12sp" />
 
     <ImageView
         android:id="@+id/dayIcon"

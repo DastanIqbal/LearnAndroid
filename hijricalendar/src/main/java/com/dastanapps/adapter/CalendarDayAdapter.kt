@@ -2,7 +2,6 @@ package com.dastanapps.adapter
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +10,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.dastanapps.hijricalendar.R
 import com.dastanapps.utils.DateUtils
+import com.dastanapps.utils.HijriCalendarDate
 import java.util.*
 
 /**
@@ -41,6 +41,7 @@ class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: 
         }
         val dayItemB = getItem(position)
         val dayLabel: TextView? = view?.findViewById(R.id.dayLabel)
+        val dayHijriLabel: TextView? = view?.findViewById(R.id.hijriLabel)
         val dayIcon: ImageView? = view?.findViewById(R.id.dayIcon)
         val day = GregorianCalendar()
         day.time = dayItemB.date
@@ -52,19 +53,20 @@ class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: 
                 dayLabel?.setTextColor(Color.RED)
             }
             dayLabel?.text = day.get(Calendar.DAY_OF_MONTH).toString()
+            dayHijriLabel?.text = HijriCalendarDate.getSimpleDateDay(day, 0)
+           // dayLabel?.visibility=View.VISIBLE
         } else {
-            dayLabel?.text=""
+            dayLabel?.text = ""
             dayIcon?.setImageBitmap(null)
+            //dayIcon?.visibility = View.GONE
         }
         return view
     }
 
     private fun setEvent(day: Calendar, dayIcon: ImageView?) {
-        eventsList.forEach {
-            if (day.equals(it)) {
-                Log.d("DEBUG", "Setting Events ${day.get(Calendar.DAY_OF_MONTH)} ${it.get(Calendar.DAY_OF_MONTH)}")
-                dayIcon?.setImageResource(android.R.drawable.ic_delete)
-            }
+        eventsList.filter { day == it }.forEach {
+            dayIcon?.setImageResource(android.R.drawable.ic_delete)
+           // dayIcon?.visibility = View.VISIBLE
         }
     }
 
