@@ -5,6 +5,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.dastanapps.hijricalendar.MainActivity">
+
+    <TextView
+        android:id="@+id/currentDateLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp" />
     <!-- eventDays header -->
     <LinearLayout
         android:id="@+id/abbreviationsBar"

@@ -1,12 +1,14 @@
 package com.dastanapps.adapter
 
 import android.content.Context
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import com.dastanapps.hijricalendar.R
+import com.dastanapps.utils.DateUtils
 import java.util.*
 
 /**
@@ -16,6 +18,7 @@ import java.util.*
  */
 class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: ArrayList<DayItemB>, pageMonth: Int) : ArrayAdapter<DayItemB>(context, resId, dayItemList) {
     private var mPageMonth = 0
+    private val todaysDay = DateUtils.getCalendar()
 
     init {
         mPageMonth = if (pageMonth < 0) 11 else pageMonth
@@ -38,23 +41,19 @@ class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: 
         val dayLabel: TextView? = view?.findViewById(R.id.dayLabel)
         val day = GregorianCalendar()
         day.time = dayItemB.date
-//        if (isCurrentMonthDay(day)) {
-//            dayLabel?.text = day.get(Calendar.DAY_OF_MONTH).toString()
-//        } else {
-//            dayLabel?.text = ""
-//        }
+        if (isCurrentMonthDay(day)) {
+            dayLabel?.text = day.get(Calendar.DAY_OF_MONTH).toString()
+        } else {
+            dayLabel?.text = ""
+        }
 
-        dayLabel?.text = day.get(Calendar.DAY_OF_MONTH).toString()
-
+        if (DateUtils.isTodaysDate(todaysDay,day)) {
+            dayLabel?.setTextColor(Color.RED)
+        }
         return view
     }
 
     private fun isCurrentMonthDay(day: Calendar): Boolean {
-        val min = Calendar.getInstance()
-        min.add(Calendar.MONTH, -2)
-        val max = Calendar.getInstance()
-        max.add(Calendar.MONTH, 2)
-
-        return day.get(Calendar.MONTH) == mPageMonth && !(min != null && day.before(min) || max != null && day.after(max))
+        return day.get(Calendar.MONTH) == mPageMonth
     }
 }
