@@ -43,6 +43,38 @@ object GLUtils {
         return iProgId
     }
 
+    fun loadProgramAndLink(strVSource: String, strFSource: String, attributes: Array<String>?): Int {
+        val iVShader: Int = loadShader(strVSource, GLES20.GL_VERTEX_SHADER)
+        val iFShader: Int = loadShader(strFSource, GLES20.GL_FRAGMENT_SHADER)
+        val iProgId: Int = GLES20.glCreateProgram()
+        val link = IntArray(1)
+        if (iVShader == 0) {
+            Log.d("Load Program", "Vertex Shader Failed")
+            return 0
+        }
+        if (iFShader == 0) {
+            Log.d("Load Program", "Fragment Shader Failed")
+            return 0
+        }
+
+        GLES20.glAttachShader(iProgId, iVShader)
+        GLES20.glAttachShader(iProgId, iFShader)
+        if (attributes != null && attributes.isNotEmpty()) {
+            attributes.forEachIndexed { index, s ->
+                GLES20.glBindAttribLocation(iProgId, index, s)
+            }
+        }
+        GLES20.glLinkProgram(iProgId)
+        GLES20.glGetProgramiv(iProgId, GLES20.GL_LINK_STATUS, link, 0)
+        if (link[0] <= 0) {
+            Log.d("Load Program", "Linking Failed")
+            return 0
+        }
+        GLES20.glDeleteShader(iVShader)
+        GLES20.glDeleteShader(iFShader)
+        return iProgId
+    }
+
     fun loadShader(strSource: String, iType: Int): Int {
         val compiled = IntArray(1)
         val iShader = GLES20.glCreateShader(iType)
