@@ -22,6 +22,8 @@ class MyRenderer : GLSurfaceView.Renderer {
     /** This will be used to pass in model position information. */
     private var mPositionHandle: Int = -1
 
+    private var mColorHandle: Int = -1
+
     /** How many bytes per float.  */
     private val mBytesPerFloat = 4
 
@@ -39,14 +41,18 @@ class MyRenderer : GLSurfaceView.Renderer {
             "uniform mat4 mMVMatrix;\n" +
             "attribute vec4 aPosition;\n" +
             "attribute vec4 aColor;\n" +
+            "varying vec4 vColor;\n" +
             "void main(){\n" +
-            "       gl_Position=mMVPMatrix*aPosition;\n" +
+            "       vec3 modelViewMatrix = vec3(mMVPMatrix*aPosition);\n" +
+            "       vColor = aColor;\n" +
+            "       gl_Position = mMVPMatrix*aPosition;\n" +
             "}\n" + ""
             );
     val fs = ("" +
             "precision mediump float;\n" +
+            "varying vec4 vColor;\n" +
             "void main(){\n" +
-            "       gl_FragColor=vec4(1,1,1,1);\n" +
+            "       gl_FragColor = vColor;\n" +
             "}\n" +
             "")
 
@@ -93,14 +99,71 @@ class MyRenderer : GLSurfaceView.Renderer {
             -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f,
 
             // Bottom face
-            1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f)
+            1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f
+    )
+
+    //R, G, B, A
+    val colorData = floatArrayOf(
+            // Front face (red)
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+            1.0f, 0.0f, 0.0f, 1.0f,
+
+            // Right face (green)
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+            0.0f, 1.0f, 0.0f, 1.0f,
+
+            // Back face (blue)
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+            0.0f, 0.0f, 1.0f, 1.0f,
+
+            // Left face (yellow)
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f, 1.0f,
+
+            // Top face (cyan)
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+            0.0f, 1.0f, 1.0f, 1.0f,
+
+            // Bottom face (magenta)
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f,
+            1.0f, 0.0f, 1.0f, 1.0f
+    )
 
     val mCubeFloatBuffer: FloatBuffer
+    val mColorFloatBuffer: FloatBuffer
 
     init {
         mCubeFloatBuffer = ByteBuffer.allocateDirect(cubePositionData.size * mBytesPerFloat)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer()
         mCubeFloatBuffer.put(cubePositionData).position(0)
+
+        mColorFloatBuffer = ByteBuffer.allocateDirect(colorData.size * mBytesPerFloat)
+                .order(ByteOrder.nativeOrder()).asFloatBuffer()
+        mColorFloatBuffer.put(colorData).position(0)
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -115,31 +178,33 @@ class MyRenderer : GLSurfaceView.Renderer {
         GLUtils.checkGlError("getMVMatrix")
         mPositionHandle = GLES20.glGetAttribLocation(mProgram, "aPosition")
         GLUtils.checkGlError("getPosition")
+        mColorHandle = GLES20.glGetAttribLocation(mProgram, "aColor")
+        GLUtils.checkGlError("getColor")
 
         Matrix.setIdentityM(mModelMatrix, 0)
-        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -7.0f);
-        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 1.0f, 0.0f)
+        Matrix.translateM(mModelMatrix, 0, 4.0f, 0.0f, -7.0f); //Right shift to x
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 0.0f) // rotating on X-axis
+        drawCube()
 
-        //mCubeFloatBuffer.position(0)
-        GLES20.glVertexAttribPointer(mPositionHandle, mPositionDataSize, GLES20.GL_FLOAT, false, 0, mCubeFloatBuffer)
-        GLES20.glEnableVertexAttribArray(mPositionHandle)
-        GLUtils.checkGlError("setVertex")
+        Matrix.setIdentityM(mModelMatrix, 0)
+        Matrix.translateM(mModelMatrix, 0, -4.0f, 0.0f, -7.0f); //Left shift to x
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 1.0f, 0.0f) //rotating on Y-axis
+        drawCube()
 
-        // This multiplies the view matrix by the model matrix, and stores the result in the MVP matrix
-        // (which currently contains model * view).
-        Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0)
+        Matrix.setIdentityM(mModelMatrix, 0)
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 4.0f, -7.0f) // Up shift to Y
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 0.0f, 0.0f, 1.0f) //Rotating on Z-axis
+        drawCube()
 
-        // Pass in the modelview matrix
-        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0)
-        GLUtils.checkGlError("setMVPMatrix")
+        Matrix.setIdentityM(mModelMatrix, 0)
+        Matrix.translateM(mModelMatrix, 0, 0.0f, -4.0f, -7.0f) // Down shift to Y
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 1.0f) //Rotating on Z-axis
+        drawCube()
 
-        //This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
-        // (which now contains model * view * projection).
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
-        // Pass in the combined matrix.
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
-
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36)
+        Matrix.setIdentityM(mModelMatrix, 0)
+        Matrix.translateM(mModelMatrix, 0, 0.0f, 0.0f, -5.0f) // Up shift to Y
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1.0f, 0.0f, 1.0f) //Rotating on Z-axis
+        drawCube()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -156,9 +221,38 @@ class MyRenderer : GLSurfaceView.Renderer {
 
         // Enable depth testing
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, -0.5f, 0f, 0f, -5.0f, 0f, 1f, 0f)
+        Matrix.setLookAtM(mViewMatrix, 0, 0f, 0f, -0.5f, 0f, 0f, -1.0f, 0f, 1f, 0f)
 
         val stringList = arrayOf("aPosition", "aColor", "aNormal")
         mProgram = GLUtils.loadProgramAndLink(vs, fs, stringList)
+    }
+
+    private fun drawCube() {
+        // Pass in the position information
+        mCubeFloatBuffer.position(0)
+        GLES20.glVertexAttribPointer(mPositionHandle, mPositionDataSize, GLES20.GL_FLOAT, false, 0, mCubeFloatBuffer)
+        GLES20.glEnableVertexAttribArray(mPositionHandle)
+        GLUtils.checkGlError("setVertex")
+
+        // Pass in the color information
+        mColorFloatBuffer.position(0)
+        GLES20.glVertexAttribPointer(mColorHandle, mColorDataSize, GLES20.GL_FLOAT, false, 0, mColorFloatBuffer)
+        GLES20.glEnableVertexAttribArray(mColorHandle)
+
+        // This multiplies the view matrix by the model matrix, and stores the result in the MVP matrix
+        // (which currently contains model * view).
+        Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0)
+
+        // Pass in the modelview matrix
+        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0)
+        GLUtils.checkGlError("setMVPMatrix")
+
+        //This multiplies the modelview matrix by the projection matrix, and stores the result in the MVP matrix
+        // (which now contains model * view * projection).
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0);
+        // Pass in the combined matrix.
+        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36)
     }
 }

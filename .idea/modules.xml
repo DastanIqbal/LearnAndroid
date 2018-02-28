@@ -3,11 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/camera/camera.iml" filepath="$PROJECT_DIR$/camera/camera.iml" />
-      <module fileurl="file://$PROJECT_DIR$/camera2/camera2.iml" filepath="$PROJECT_DIR$/camera2/camera2.iml" />
-      <module fileurl="file://$PROJECT_DIR$/hijricalendar/hijricalendar.iml" filepath="$PROJECT_DIR$/hijricalendar/hijricalendar.iml" />
       <module fileurl="file://$PROJECT_DIR$/tutsopengles/tutsopengles.iml" filepath="$PROJECT_DIR$/tutsopengles/tutsopengles.iml" />
-      <module fileurl="file://$PROJECT_DIR$/verticaledittext/verticaledittext.iml" filepath="$PROJECT_DIR$/verticaledittext/verticaledittext.iml" />
     </modules>
   </component>
 </project>
