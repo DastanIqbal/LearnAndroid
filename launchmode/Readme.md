@@ -1,4 +1,4 @@
-## Tested single Instance
+## Android Launch Mode
 
 ### Case 1: set MainActivity as single Instance
 
