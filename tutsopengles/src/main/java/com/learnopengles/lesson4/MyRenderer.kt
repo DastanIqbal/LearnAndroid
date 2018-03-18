@@ -1,10 +1,7 @@
 package com.learnopengles.lesson4
 
 import android.content.Context
-import android.opengl.GLES10
-import android.opengl.GLES20
-import android.opengl.GLSurfaceView
-import android.opengl.Matrix
+import android.opengl.*
 import android.os.SystemClock
 import com.iaandroid.tutsopengles.R
 import com.raywenderlich.GLUtils
@@ -25,26 +22,79 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
     val mProjectionMatrix = FloatArray(16)
     val mMVPMatrix = FloatArray(16)
 
+    val mLightModelMatrix = FloatArray(16)
+    private val mLightPosInWorldSpace: FloatArray = FloatArray(4)
+    private val mLightPosInEyeSpace: FloatArray = FloatArray(4)
+
+    private val mLightPositionVertex = floatArrayOf(0f, 0f, 0f, 1f)
+
+    private var mProgramHandle: Int = -1
+    private var mLightProgramHandle: Int = -1
+
     private var mMVPMatrixHandle: Int = -1
     private var mPositionHandle: Int = -1
+    private var mColorHandle: Int = -1
+    private var mNormalHandle: Int = -1
+
+    private var mMVMatrixHandle: Int = -1
+    private var mLightPosHandle: Int = -1
+
 
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT.or(GLES20.GL_DEPTH_BUFFER_BIT))
 
         val time = SystemClock.uptimeMillis() % 10000L;
-        val angleInDegrees = (360.0f / 10000.0f) * time.toInt();
+        val angleInDegrees = (360.0f / 10000.0f) * time.toInt()
+
         GLES20.glUseProgram(mProgramHandle)
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "uMVPMatrix")
         GLUtils.checkGlError("getMVPMatrix")
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "mMVMatrix")
+        GLUtils.checkGlError("getMVMatrix")
+        mLightPosHandle = GLES20.glGetUniformLocation(mProgramHandle, "mLightPos")
+        GLUtils.checkGlError("getLightPos")
         mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "aPosition")
         GLUtils.checkGlError("getPosition")
+        mColorHandle = GLES20.glGetAttribLocation(mProgramHandle, "aColor")
+        GLUtils.checkGlError("getPosition")
+        mNormalHandle = GLES20.glGetAttribLocation(mProgramHandle, "aNormal")
+        GLUtils.checkGlError("getPosition")
 
+        Matrix.setIdentityM(mLightModelMatrix, 0)
+        Matrix.translateM(mLightModelMatrix, 0, 0f, 0f, -5f)
+        Matrix.rotateM(mLightModelMatrix, 0, angleInDegrees, 0f, 1f, 0f)
+        Matrix.translateM(mLightModelMatrix, 0, 0.0f, 0.0f, 2.0f)
+
+        Matrix.multiplyMV(mLightPosInWorldSpace, 0, mLightModelMatrix, 0, mLightPositionVertex, 0)
+        Matrix.multiplyMV(mLightPosInEyeSpace, 0, mViewMatrix, 0, mLightPosInWorldSpace, 0)
 
         Matrix.setIdentityM(mModelMatrix, 0)
         Matrix.translateM(mModelMatrix, 0, 0f, 0f, -5f)
         Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1f, 1f, 0f)
         drawCube()
+
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 5f, 0f, -8f)
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1f, 1f, 1f)
+        drawCube()
+
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, -5f, 0f, -8f)
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1f, 1f, 1f)
+        drawCube()
+
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0f, 5f, -8f)
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1f, 1f, 1f)
+        drawCube()
+
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0f, -5f, -8f)
+        Matrix.rotateM(mModelMatrix, 0, angleInDegrees, 1f, 1f, 1f)
+        drawCube()
+
+        drawLight()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -53,16 +103,45 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
         Matrix.frustumM(mProjectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, 1f, 10f)
     }
 
-    private var mProgramHandle: Int = -1
+    val lightVS = (""
+            + "uniform mat4 uMVPMatrix;\n"
+            + "attribute vec4 aPosition;\n"
+            + "void main(){\n"
+            + " gl_Position = uMVPMatrix * aPosition;\n"
+            + " gl_PointSize = 5.0;\n"
+            + "}"
+            )
+    val lightFS = ("" +
+            "precision mediump float;\n"
+            + "void main(){\n"
+            + " gl_FragColor=vec4(1.0,1.0,1.0,1.0);\n"
+            + "}")
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(11f / 255, 19f / 255, 33f / 255, 1f)
-        //     GLES20.glCullFace(GLES20.GL_CULL_FACE)
-        //     GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+        GLES20.glEnable(GLES20.GL_CULL_FACE)
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
         Matrix.setLookAtM(mViewMatrix, 0, 0f, 1f, 0f, 0f, 0f, -5f, 0f, 1f, 0f)
 
         mProgramHandle = GLUtils.loadProgram(GLUtils.readTextFileFromRawResource(context, R.raw.vs_lesson4opengles)!!,
                 GLUtils.readTextFileFromRawResource(context, R.raw.fs_lesson4opengles)!!)
+
+        mLightProgramHandle = GLUtils.loadProgram(lightVS, lightFS)
+    }
+
+    private fun drawLight() {
+        GLES20.glUseProgram(mLightProgramHandle)
+        val mLightMVPMatrixHandle = GLES20.glGetUniformLocation(mLightProgramHandle, "uMVPMatrix")
+        val mLightPositionHandle = GLES20.glGetAttribLocation(mLightProgramHandle, "aPosition")
+
+        GLES20.glVertexAttrib3f(mLightPositionHandle, mLightPositionVertex[0], mLightPositionVertex[1], mLightPositionVertex[2])
+        GLES20.glDisableVertexAttribArray(mLightPositionHandle)
+
+        Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mLightModelMatrix, 0)
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0)
+
+        GLES20.glUniformMatrix4fv(mLightMVPMatrixHandle, 1, false, mMVPMatrix, 0)
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 0, 1)
     }
 
     fun drawCube() {
@@ -71,15 +150,31 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(mPositionHandle)
         GLUtils.checkGlError("setPosition")
 
+        mColorFloatBuffer.position(0)
+        GLES20.glVertexAttribPointer(mColorHandle, 4, GLES20.GL_FLOAT, false, 0, mColorFloatBuffer)
+        GLES20.glEnableVertexAttribArray(mColorHandle)
+        GLUtils.checkGlError("setColor")
+
+        mNormalFloatBuffer.position(0)
+        GLES20.glVertexAttribPointer(mNormalHandle, 3, GLES20.GL_FLOAT, false, 0, mNormalFloatBuffer)
+        GLES20.glEnableVertexAttribArray(mNormalHandle)
+        GLUtils.checkGlError("setNormal")
+
         Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0)
+
+        //MV Data
+        GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0)
+
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0)
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0)
-
         GLUtils.checkGlError("getUniform")
+
+        //Light Data
+        GLES20.glUniform3f(mLightPosHandle, mLightPosInEyeSpace[0], mLightPosInEyeSpace[1], mLightPosInEyeSpace[2]);
+
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36)
     }
 
-    val mBytesPerFloat: Byte = 4
     // X, Y, Z
     val mCubeVertices = floatArrayOf(
             // In OpenGL counter-clockwise winding is default. This means that when we look at a triangle,
@@ -214,6 +309,7 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
     val mColorFloatBuffer: FloatBuffer
     val mNormalFloatBuffer: FloatBuffer
     //val mTextureFloatBuffer: FloatBuffer
+    val mBytesPerFloat: Byte = 4
 
     init {
         mCubeFloatBuffer = ByteBuffer.allocateDirect(mCubeVertices.size * mBytesPerFloat).order(ByteOrder.nativeOrder()).asFloatBuffer()
