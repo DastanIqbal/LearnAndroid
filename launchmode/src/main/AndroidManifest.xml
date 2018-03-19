@@ -16,10 +16,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".AcivityA"
-            android:launchMode="singleTask"/>
-        <activity android:name=".AcivityB"/>
+        <activity android:name=".AcivityA" />
+        <activity android:name=".AcivityB" />
         <activity android:name=".AcivityC"/>
         <activity android:name=".AcivityD"/>
     </application>

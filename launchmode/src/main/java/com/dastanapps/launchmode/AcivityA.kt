@@ -1,5 +1,6 @@
 package com.dastanapps.launchmode
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -15,10 +16,14 @@ class AcivityA : AppCompatActivity() {
             val intent = Intent(this, AcivityB::class.java)
             startActivity(intent)
         }
+        if (intent != null && intent.getStringExtra("src") == "B") {
+            setResult(Activity.RESULT_OK)
+            finish()
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        text1.text="From onNewIntent Activity A"
+        text1.text = "From onNewIntent Activity A"
     }
 }

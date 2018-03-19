@@ -32,5 +32,8 @@
   
   *Note: but when we launching Activity A using startActivityForResult then its always create new instance
   
+###Case 4: set Activity A as single Instance, B as single Top
+Input: MainActivity-> A->B->C->D-> MainActivity->A->B->C->D-> MainActivity
+Backpress: popping in same sequence but A has single instance only calling onNewIntent on next launch.
   
   
