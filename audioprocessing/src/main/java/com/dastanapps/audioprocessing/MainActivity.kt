@@ -21,7 +21,9 @@ class MainActivity : AppCompatActivity() {
     private var bufferElements2Rec = 1024 // want to play 2048 (2K) since 2 bytes we use only 1024
     private var bytesPerElement = 2 // 2 bytes in 16bit format
     private val SAMPLERATE = 44100
-
+    private val CHANNEL_MASK = AudioFormat.CHANNEL_IN_MONO
+    private val ENCODING = AudioFormat.ENCODING_PCM_16BIT
+    private val BUFFER_SIZE = 2 * AudioRecord.getMinBufferSize(SAMPLERATE, CHANNEL_MASK, ENCODING)
 
     private var mAudioRecorder: AudioRecord? = null
     private var isRecording: Boolean = false
@@ -64,11 +66,11 @@ class MainActivity : AppCompatActivity() {
 
     fun startRecording() {
         mAudioRecorder = AudioRecord(
-                MediaRecorder.AudioSource.CAMCORDER,
+                MediaRecorder.AudioSource.MIC,
                 SAMPLERATE,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                bytesPerElement * bufferElements2Rec)
+                CHANNEL_MASK,
+                ENCODING,
+                BUFFER_SIZE)
         mAudioRecorder?.startRecording()
         isRecording = true
         recordingThread = Thread(Runnable { writeAudioDataToFile() }, "AudioRecorder Thread")
