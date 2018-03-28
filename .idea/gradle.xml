@@ -8,7 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/tutsopengles" />
+            <option value="$PROJECT_DIR$/audioprocessing" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

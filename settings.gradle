@@ -1,6 +1,7 @@
 //include ':shadersNfilters'
 //include  ':mediaeffectswithopengles'
-include  ':tutsopengles'
+//include  ':tutsopengles', ':launchmode'
+include ':audioprocessing'
 //include  ':camera2'
 //include  ':verticaledittext', ':hijricalendar'
 //include  ':camera'
