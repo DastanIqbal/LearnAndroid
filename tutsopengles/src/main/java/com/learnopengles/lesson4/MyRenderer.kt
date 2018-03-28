@@ -38,6 +38,10 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
     private var mMVMatrixHandle: Int = -1
     private var mLightPosHandle: Int = -1
+    private var mTextureDataHandle: Int=-1
+    private var mTextureUniformHandle: Int = 0
+    private var mTextureCoordinateHandle: Int = 0
+
 
 
     override fun onDrawFrame(gl: GL10?) {
@@ -50,16 +54,27 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
 
         mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "uMVPMatrix")
         GLUtils.checkGlError("getMVPMatrix")
-        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "mMVMatrix")
+        mMVMatrixHandle = GLES20.glGetUniformLocation(mProgramHandle, "uMVMatrix")
         GLUtils.checkGlError("getMVMatrix")
-        mLightPosHandle = GLES20.glGetUniformLocation(mProgramHandle, "mLightPos")
+        mLightPosHandle = GLES20.glGetUniformLocation(mProgramHandle, "uLightPos")
         GLUtils.checkGlError("getLightPos")
+        mTextureUniformHandle = GLES20.glGetUniformLocation(mProgramHandle, "uTexture")
         mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, "aPosition")
         GLUtils.checkGlError("getPosition")
         mColorHandle = GLES20.glGetAttribLocation(mProgramHandle, "aColor")
         GLUtils.checkGlError("getPosition")
         mNormalHandle = GLES20.glGetAttribLocation(mProgramHandle, "aNormal")
         GLUtils.checkGlError("getPosition")
+        mTextureCoordinateHandle = GLES20.glGetAttribLocation(mProgramHandle, "aTexCoordinate")
+
+        // Set the active texture unit to texture unit 0.
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+
+        // Bind the texture to this unit.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureDataHandle)
+
+        // Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
+        GLES20.glUniform1i(mTextureUniformHandle, 0)
 
         Matrix.setIdentityM(mLightModelMatrix, 0)
         Matrix.translateM(mLightModelMatrix, 0, 0f, 0f, -5f)
@@ -127,6 +142,9 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
                 GLUtils.readTextFileFromRawResource(context, R.raw.fs_lesson4opengles)!!)
 
         mLightProgramHandle = GLUtils.loadProgram(lightVS, lightFS)
+
+        // Load the texture
+        mTextureDataHandle = GLUtils.loadTexture(context, R.drawable.bumpy_bricks_public_domain)
     }
 
     private fun drawLight() {
@@ -160,13 +178,21 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glEnableVertexAttribArray(mNormalHandle)
         GLUtils.checkGlError("setNormal")
 
+        // Pass in the texture coordinate information
+        mTextureFloatBuffer.position(0)
+        GLES20.glVertexAttribPointer(mTextureCoordinateHandle, 2, GLES20.GL_FLOAT, false, 0, mTextureFloatBuffer)
+        GLES20.glEnableVertexAttribArray(mTextureCoordinateHandle)
+        GLUtils.checkGlError("setTexture")
+
         Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mModelMatrix, 0)
 
         //MV Data
         GLES20.glUniformMatrix4fv(mMVMatrixHandle, 1, false, mMVPMatrix, 0)
 
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mMVPMatrix, 0)
+
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mMVPMatrix, 0)
+
         GLUtils.checkGlError("getUniform")
 
         //Light Data
@@ -305,10 +331,34 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
             0.0f, -1.0f, 0.0f
     )
 
+    // S, T (or X, Y)
+    // Texture coordinate data.
+    // Because images have a Y axis pointing downward (values increase as you move down the image) while
+    // OpenGL has a Y axis pointing upward, we adjust for that here by flipping the Y axis.
+    // What's more is that the texture coordinates are the same for every face.
+    val cubeTextureCoordinateData = floatArrayOf(
+            // Front face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+            // Right face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+            // Back face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+            // Left face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+            // Top face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+
+            // Bottom face
+            0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f)
+
     val mCubeFloatBuffer: FloatBuffer
     val mColorFloatBuffer: FloatBuffer
     val mNormalFloatBuffer: FloatBuffer
-    //val mTextureFloatBuffer: FloatBuffer
+    val mTextureFloatBuffer: FloatBuffer
     val mBytesPerFloat: Byte = 4
 
     init {
@@ -321,7 +371,7 @@ class MyRenderer(private val context: Context) : GLSurfaceView.Renderer {
         mNormalFloatBuffer = ByteBuffer.allocateDirect(mNormalVertices.size * mBytesPerFloat).order(ByteOrder.nativeOrder()).asFloatBuffer()
         mNormalFloatBuffer.put(mNormalVertices).position(0)
 
-//        mTextureFloatBuffer = ByteBuffer.allocateDirect(mTextureVertices.size * mBytesPerFloat).order(ByteOrder.nativeOrder()).asFloatBuffer()
-//        mTextureFloatBuffer.position(0)
+        mTextureFloatBuffer = ByteBuffer.allocateDirect(cubeTextureCoordinateData.size * mBytesPerFloat).order(ByteOrder.nativeOrder()).asFloatBuffer()
+        mTextureFloatBuffer.position(0)
     }
 }
