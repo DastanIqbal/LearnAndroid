@@ -2,6 +2,7 @@
 <resources>
     <string-array name="players">
         <item>Exo Player</item>
+        <item>Exo Player 2.4.2</item>
         <item>Media Player</item>
     </string-array>
 </resources>

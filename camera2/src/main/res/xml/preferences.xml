@@ -99,6 +99,14 @@
             android:summary="%s"
             android:title="@string/preference_burst_interval" />
 
+        <ListPreference
+            android:defaultValue="preference_ghost_image_off"
+            android:entries="@array/preference_ghost_image_entries"
+            android:entryValues="@array/preference_ghost_image_values"
+            android:key="preference_ghost_image"
+            android:summary="@string/preference_ghost_image_summary"
+            android:title="@string/preference_ghost_image" />
+
         <PreferenceScreen
             android:key="preference_screen_camera_controls_more"
             android:persistent="false"
@@ -572,6 +580,7 @@
 
             </PreferenceCategory>
 
+            <!--  if we move this to another PreferenceGroup, we should update code to remove this Preference -->
             <PreferenceCategory
                 android:key="preference_category_photo_debugging"
                 android:title="@string/preference_category_photo_debugging">
@@ -590,11 +599,21 @@
                     android:summary="@string/preference_camera2_fast_burst_summary"
                     android:title="@string/preference_camera2_fast_burst" />
 
+                <!--  if we move this to another PreferenceGroup, we should update code to remove this Preference -->
                 <SwitchPreference
                     android:defaultValue="true"
+                    android:key="preference_camera2_photo_video_recording"
+                    android:summary="@string/preference_camera2_photo_video_recording_summary"
+                    android:title="@string/preference_camera2_photo_video_recording" />
+
+                <!--
+                <SwitchPreference
                     android:key="preference_background_photo_saving"
+                    android:title="@string/preference_background_photo_saving"
                     android:summary="@string/preference_background_photo_saving_summary"
-                    android:title="@string/preference_background_photo_saving" />
+                    android:defaultValue="true"
+                    />
+                -->
 
             </PreferenceCategory>
 
@@ -628,14 +647,21 @@
 
             <ListPreference
                 android:defaultValue="default"
-                android:entries="@array/preference_video_fps_entries"
-                android:entryValues="@array/preference_video_fps_values"
                 android:key="preference_video_fps"
                 android:summary="@string/preference_video_fps_summary"
                 android:title="@string/preference_video_fps" />
 
+            <!--  if we move this to another PreferenceGroup, we should update code for the findPreference() call -->
             <ListPreference
-                android:defaultValue="30"
+                android:defaultValue="off"
+                android:entries="@array/preference_video_log_entries"
+                android:entryValues="@array/preference_video_log_values"
+                android:key="preference_video_log"
+                android:summary="@string/preference_video_log_summary"
+                android:title="@string/preference_video_log" />
+
+            <ListPreference
+                android:defaultValue="0"
                 android:entries="@array/preference_video_max_duration_entries"
                 android:entryValues="@array/preference_video_max_duration_values"
                 android:key="preference_video_max_duration"
@@ -751,6 +777,13 @@
                 android:title="@string/preference_require_location" />
 
         </PreferenceScreen>
+
+        <!--  if we move this to another PreferenceGroup, we should update code for the findPreference() call -->
+        <!--  if we move this to another PreferenceGroup, we should update code for the readFromIntent() call -->
+        <ListPreference
+            android:key="preference_antibanding"
+            android:summary="@string/preference_antibanding_summary"
+            android:title="@string/preference_antibanding" />
 
     </PreferenceCategory>
 

@@ -19,10 +19,8 @@ import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
-import android.hardware.camera2.DngCreator;
 import android.location.Location;
 import android.media.CamcorderProfile;
-import android.media.Image;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -58,6 +56,7 @@ import com.dastanapps.camera2.CameraController.CameraControllerException;
 import com.dastanapps.camera2.CameraController.CameraControllerManager;
 import com.dastanapps.camera2.CameraController.CameraControllerManager1;
 import com.dastanapps.camera2.CameraController.CameraControllerManager2;
+import com.dastanapps.camera2.CameraController.RawImage;
 import com.dastanapps.camera2.MyDebug;
 import com.dastanapps.camera2.Preview.CameraSurface.CameraSurface;
 import com.dastanapps.camera2.Preview.CameraSurface.MySurfaceView;
@@ -164,7 +163,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private final Timer batteryCheckVideoTimer = new Timer();
     private TimerTask batteryCheckVideoTimerTask;
     private long take_photo_time;
-    private int remaining_burst_photos;
+    private int remaining_repeat_photos;
     private int remaining_restart_video;
 
     private boolean is_preview_started;
@@ -202,6 +201,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private List<String> color_effects;
     private List<String> scene_modes;
     private List<String> white_balances;
+    private List<String> antibanding;
     private List<String> isos;
     private boolean supports_white_balance_temperature;
     private int min_temperature;
@@ -219,6 +219,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private boolean supports_expo_bracketing;
     private int max_expo_bracketing_n_images;
     private boolean supports_raw;
+    private boolean supports_burst;
     private float view_angle_x;
     private float view_angle_y;
 
@@ -227,8 +228,9 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private List<CameraController.Size> sizes;
     private int current_size_index = -1; // this is an index into the sizes array, or -1 if sizes not yet set
 
-    private boolean has_capture_rate_factor; // whether we have a capture rate for faster or slow motion
-    private float capture_rate_factor = 1.0f; // should be 1.0f if has_capture_rate_factor is false
+    private boolean supports_video;
+    private boolean has_capture_rate_factor; // whether we have a capture rate for faster (timelapse) or slow motion
+    private float capture_rate_factor = 1.0f; // should be 1.0f if has_capture_rate_factor is false; set lower than 1 for slow motion, higher than 1 for timelapse
     private boolean video_high_speed; // whether the current video mode requires high speed frame rate (note this may still be true even if is_video==false, so potentially we could switch photo/video modes without setting up the flag)
     private boolean supports_video_high_speed;
     private final VideoQualityHandler video_quality_handler = new VideoQualityHandler();
@@ -281,10 +283,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     private final DecimalFormat decimal_format_1dp = new DecimalFormat("#.#");
     private final DecimalFormat decimal_format_2dp = new DecimalFormat("#.##");
 
-    /* If the user touches to focus in continuous mode, we switch the camera_controller to autofocus mode.
+    /* If the user touches to focus in continuous mode, and in photo mode, we switch the camera_controller to autofocus mode.
      * autofocus_in_continuous_mode is set to true when this happens; the runnable reset_continuous_focus_runnable
-	 * switches back to continuous mode.
-	 */
+     * switches back to continuous mode.
+     */
     private final Handler reset_continuous_focus_handler = new Handler();
     private Runnable reset_continuous_focus_runnable;
     private boolean autofocus_in_continuous_mode;
@@ -316,7 +318,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 
         this.applicationInterface = applicationInterface;
 
-        final Activity activity = (Activity) this.getContext();
+        Activity activity = (Activity) this.getContext();
         if (activity.getIntent() != null && activity.getIntent().getExtras() != null) {
             // whether called from testing
             is_test = activity.getIntent().getExtras().getBoolean("test_project");
@@ -376,14 +378,14 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
 	/*private void previewToCamera(float [] coords) {
-        float alpha = coords[0] / (float)this.getWidth();
+		float alpha = coords[0] / (float)this.getWidth();
 		float beta = coords[1] / (float)this.getHeight();
 		coords[0] = 2000.0f * alpha - 1000.0f;
 		coords[1] = 2000.0f * beta - 1000.0f;
 	}*/
 
 	/*private void cameraToPreview(float [] coords) {
-        float alpha = (coords[0] + 1000.0f) / 2000.0f;
+		float alpha = (coords[0] + 1000.0f) / 2000.0f;
 		float beta = (coords[1] + 1000.0f) / 2000.0f;
 		coords[0] = alpha * (float)this.getWidth();
 		coords[1] = beta * (float)this.getHeight();
@@ -454,7 +456,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
 	/*Matrix getPreviewToCameraMatrix() {
-        calculatePreviewToCameraMatrix();
+		calculatePreviewToCameraMatrix();
 		return preview_to_camera_matrix;
 	}*/
 
@@ -510,8 +512,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             return true;
         }
         applicationInterface.touchEvent(event);
-        /*if( MyDebug.LOG ) {
-            Log.d(TAG, "touch event: " + event.getAction());
+		/*if( MyDebug.LOG ) {
+			Log.d(TAG, "touch event: " + event.getAction());
 		}*/
         if (event.getPointerCount() != 1) {
             //multitouch_time = System.currentTimeMillis();
@@ -864,6 +866,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                         try {
                             DocumentsContract.deleteDocument(getContext().getContentResolver(), video_uri);
                         } catch (FileNotFoundException e2) {
+                            // note, Android Studio reports a warning that FileNotFoundException isn't thrown, but it can be
+                            // thrown by DocumentsContract.deleteDocument - and we get an error if we try to remove the catch!
                             if (MyDebug.LOG)
                                 Log.e(TAG, "exception when deleting " + video_uri);
                             e2.printStackTrace();
@@ -1094,7 +1098,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
         applicationInterface.cameraClosed();
         cancelTimer();
-        cancelBurst();
+        cancelRepeat();
         if (camera_controller != null) {
             if (MyDebug.LOG) {
                 Log.d(TAG, "close camera_controller");
@@ -1167,10 +1171,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
     }
 
-    public void cancelBurst() {
+    public void cancelRepeat() {
         if (MyDebug.LOG)
-            Log.d(TAG, "cancelBurst()");
-        remaining_burst_photos = 0;
+            Log.d(TAG, "cancelRepeat()");
+        remaining_repeat_photos = 0;
     }
 
     /**
@@ -1209,8 +1213,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (MyDebug.LOG) {
             Log.d(TAG, "pausePreview: about to call cameraInOperation: " + (System.currentTimeMillis() - debug_time));
         }
-        /*applicationInterface.cameraInOperation(false, false);
-        if( is_video )
+		/*applicationInterface.cameraInOperation(false, false);
+		if( is_video )
 			applicationInterface.cameraInOperation(false, true);*/
         if (MyDebug.LOG) {
             Log.d(TAG, "pausePreview: total time: " + (System.currentTimeMillis() - debug_time));
@@ -1269,6 +1273,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         can_disable_shutter_sound = false;
         color_effects = null;
         white_balances = null;
+        antibanding = null;
         isos = null;
         supports_white_balance_temperature = false;
         min_temperature = 0;
@@ -1286,6 +1291,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         supports_expo_bracketing = false;
         max_expo_bracketing_n_images = 0;
         supports_raw = false;
+        supports_burst = false;
         view_angle_x = 55.0f; // set a sensible default
         view_angle_y = 43.0f; // set a sensible default
         sizes = null;
@@ -1293,6 +1299,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         has_capture_rate_factor = false;
         capture_rate_factor = 1.0f;
         video_high_speed = false;
+        supports_video = true;
         supports_video_high_speed = false;
         video_quality_handler.resetCurrentQuality();
         supported_flash_values = null;
@@ -1343,7 +1350,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         has_permissions = true;
 
 		/*{
-            // debug
+			// debug
 			if( debug_count_opencamera++ == 0 ) {
 				if( MyDebug.LOG )
 					Log.d(TAG, "debug: don't open camera yet");
@@ -1362,8 +1369,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 
         //final boolean use_background_thread = false;
         //final boolean use_background_thread = true;
-        final boolean use_background_thread = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
-        /* Opening camera on background thread is important so that we don't block the UI thread:
+        final boolean use_background_thread = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+		/* Opening camera on background thread is important so that we don't block the UI thread:
 		 *   - For old Camera API, this is recommended behaviour by Google for Camera.open().
 		     - For Camera2, the manager.openCamera() call is asynchronous, but CameraController2
 		       waits for it to open, so it's still important that we run that in a background thread.
@@ -1371,6 +1378,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 		 * with tests testTakePhotoAutoLevel(), testTakePhotoAutoLevelAngles() (various camera
 		 * errors/exceptions, failing to taking photos). Since this is a significant change, this is
 		 * for now limited to modern devices.
+		 * Initially this was Android 7, but for 1.44, I enabled for Android 6.
 		 */
         if (use_background_thread) {
             final int cameraId_f = cameraId;
@@ -1620,9 +1628,12 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     /* Should only be called after camera first opened, or after preview is paused.
-	 * take_photo is true if we have been called from the TakePhoto widget (which means
-	 * we'll take a photo immediately after startup).
-	 */
+     * take_photo is true if we have been called from the TakePhoto widget (which means
+     * we'll take a photo immediately after startup).
+     * Important to call this when switching between photo and video mode, as ApplicationInterface
+     * preferences/parameters may be different (since we can support taking photos in video snapshot
+     * mode, but this may have different parameters).
+     */
     public void setupCamera(boolean take_photo) {
         if (MyDebug.LOG)
             Log.d(TAG, "setupCamera()");
@@ -1661,6 +1672,11 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (MyDebug.LOG) {
             Log.d(TAG, "saved_is_video: " + saved_is_video);
         }
+        if (saved_is_video && !supports_video) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "but video not supported");
+            saved_is_video = false;
+        }
         // must switch video before starting preview
         if (saved_is_video != this.is_video) {
             if (MyDebug.LOG)
@@ -1676,20 +1692,17 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             }
         }
 
+        // must be done after switching to video mode (so is_video is set correctly)
+        if (this.is_video) {
+            boolean use_video_log_profile = applicationInterface.useVideoLogProfile();
+            float video_log_profile_strength = use_video_log_profile ? applicationInterface.getVideoLogProfileStrength() : 0.0f;
+            camera_controller.setLogProfile(use_video_log_profile, video_log_profile_strength);
+        }
+
         // in theory it shouldn't matter if we call setVideoHighSpeed(true) if is_video==false, as it should only have an effect
         // in video mode; but don't set high speed mode in photo mode just to be safe
         // Setup for high speed - must be done after setupCameraParameters() and switching to video mode, but before setPreviewSize() and startCameraPreview()
         camera_controller.setVideoHighSpeed(is_video && video_high_speed);
-        // test slow motion
-		/*if( this.is_video && video_high_speed
-				//&& false
-				// && applicationInterface.isVideoSlowMotionPref()
-			) {
-			if( MyDebug.LOG )
-				Log.d(TAG, "set capture rate for slow motion");
-	    	has_capture_rate_factor = true;
-	    	capture_rate_factor = 0.25f;
-		}*/
 
         if (do_startup_focus && using_android_l && camera_controller.supportsAutoFocus()) {
             // need to switch flash off for autofocus - and for Android L, need to do this before starting preview (otherwise it won't work in time); for old camera API, need to do this after starting preview!
@@ -1705,10 +1718,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 Log.d(TAG, "set_flash_value_after_autofocus is now: " + set_flash_value_after_autofocus);
         }
 
-        if (this.supports_raw && applicationInterface.isRawPref()) {
-            camera_controller.setRaw(true);
+        if (this.supports_raw && applicationInterface.getRawPref() != ApplicationInterface.RawPref.RAWPREF_JPEG_ONLY) {
+            camera_controller.setRaw(true, applicationInterface.getMaxRawImages());
         } else {
-            camera_controller.setRaw(false);
+            camera_controller.setRaw(false, 0);
         }
 
         if (this.supports_expo_bracketing && applicationInterface.isExpoBracketingPref()) {
@@ -1720,7 +1733,22 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             camera_controller.setExpoBracketing(false);
         }
 
-        camera_controller.setWantBurst(applicationInterface.isCameraBurstPref());
+        if (this.supports_burst && applicationInterface.isCameraBurstPref()) {
+            if (applicationInterface.getBurstForNoiseReduction()) {
+                if (this.supports_exposure_time) { // noise reduction mode also needs manual exposure
+                    camera_controller.setWantBurst(true);
+                    camera_controller.setBurstForNoiseReduction(true);
+                } else {
+                    camera_controller.setWantBurst(false);
+                }
+            } else {
+                camera_controller.setWantBurst(true);
+                camera_controller.setBurstForNoiseReduction(false);
+                camera_controller.setBurstNImages(applicationInterface.getBurstNImages());
+            }
+        } else {
+            camera_controller.setWantBurst(false);
+        }
 
         camera_controller.setOptimiseAEForDRO(applicationInterface.getOptimiseAEForDROPref());
 
@@ -1863,6 +1891,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             this.supports_expo_bracketing = camera_features.supports_expo_bracketing;
             this.max_expo_bracketing_n_images = camera_features.max_expo_bracketing_n_images;
             this.supports_raw = camera_features.supports_raw;
+            this.supports_burst = camera_features.supports_burst;
             this.view_angle_x = camera_features.view_angle_x;
             this.view_angle_y = camera_features.view_angle_y;
             this.supports_video_high_speed = camera_features.video_sizes_high_speed != null && camera_features.video_sizes_high_speed.size() > 0;
@@ -1944,6 +1973,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                     /** Accessibility: report number of faces for talkback etc.
                      */
                     private void reportFaces(CameraController.Face[] local_faces) {
+                        // View.announceForAccessibility requires JELLY_BEAN
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && accessibility_manager.isEnabled() && accessibility_manager.isTouchExplorationEnabled()) {
                             int n_faces = local_faces.length;
                             FaceLocation face_location = FaceLocation.FACELOCATION_UNKNOWN;
@@ -2127,6 +2157,21 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
         if (MyDebug.LOG) {
             Log.d(TAG, "setupCameraParameters: time after white balance: " + (System.currentTimeMillis() - debug_time));
+        }
+
+        {
+            if (MyDebug.LOG)
+                Log.d(TAG, "set up antibanding");
+            String value = applicationInterface.getAntiBandingPref();
+            if (MyDebug.LOG)
+                Log.d(TAG, "saved antibanding: " + value);
+
+            CameraController.SupportedValues supported_values = camera_controller.setAntiBanding(value);
+            // for anti-banding, if the stored preference wasn't supported, we stick with the device default - but don't
+            // write it back to the user preference
+            if (supported_values != null) {
+                antibanding = supported_values.values;
+            }
         }
 
         // must be done before setting flash modes, as we may remove flash modes if in manual mode
@@ -2354,40 +2399,90 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             if (MyDebug.LOG)
                 Log.d(TAG, "set video_quality value to " + video_quality_handler.getCurrentVideoQuality());
         }
+
         if (video_quality_handler.getCurrentVideoQualityIndex() != -1) {
             // now save, so it's available for PreferenceActivity
             applicationInterface.setVideoQualityPref(video_quality_handler.getCurrentVideoQuality());
+        } else {
+            // This means video_quality_handler.getSupportedVideoQuality().size() is 0 - this could happen if the camera driver
+            // supports no camcorderprofiles? In this case, we shouldn't support video.
+            Log.e(TAG, "no video qualities found");
+            supports_video = false;
         }
+
         if (MyDebug.LOG) {
             Log.d(TAG, "setupCameraParameters: time after handling video quality: " + (System.currentTimeMillis() - debug_time));
         }
 
-        {
+        if (supports_video) {
+            capture_rate_factor = applicationInterface.getVideoCaptureRateFactor();
+            has_capture_rate_factor = Math.abs(capture_rate_factor - 1.0f) > 1.0e-5f;
+            if (MyDebug.LOG) {
+                Log.d(TAG, "has_capture_rate_factor: " + has_capture_rate_factor);
+                Log.d(TAG, "capture_rate_factor: " + capture_rate_factor);
+            }
+
             // set up high speed frame rates
-            // should be done after checking the requested video size is available
+            // should be done after checking the requested video size is available, and after reading the requested capture rate
             video_high_speed = false;
             if (this.supports_video_high_speed) {
                 VideoProfile profile = getVideoProfile();
                 if (MyDebug.LOG)
                     Log.d(TAG, "check if we need high speed video for " + profile.videoFrameWidth + " x " + profile.videoFrameHeight + " at fps " + profile.videoCaptureRate);
-                CameraController.Size requested_size = new CameraController.Size(profile.videoFrameWidth, profile.videoFrameHeight);
-                CameraController.Size best_video_size = CameraController.CameraFeatures.findSize(video_quality_handler.getSupportedVideoSizes(), requested_size, profile.videoCaptureRate, false);
+                CameraController.Size best_video_size = video_quality_handler.findVideoSizeForFrameRate(profile.videoFrameWidth, profile.videoFrameHeight, profile.videoCaptureRate);
+
                 if (best_video_size == null && video_quality_handler.getSupportedVideoSizesHighSpeed() != null) {
-                    if (MyDebug.LOG)
-                        Log.d(TAG, "need to check high speed sizes");
-                    // check high speed
+                    Log.e(TAG, "can't find match for capture rate: " + profile.videoCaptureRate + " and video size: " + profile.videoFrameWidth + " x " + profile.videoFrameHeight + " at fps " + profile.videoCaptureRate);
+                    // try falling back to one of the supported high speed resolutions
+                    CameraController.Size requested_size = video_quality_handler.getMaxSupportedVideoSizeHighSpeed();
+                    profile.videoFrameWidth = requested_size.width;
+                    profile.videoFrameHeight = requested_size.height;
+                    // now try again
                     best_video_size = CameraController.CameraFeatures.findSize(video_quality_handler.getSupportedVideoSizesHighSpeed(), requested_size, profile.videoCaptureRate, false);
+                    if (best_video_size != null) {
+                        if (MyDebug.LOG)
+                            Log.d(TAG, "fall back to a supported video size for high speed fps");
+                        // need to write back to the application
+                        // so find the corresponding quality value
+                        video_quality_handler.setCurrentVideoQualityIndex(-1);
+                        for (int i = 0; i < video_quality_handler.getSupportedVideoQuality().size(); i++) {
+                            if (MyDebug.LOG)
+                                Log.d(TAG, "check video quality: " + video_quality_handler.getSupportedVideoQuality().get(i));
+                            CamcorderProfile camcorder_profile = getCamcorderProfile(video_quality_handler.getSupportedVideoQuality().get(i));
+                            if (camcorder_profile.videoFrameWidth == profile.videoFrameWidth && camcorder_profile.videoFrameHeight == profile.videoFrameHeight) {
+                                video_quality_handler.setCurrentVideoQualityIndex(i);
+                                break;
+                            }
+                        }
+                        if (video_quality_handler.getCurrentVideoQualityIndex() != -1) {
+                            if (MyDebug.LOG)
+                                Log.d(TAG, "reset to video quality: " + video_quality_handler.getCurrentVideoQuality());
+                            applicationInterface.setVideoQualityPref(video_quality_handler.getCurrentVideoQuality());
+                        } else {
+                            if (MyDebug.LOG)
+                                Log.d(TAG, "but couldn't find a corresponding video quality");
+                            best_video_size = null;
+                        }
+                    }
                 }
 
                 if (best_video_size == null) {
                     Log.e(TAG, "fps not supported for this video size: " + profile.videoFrameWidth + " x " + profile.videoFrameHeight + " at fps " + profile.videoCaptureRate);
-                    // TODO handle this
+                    // we'll end up trying to record at the requested resolution and fps even though these seem incompatible;
+                    // the camera driver will either ignore the requested fps, or fail
                 } else if (best_video_size.high_speed) {
                     video_high_speed = true;
                 }
             }
             if (MyDebug.LOG)
                 Log.d(TAG, "video_high_speed?: " + video_high_speed);
+        }
+
+        if (is_video && video_high_speed && supports_iso_range && is_manual_iso) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "manual mode not supported for video_high_speed");
+            camera_controller.setManualISO(false, 0);
+            is_manual_iso = false;
         }
 
         {
@@ -2674,7 +2769,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         // 4K UHD video is not yet supported by Android API (at least testing on Samsung S5 and Note 3, they do not return it via getSupportedVideoSizes(), nor via a CamcorderProfile (either QUALITY_HIGH, or anything else)
         // but it does work if we explicitly set the resolution (at least tested on an S5)
         if (camera_controller == null) {
-            video_profile = new VideoProfile(CamcorderProfile.get(0, CamcorderProfile.QUALITY_HIGH));
+            video_profile = new VideoProfile();
             Log.e(TAG, "camera not opened! returning default video profile for QUALITY_HIGH");
             return video_profile;
         }
@@ -2700,7 +2795,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             CamcorderProfile cam_profile;
             int cameraId = camera_controller.getCameraId();
 
-            if (force4k) {
+            // video_high_speed should only be for Camera2, where we don't support force4k option, but
+            // put the check here just in case - don't want to be forcing 4K resolution if high speed
+            // frame rate!
+            if (force4k && !video_high_speed) {
                 if (MyDebug.LOG)
                     Log.d(TAG, "force 4K UHD video");
                 cam_profile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_HIGH);
@@ -2710,9 +2808,9 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             } else if (this.video_quality_handler.getCurrentVideoQualityIndex() != -1) {
                 cam_profile = getCamcorderProfile(this.video_quality_handler.getCurrentVideoQuality());
             } else {
-                cam_profile = CamcorderProfile.get(cameraId, CamcorderProfile.QUALITY_HIGH);
+                cam_profile = null;
             }
-            video_profile = new VideoProfile(cam_profile);
+            video_profile = cam_profile != null ? new VideoProfile(cam_profile) : new VideoProfile();
         }
 
         //video_profile.fileFormat = MediaRecorder.OutputFormat.MPEG_4;
@@ -2751,11 +2849,36 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 
         if (has_capture_rate_factor) {
             if (MyDebug.LOG)
-                Log.d(TAG, "set video profile frame rate for slow motion or timelapse");
-            // capture rate remains the same, and we adjust the frame rate of video
-            video_profile.videoFrameRate = (int) (video_profile.videoFrameRate * capture_rate_factor + 0.5f);
-            video_profile.videoBitRate = (int) (video_profile.videoBitRate * capture_rate_factor + 0.5f);
-            // audio not recorded with slow motion video
+                Log.d(TAG, "set video profile frame rate for slow motion or timelapse, capture rate: " + capture_rate_factor);
+            if (capture_rate_factor < 1.0) {
+                // capture rate remains the same, and we adjust the frame rate of video
+                video_profile.videoFrameRate = (int) (video_profile.videoFrameRate * capture_rate_factor + 0.5f);
+                video_profile.videoBitRate = (int) (video_profile.videoBitRate * capture_rate_factor + 0.5f);
+                if (MyDebug.LOG)
+                    Log.d(TAG, "scaled frame rate to: " + video_profile.videoFrameRate);
+                if (Math.abs(capture_rate_factor - 0.5f) < 1.0e-5f) {
+                    // hack - on Nokia 8 at least, capture_rate_factor of 0.5x still gives a normal speed video, but a
+                    // workaround is to increase the capture rate - even increasing by just 1.0e-5 works
+                    // unclear if this is needed in general, or is a Nokia specific bug
+                    video_profile.videoCaptureRate += 1.0e-3;
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "fudged videoCaptureRate to: " + video_profile.videoCaptureRate);
+                }
+            } else if (capture_rate_factor > 1.0) {
+                // resultant framerate remains the same, instead adjst the capture rate
+                video_profile.videoCaptureRate = video_profile.videoCaptureRate / (double) capture_rate_factor;
+                if (MyDebug.LOG)
+                    Log.d(TAG, "scaled capture rate to: " + video_profile.videoCaptureRate);
+                if (Math.abs(capture_rate_factor - 2.0f) < 1.0e-5f) {
+                    // hack - similar idea to the hack above for 2x slow motion
+                    // again, even decreasing by 1.0e-5 works
+                    // again, unclear if this is needed in general, or is a Nokia specific bug
+                    video_profile.videoCaptureRate -= 1.0e-3f;
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "fudged videoCaptureRate to: " + video_profile.videoCaptureRate);
+                }
+            }
+            // audio not recorded with slow motion or timelapse video
             record_audio = false;
         }
 
@@ -2792,6 +2915,17 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                     break;
                 case "audio_src_voice_communication":
                     video_profile.audioSource = MediaRecorder.AudioSource.VOICE_COMMUNICATION;
+                    break;
+                case "audio_src_voice_recognition":
+                    video_profile.audioSource = MediaRecorder.AudioSource.VOICE_RECOGNITION;
+                    break;
+                case "audio_src_unprocessed":
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        video_profile.audioSource = MediaRecorder.AudioSource.UNPROCESSED;
+                    } else {
+                        Log.e(TAG, "audio_src_voice_unprocessed requires Android 7");
+                        video_profile.audioSource = MediaRecorder.AudioSource.CAMCORDER;
+                    }
                     break;
                 case "audio_src_camcorder":
                 default:
@@ -3000,6 +3134,15 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         {
             Display display = activity.getWindowManager().getDefaultDisplay();
             display.getSize(display_size);
+            // getSize() is adjusted based on the current rotation, so should already be landscape format, but:
+            // (a) it would be good to not assume Open Camera runs in landscape mode (if we ever ran in portrait mode,
+            // we'd still want display_size.x > display_size.y as preview resolutions also have width > height,
+            // (b) on some devices (e.g., Nokia 8), when coming back from the Settings when device is held in Preview,
+            // display size is returned in portrait format! (To reproduce, enable "Maximise preview size"; or if that's
+            // already enabled, change the setting off and on.)
+            if (display_size.x < display_size.y) {
+                display_size.set(display_size.y, display_size.x);
+            }
             if (MyDebug.LOG)
                 Log.d(TAG, "display_size: " + display_size.x + " x " + display_size.y);
         }
@@ -3245,7 +3388,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     /* Returns the rotation (in degrees) to use for images/videos, taking the preference_lock_orientation into account.
-	 */
+     */
     private int getImageVideoRotation() {
         if (MyDebug.LOG)
             Log.d(TAG, "getImageVideoRotation() from current_rotation " + current_rotation);
@@ -3628,7 +3771,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 }
             }
             if (MyDebug.LOG)
-                Log.d(TAG, "    can't find match for fps range, so choose closest: " + selected_min_fps + " to " + selected_max_fps);
+                Log.e(TAG, "    can't find match for fps range, so choose closest: " + selected_min_fps + " to " + selected_max_fps);
         }
         return new int[]{selected_min_fps, selected_max_fps};
     }
@@ -3684,10 +3827,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     /* It's important to set a preview FPS using chooseBestPreviewFps() rather than just leaving it to the default, as some devices
-	 * have a poor choice of default - e.g., Nexus 5 and Nexus 6 on original Camera API default to (15000, 15000), which means very dark
-	 * preview and photos in low light, as well as a less smooth framerate in good light.
-	 * See http://stackoverflow.com/questions/18882461/why-is-the-default-android-camera-preview-smoother-than-my-own-camera-preview .
-	 */
+     * have a poor choice of default - e.g., Nexus 5 and Nexus 6 on original Camera API default to (15000, 15000), which means very dark
+     * preview and photos in low light, as well as a less smooth framerate in good light.
+     * See http://stackoverflow.com/questions/18882461/why-is-the-default-android-camera-preview-smoother-than-my-own-camera-preview .
+     */
     private void setPreviewFps() {
         if (MyDebug.LOG)
             Log.d(TAG, "setPreviewFps()");
@@ -3698,7 +3841,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 Log.d(TAG, "fps_ranges not available");
             return;
         }
-        int[] selected_fps;
+        int[] selected_fps = null;
         if (this.is_video) {
             // For Nexus 5 and Nexus 6, we need to set the preview fps using matchPreviewFpsToVideo to avoid problem of dark preview in low light, as described above.
             // When the video recording starts, the preview automatically adjusts, but still good to avoid too-dark preview before the user starts recording.
@@ -3710,16 +3853,22 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             // but leaving the code as it is, to be safe.
             // Update for v1.43: implementing setPreviewFpsRange() for CameraController2 caused the dark preview problem on
             // OnePlus 3T. So enable the preview_too_dark for all devices on Camera2.
+            // Update for v1.43.3: had reports of problems (e.g., setting manual mode with video on camera2) since 1.43. It's unclear
+            // if there is any benefit to setting the preview fps when we aren't requesting a specific fps value, so seems safest to
+            // revert to the old behaviour (where CameraController2.setPreviewFpsRange() did nothing).
             boolean preview_too_dark = using_android_l || Build.MODEL.equals("Nexus 5") || Build.MODEL.equals("Nexus 6");
             String fps_value = applicationInterface.getVideoFPSPref();
             if (MyDebug.LOG) {
                 Log.d(TAG, "preview_too_dark? " + preview_too_dark);
                 Log.d(TAG, "fps_value: " + fps_value);
             }
-            if (fps_value.equals("default") && preview_too_dark) {
+            if (fps_value.equals("default") && using_android_l) {
+                if (MyDebug.LOG)
+                    Log.d(TAG, "don't set preview fps for camera2 and default fps video");
+            } else if (fps_value.equals("default") && preview_too_dark) {
                 selected_fps = chooseBestPreviewFps(fps_ranges);
             } else {
-                selected_fps = matchPreviewFpsToVideo(fps_ranges, profile.videoFrameRate * 1000);
+                selected_fps = matchPreviewFpsToVideo(fps_ranges, (int) (profile.videoCaptureRate * 1000));
             }
         } else {
             // note that setting an fps here in continuous video focus mode causes preview to not restart after taking a photo on Galaxy Nexus
@@ -3727,11 +3876,22 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             // we could hardcode behaviour like we do for video, but this is the same way that Google Camera chooses preview fps for photos
             // or I could hardcode behaviour for Galaxy Nexus, but since it's an old device (and an obscure bug anyway - most users don't really need continuous focus in photo mode), better to live with the bug rather than complicating the code
             // Update for v1.29: this doesn't seem to happen on Galaxy Nexus with continuous picture focus mode, which is what we now use
-            // Update for v1.31: we no longer seem to need this - I no longer get a dark preview in photo or video mode if we don't set the fps range;
+            // Update for v1.31: we no longer seem to need this for old API - I no longer get a dark preview in photo or video mode if we don't set the fps range;
             // but leaving the code as it is, to be safe.
-            selected_fps = chooseBestPreviewFps(fps_ranges);
+            // Update for v1.43.3: as noted above, setPreviewFpsRange() was implemented for CameraController2 in v1.43, but no evidence this
+            // is needed for anything, so thinking about it, best to keep things as they were before for Camera2
+            if (using_android_l) {
+                if (MyDebug.LOG)
+                    Log.d(TAG, "don't set preview fps for camera2 and photo");
+            } else {
+                selected_fps = chooseBestPreviewFps(fps_ranges);
+            }
         }
-        camera_controller.setPreviewFpsRange(selected_fps[0], selected_fps[1]);
+        if (selected_fps != null) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "set preview fps range: " + selected_fps);
+            camera_controller.setPreviewFpsRange(selected_fps[0], selected_fps[1]);
+        }
     }
 
     public void switchVideo(boolean during_startup, boolean change_user_pref) {
@@ -3740,6 +3900,11 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (camera_controller == null) {
             if (MyDebug.LOG)
                 Log.d(TAG, "camera not opened!");
+            return;
+        }
+        if (!is_video && !supports_video) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "video not supported");
             return;
         }
         boolean old_is_video = is_video;
@@ -3785,6 +3950,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 // run on the background thread, thus not freezing the UI
                 // Also workaround for bug on Nexus 6 at least where switching to video and back to photo mode causes continuous picture mode to stop -
                 // at the least, we need to reopen camera when: ( !is_video && focus_value != null && focus_value.equals("focus_mode_continuous_picture") ).
+                // Lastly, note that it's important to still call setupCamera() when switching between photo and video modes (see comment for setupCamera()).
+                // So if we ever allow stopping/starting the preview again, we still need to call setupCamera() again.
                 this.reopenCamera();
             }
 
@@ -3887,15 +4054,14 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     /**
-     * Whether the flash mode is supported in video mode. This only returns true or flash_off or
-     * flash_torch.
+     * Whether the flash mode is supported in video mode.
      */
     public static boolean isFlashSupportedForVideo(String flash_mode) {
-        return flash_mode != null && (flash_mode.equals("flash_off") || flash_mode.equals("flash_torch"));
+        return flash_mode != null && (flash_mode.equals("flash_off") || flash_mode.equals("flash_torch") || flash_mode.equals("flash_frontscreen_torch"));
     }
 
     public String getErrorFeatures(VideoProfile profile) {
-        boolean was_4k = false, was_bitrate = false, was_fps = false;
+        boolean was_4k = false, was_bitrate = false, was_fps = false, was_slow_motion = false;
         if (profile.videoFrameWidth == 3840 && profile.videoFrameHeight == 2160 && applicationInterface.getForce4KPref()) {
             was_4k = true;
         }
@@ -3904,11 +4070,13 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             was_bitrate = true;
         }
         String fps_value = applicationInterface.getVideoFPSPref();
-        if (!fps_value.equals("default")) {
+        if (applicationInterface.getVideoCaptureRateFactor() < 1.0f - 1.0e-5f) {
+            was_slow_motion = true;
+        } else if (!fps_value.equals("default")) {
             was_fps = true;
         }
         String features = "";
-        if (was_4k || was_bitrate || was_fps) {
+        if (was_4k || was_bitrate || was_fps || was_slow_motion) {
             if (was_4k) {
                 features = "4K UHD";
             }
@@ -3923,6 +4091,12 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                     features = "Frame rate";
                 else
                     features += "/Frame rate";
+            }
+            if (was_slow_motion) {
+                if (features.length() == 0)
+                    features = "Slow motion";
+                else
+                    features += "/Slow motion";
             }
         }
         return features;
@@ -4237,42 +4411,52 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             // user requested take photo while already taking photo
             if (MyDebug.LOG)
                 Log.d(TAG, "already taking a photo");
-            if (remaining_burst_photos != 0) {
-                cancelBurst();
-                showToast(take_photo_toast, R.string.cancelled_burst_mode);
+            if (remaining_repeat_photos != 0) {
+                cancelRepeat();
+                showToast(take_photo_toast, R.string.cancelled_repeat_mode);
             }
             return;
+        }
+
+        if (!is_video || photo_snapshot) {
+            // check it's okay to take a photo
+            if (!applicationInterface.canTakeNewPhoto()) {
+                if (MyDebug.LOG)
+                    Log.d(TAG, "don't take another photo, queue is full");
+                //showToast(take_photo_toast, "Still processing...");
+                return;
+            }
         }
 
         // make sure that preview running (also needed to hide trash/share icons)
         this.startCameraPreview();
 
         if (photo_snapshot) {
-            // go straight to taking a photo, ignore timer or burst options
+            // go straight to taking a photo, ignore timer or repeat options
             takePicture(false, photo_snapshot);
             return;
         }
 
         long timer_delay = applicationInterface.getTimerPref();
 
-        String burst_mode_value = applicationInterface.getRepeatPref();
-        if (burst_mode_value.equals("unlimited")) {
+        String repeat_mode_value = applicationInterface.getRepeatPref();
+        if (repeat_mode_value.equals("unlimited")) {
             if (MyDebug.LOG)
-                Log.d(TAG, "unlimited burst");
-            remaining_burst_photos = -1;
+                Log.d(TAG, "unlimited repeat");
+            remaining_repeat_photos = -1;
         } else {
-            int n_burst;
+            int n_repeat;
             try {
-                n_burst = Integer.parseInt(burst_mode_value);
+                n_repeat = Integer.parseInt(repeat_mode_value);
                 if (MyDebug.LOG)
-                    Log.d(TAG, "n_burst: " + n_burst);
+                    Log.d(TAG, "n_repeat: " + n_repeat);
             } catch (NumberFormatException e) {
                 if (MyDebug.LOG)
-                    Log.e(TAG, "failed to parse preference_burst_mode value: " + burst_mode_value);
+                    Log.e(TAG, "failed to parse repeat_mode value: " + repeat_mode_value);
                 e.printStackTrace();
-                n_burst = 1;
+                n_repeat = 1;
             }
-            remaining_burst_photos = n_burst - 1;
+            remaining_repeat_photos = n_repeat - 1;
         }
 
         if (timer_delay == 0) {
@@ -4715,7 +4899,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 if (MyDebug.LOG)
                     Log.d(TAG, "about to prepare video recorder");
                 local_video_recorder.prepare();
-                camera_controller.initVideoRecorderPostPrepare(local_video_recorder);
+                boolean want_photo_video_recording = supportsPhotoVideoRecording() && applicationInterface.usePhotoVideoRecording();
+                camera_controller.initVideoRecorderPostPrepare(local_video_recorder, want_photo_video_recording);
                 if (MyDebug.LOG)
                     Log.d(TAG, "about to start video recorder");
 
@@ -4861,15 +5046,15 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
 
         if (applicationInterface.getVideoLowPowerCheckPref()) {
-			/* When a device shuts down due to power off, the application will receive shutdown signals, and normally the video
-			 * should stop and be valid. However it can happen that the video ends up corrupted (I've had people telling me this
-			 * can happen; Googling finds plenty of stories of this happening on Android devices). I think the issue is that for
-			 * very large videos, a lot of time is spent processing during the MediaRecorder.stop() call - if that doesn't complete
-			 * by the time the device switches off, the video may be corrupt.
-			 * So we add an extra safety net - devices typically turn off abou 1%, but we stop video at 3% to be safe. The user
-			 * can try recording more videos after that if the want, but this reduces the risk that really long videos are entirely
-			 * lost.
-			 */
+            /* When a device shuts down due to power off, the application will receive shutdown signals, and normally the video
+             * should stop and be valid. However it can happen that the video ends up corrupted (I've had people telling me this
+             * can happen; Googling finds plenty of stories of this happening on Android devices). I think the issue is that for
+             * very large videos, a lot of time is spent processing during the MediaRecorder.stop() call - if that doesn't complete
+             * by the time the device switches off, the video may be corrupt.
+             * So we add an extra safety net - devices typically turn off abou 1%, but we stop video at 3% to be safe. The user
+             * can try recording more videos after that if the want, but this reduces the risk that really long videos are entirely
+             * lost.
+             */
             class BatteryCheckVideoTimerTask extends TimerTask {
                 public void run() {
                     if (MyDebug.LOG)
@@ -5115,7 +5300,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         focus_success = FOCUS_DONE; // clear focus rectangle if not already done
         successfully_focused = false; // so next photo taken will require an autofocus
         if (MyDebug.LOG)
-            Log.d(TAG, "remaining_burst_photos: " + remaining_burst_photos);
+            Log.d(TAG, "remaining_repeat_photos: " + remaining_repeat_photos);
 
         CameraController.PictureCallback pictureCallback = new CameraController.PictureCallback() {
             private boolean success = false; // whether jpeg callback succeeded
@@ -5135,16 +5320,16 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 if (!using_android_l) {
                     is_preview_started = false; // preview automatically stopped due to taking photo on original Camera API
                 }
-                phase = PHASE_NORMAL; // need to set this even if remaining burst photos, so we can restart the preview
-                if (remaining_burst_photos == -1 || remaining_burst_photos > 0) {
+                phase = PHASE_NORMAL; // need to set this even if remaining repeat photos, so we can restart the preview
+                if (remaining_repeat_photos == -1 || remaining_repeat_photos > 0) {
                     if (!is_preview_started) {
                         // we need to restart the preview; and we do this in the callback, as we need to restart after saving the image
                         // (otherwise this can fail, at least on Nexus 7)
                         if (MyDebug.LOG)
-                            Log.d(TAG, "burst mode photos remaining: onPictureTaken about to start preview: " + remaining_burst_photos);
+                            Log.d(TAG, "repeat mode photos remaining: onPictureTaken about to start preview: " + remaining_repeat_photos);
                         startCameraPreview();
                         if (MyDebug.LOG)
-                            Log.d(TAG, "burst mode photos remaining: onPictureTaken started preview: " + remaining_burst_photos);
+                            Log.d(TAG, "repeat mode photos remaining: onPictureTaken started preview: " + remaining_repeat_photos);
                     }
                 } else {
                     phase = PHASE_NORMAL;
@@ -5179,25 +5364,9 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 }
 
                 if (MyDebug.LOG)
-                    Log.d(TAG, "do we need to take another photo? remaining_burst_photos: " + remaining_burst_photos);
-                if (remaining_burst_photos == -1 || remaining_burst_photos > 0) {
-                    if (camera_controller == null) {
-                        Log.e(TAG, "remaining_burst_photos still set, but camera is closed!: " + remaining_burst_photos);
-                        cancelBurst();
-                    } else {
-                        if (remaining_burst_photos > 0)
-                            remaining_burst_photos--;
-
-                        long timer_delay = applicationInterface.getRepeatIntervalPref();
-                        if (timer_delay == 0) {
-                            // we set skip_autofocus to go straight to taking a photo rather than refocusing, for speed
-                            // need to manually set the phase
-                            phase = PHASE_TAKING_PHOTO;
-                            takePhoto(true);
-                        } else {
-                            takePictureOnTimer(timer_delay, true);
-                        }
-                    }
+                    Log.d(TAG, "do we need to take another photo? remaining_repeat_photos: " + remaining_repeat_photos);
+                if (remaining_repeat_photos == -1 || remaining_repeat_photos > 0) {
+                    takeRemainingRepeatPhotos();
                 }
             }
 
@@ -5227,11 +5396,11 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
                 }
             }
 
-            public void onRawPictureTaken(DngCreator dngCreator, Image image) {
+            public void onRawPictureTaken(RawImage raw_image) {
                 if (MyDebug.LOG)
                     Log.d(TAG, "onRawPictureTaken");
                 initDate();
-                if (!applicationInterface.onRawPictureTaken(dngCreator, image, current_date)) {
+                if (!applicationInterface.onRawPictureTaken(raw_image, current_date)) {
                     if (MyDebug.LOG)
                         Log.e(TAG, "applicationInterface.onRawPictureTaken failed");
                 }
@@ -5290,6 +5459,47 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
         if (MyDebug.LOG)
             Log.d(TAG, "takePhotoWhenFocused exit");
+    }
+
+    private void takeRemainingRepeatPhotos() {
+        if (MyDebug.LOG)
+            Log.d(TAG, "takeRemainingRepeatPhotos");
+        if (remaining_repeat_photos == -1 || remaining_repeat_photos > 0) {
+            if (camera_controller == null) {
+                Log.e(TAG, "remaining_repeat_photos still set, but camera is closed!: " + remaining_repeat_photos);
+                cancelRepeat();
+            } else {
+                // check it's okay to take a photo
+                if (!applicationInterface.canTakeNewPhoto()) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "takeRemainingRepeatPhotos: still processing...");
+                    // wait a bit then check again
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (MyDebug.LOG)
+                                Log.d(TAG, "takeRemainingRepeatPhotos: check again from post delayed runnable");
+                            takeRemainingRepeatPhotos();
+                        }
+                    }, 500);
+                    return;
+                }
+
+                if (remaining_repeat_photos > 0)
+                    remaining_repeat_photos--;
+
+                long timer_delay = applicationInterface.getRepeatIntervalPref();
+                if (timer_delay == 0) {
+                    // we set skip_autofocus to go straight to taking a photo rather than refocusing, for speed
+                    // need to manually set the phase
+                    phase = PHASE_TAKING_PHOTO;
+                    takePhoto(true);
+                } else {
+                    takePictureOnTimer(timer_delay, true);
+                }
+            }
+        }
     }
 
     public void requestAutoFocus() {
@@ -5727,8 +5937,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     public boolean supportsFaceDetection() {
-        if (MyDebug.LOG)
-            Log.d(TAG, "supportsFaceDetection");
+        // don't log this, as we call from DrawPreview!
         return supports_face_detection;
     }
 
@@ -5775,6 +5984,12 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         if (MyDebug.LOG)
             Log.d(TAG, "getSupportedWhiteBalances");
         return this.white_balances;
+    }
+
+    public List<String> getSupportedAntiBanding() {
+        if (MyDebug.LOG)
+            Log.d(TAG, "getSupportedAntiBanding");
+        return this.antibanding;
     }
 
     public String getISOKey() {
@@ -5931,6 +6146,10 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         return this.supports_raw;
     }
 
+    public boolean supportsBurst() {
+        return this.supports_burst;
+    }
+
     /**
      * Returns the horizontal angle of view in degrees (when unzoomed).
      */
@@ -5975,6 +6194,92 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 
     public VideoQualityHandler getVideoQualityHander() {
         return this.video_quality_handler;
+    }
+
+    /**
+     * Returns the supported video "qualities", but unlike
+     * getVideoQualityHander().getSupportedVideoQuality(), allows filtering to the supplied
+     * fps_value.
+     *
+     * @param fps_value If not "default", the returned video qualities will be filtered to those that supported the requested
+     *                  frame rate.
+     */
+    public List<String> getSupportedVideoQuality(String fps_value) {
+        if (MyDebug.LOG)
+            Log.d(TAG, "getSupportedVideoQuality: " + fps_value);
+        if (!fps_value.equals("default") && supports_video_high_speed) {
+            try {
+                int fps = Integer.parseInt(fps_value);
+                if (MyDebug.LOG)
+                    Log.d(TAG, "fps: " + fps);
+                List<String> filtered_video_quality = new ArrayList<>();
+                for (String quality : video_quality_handler.getSupportedVideoQuality()) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "quality: " + quality);
+                    CamcorderProfile profile = getCamcorderProfile(quality);
+                    if (MyDebug.LOG) {
+                        Log.d(TAG, "    width: " + profile.videoFrameWidth);
+                        Log.d(TAG, "    height: " + profile.videoFrameHeight);
+                    }
+                    CameraController.Size best_video_size = video_quality_handler.findVideoSizeForFrameRate(profile.videoFrameWidth, profile.videoFrameHeight, fps);
+                    if (best_video_size != null) {
+                        if (MyDebug.LOG)
+                            Log.d(TAG, "    requested frame rate is supported");
+                        filtered_video_quality.add(quality);
+                    } else {
+                        if (MyDebug.LOG)
+                            Log.d(TAG, "    requested frame rate is NOT supported");
+                    }
+                }
+                return filtered_video_quality;
+            } catch (NumberFormatException exception) {
+                if (MyDebug.LOG)
+                    Log.d(TAG, "fps invalid format, can't parse to int: " + fps_value);
+            }
+        }
+        return video_quality_handler.getSupportedVideoQuality();
+    }
+
+    /**
+     * Returns whether the user's fps preference is both non-default, and is considered a
+     * "high-speed" frame rate, but not a normal frame rate. (Note, we go by the supplied
+     * fps_value, and not what the user's preference necessarily is; so this doesn't say whether
+     * the Preview is currently set to normal or high speed video mode.)
+     */
+    public boolean fpsIsHighSpeed(String fps_value) {
+        if (MyDebug.LOG)
+            Log.d(TAG, "fpsIsHighSpeed: " + fps_value);
+        if (!fps_value.equals("default") && supports_video_high_speed) {
+            try {
+                int fps = Integer.parseInt(fps_value);
+                if (MyDebug.LOG)
+                    Log.d(TAG, "fps: " + fps);
+                // need to check both, e.g., 30fps on Nokia 8 is in fps ranges of both normal and high speed video sizes
+                if (video_quality_handler.videoSupportsFrameRate(fps)) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "fps is normal");
+                    return false;
+                } else if (video_quality_handler.videoSupportsFrameRateHighSpeed(fps)) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "fps is high speed");
+                    return true;
+                } else {
+                    // shouldn't be here?!
+                    Log.e(TAG, "fps is neither normal nor high speed");
+                    return false;
+                }
+            } catch (NumberFormatException exception) {
+                if (MyDebug.LOG)
+                    Log.d(TAG, "fps invalid format, can't parse to int: " + fps_value);
+            }
+        }
+        if (MyDebug.LOG)
+            Log.d(TAG, "fps is not high speed");
+        return false;
+    }
+
+    public boolean supportsVideoHighSpeed() {
+        return this.supports_video_high_speed;
     }
 
     public List<String> getSupportedFlashValues() {
@@ -6099,7 +6404,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             private final Rect sub_bounds = new Rect();
             private final RectF rect = new RectF();
 
-            public RotatedTextView(String text, Context context) {
+            RotatedTextView(String text, Context context) {
                 super(context);
 
                 this.lines = text.split("\n");

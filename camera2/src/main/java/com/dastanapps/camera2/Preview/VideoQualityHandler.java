@@ -128,13 +128,13 @@ public class VideoQualityHandler {
         return this.video_quality;
     }
 
-    public int getCurrentVideoQualityIndex() {
+    int getCurrentVideoQualityIndex() {
         if( MyDebug.LOG )
             Log.d(TAG, "getCurrentVideoQualityIndex");
         return this.current_video_quality;
     }
 
-    public void setCurrentVideoQualityIndex(int current_video_quality) {
+    void setCurrentVideoQualityIndex(int current_video_quality) {
         if( MyDebug.LOG )
             Log.d(TAG, "setCurrentVideoQualityIndex: " + current_video_quality);
         this.current_video_quality = current_video_quality;
@@ -158,17 +158,58 @@ public class VideoQualityHandler {
         return this.video_sizes_high_speed;
     }
 
-    /** Returns the maximum supported video size.
+    /** Whether the requested fps is supported, without relying on high-speed mode.
+     *  Typically caller should first check videoSupportsFrameRateHighSpeed().
      */
-    CameraController.Size getMaxSupportedVideoSize() {
+    public boolean videoSupportsFrameRate(int fps) {
+        return CameraController.CameraFeatures.supportsFrameRate(this.video_sizes, fps);
+    }
+
+    /** Whether the requested fps is supported as a high-speed mode.
+     */
+    public boolean videoSupportsFrameRateHighSpeed(int fps) {
+        return CameraController.CameraFeatures.supportsFrameRate(this.video_sizes_high_speed, fps);
+    }
+
+    CameraController.Size findVideoSizeForFrameRate(int width, int height, double fps) {
+        if( MyDebug.LOG ) {
+            Log.d(TAG, "findVideoSizeForFrameRate");
+            Log.d(TAG, "width: " + width);
+            Log.d(TAG, "height: " + height);
+            Log.d(TAG, "fps: " + fps);
+        }
+        CameraController.Size requested_size = new CameraController.Size(width, height);
+        CameraController.Size best_video_size = CameraController.CameraFeatures.findSize(this.getSupportedVideoSizes(), requested_size, fps, false);
+        if( best_video_size == null && this.getSupportedVideoSizesHighSpeed() != null ) {
+            if( MyDebug.LOG )
+                Log.d(TAG, "need to check high speed sizes");
+            // check high speed
+            best_video_size = CameraController.CameraFeatures.findSize(this.getSupportedVideoSizesHighSpeed(), requested_size, fps, false);
+        }
+        return best_video_size;
+    }
+
+    private static CameraController.Size getMaxVideoSize(List<CameraController.Size> sizes) {
         int max_width = -1, max_height = -1;
-        for(CameraController.Size size : video_sizes) {
+        for(CameraController.Size size : sizes) {
             if( max_width == -1 || size.width*size.height > max_width*max_height ) {
                 max_width = size.width;
                 max_height = size.height;
             }
         }
         return new CameraController.Size(max_width, max_height);
+    }
+
+    /** Returns the maximum supported (non-high-speed) video size.
+     */
+    CameraController.Size getMaxSupportedVideoSize() {
+        return getMaxVideoSize(video_sizes);
+    }
+
+    /** Returns the maximum supported high speed video size.
+     */
+    CameraController.Size getMaxSupportedVideoSizeHighSpeed() {
+        return getMaxVideoSize(video_sizes_high_speed);
     }
 
     public void setVideoSizes(List<CameraController.Size> video_sizes) {

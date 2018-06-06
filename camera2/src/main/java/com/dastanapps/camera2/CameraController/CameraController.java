@@ -2,15 +2,14 @@ package com.dastanapps.camera2.CameraController;
 
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.DngCreator;
 import android.location.Location;
-import android.media.Image;
 import android.media.MediaRecorder;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
 import com.dastanapps.camera2.MyDebug;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,6 +33,7 @@ public abstract class CameraController {
     public static final String SCENE_MODE_DEFAULT = "auto"; // chosen to match Camera.Parameters.SCENE_MODE_AUTO, but we also use compatible values for Camera2 API
     public static final String COLOR_EFFECT_DEFAULT = "none"; // chosen to match Camera.Parameters.EFFECT_NONE, but we also use compatible values for Camera2 API
     public static final String WHITE_BALANCE_DEFAULT = "auto"; // chosen to match Camera.Parameters.WHITE_BALANCE_AUTO, but we also use compatible values for Camera2 API
+    public static final String ANTIBANDING_DEFAULT = "auto"; // chosen to match Camera.Parameters.ANTIBANDING_AUTO, but we also use compatible values for Camera2 API
     public static final String ISO_DEFAULT = "auto";
     public static final long EXPOSURE_TIME_DEFAULT = 1000000000L / 30; // note, responsibility of callers to check that this is within the valid min/max range
 
@@ -88,10 +88,31 @@ public abstract class CameraController {
         public boolean supports_expo_bracketing;
         public int max_expo_bracketing_n_images;
         public boolean supports_raw;
+        public boolean supports_burst; // whether setWantBurst() can be set to true
         public float view_angle_x; // horizontal angle of view in degrees (when unzoomed)
         public float view_angle_y; // vertical angle of view in degrees (when unzoomed)
 
-        public static Size findSize(List<Size> sizes, Size size, int fps, boolean return_closest) {
+        /**
+         * Returns whether any of the supplied sizes support the requested fps.
+         */
+        public static boolean supportsFrameRate(List<Size> sizes, int fps) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "supportsFrameRate: " + fps);
+            if (sizes == null)
+                return false;
+            for (Size size : sizes) {
+                if (size.supportsFrameRate(fps)) {
+                    if (MyDebug.LOG)
+                        Log.d(TAG, "fps is supported");
+                    return true;
+                }
+            }
+            if (MyDebug.LOG)
+                Log.d(TAG, "fps is NOT supported");
+            return false;
+        }
+
+        public static Size findSize(List<Size> sizes, Size size, double fps, boolean return_closest) {
             Size last_s = null;
             for (Size s : sizes) {
                 if (size.equals(s)) {
@@ -109,7 +130,8 @@ public abstract class CameraController {
         }
     }
 
-    public static class RangeSorter implements Comparator<int[]> {
+    // Android docs and FindBugs recommend that Comparators also be Serializable
+    public static class RangeSorter implements Comparator<int[]>, Serializable {
         private static final long serialVersionUID = 5802214721073728212L;
 
         @Override
@@ -119,7 +141,8 @@ public abstract class CameraController {
         }
     }
 
-    public static class SizeSorter implements Comparator<Size> {
+    // Android docs and FindBugs recommend that Comparators also be Serializable
+    public static class SizeSorter implements Comparator<Size>, Serializable {
         private static final long serialVersionUID = 5802214721073718212L;
 
         @Override
@@ -131,10 +154,10 @@ public abstract class CameraController {
     public static class Size {
         public final int width;
         public final int height;
-        public final List<int[]> fps_ranges;
+        final List<int[]> fps_ranges;
         public final boolean high_speed;
 
-        public Size(int width, int height, List<int[]> fps_ranges, boolean high_speed) {
+        Size(int width, int height, List<int[]> fps_ranges, boolean high_speed) {
             this.width = width;
             this.height = height;
             this.fps_ranges = fps_ranges;
@@ -146,7 +169,7 @@ public abstract class CameraController {
             this(width, height, new ArrayList<int[]>(), false);
         }
 
-        public boolean supportsFrameRate(int fps) {
+        boolean supportsFrameRate(double fps) {
             for (int[] f : this.fps_ranges) {
                 if (f[0] <= fps && fps <= f[1])
                     return true;
@@ -208,9 +231,9 @@ public abstract class CameraController {
 
         /**
          * Only called if RAW is requested.
-         * Caller should call image.close() and dngCreator.close() when done with the image.
+         * Caller should call raw_image.close() when done with the image.
          */
-        void onRawPictureTaken(DngCreator dngCreator, Image image);
+        void onRawPictureTaken(RawImage raw_image);
 
         /**
          * Only called if burst is requested.
@@ -310,6 +333,10 @@ public abstract class CameraController {
 
     public abstract int getWhiteBalanceTemperature();
 
+    public abstract SupportedValues setAntiBanding(String value);
+
+    public abstract String getAntiBanding();
+
     /**
      * Set an ISO value. Only supported if supports_iso_range is false.
      */
@@ -357,6 +384,19 @@ public abstract class CameraController {
 
     public abstract void setWantBurst(boolean want_burst);
 
+    /**
+     * Only relevant if setWantBurst() is also called with want_burst==true. Sets the number of
+     * images to take in the burst.
+     */
+    public abstract void setBurstNImages(int burst_requested_n_images);
+
+    /**
+     * Only relevant if setWantBurst() is also called with want_burst==true. If this method is
+     * called with burst_for_noise_reduction, then the number of burst images, and other settings,
+     * will be set for noise reduction mode (and setBurstNImages() is ignored).
+     */
+    public abstract void setBurstForNoiseReduction(boolean burst_for_noise_reduction);
+
     public abstract void setExpoBracketing(boolean want_expo_bracketing);
 
     /**
@@ -374,7 +414,15 @@ public abstract class CameraController {
      */
     public abstract void setOptimiseAEForDRO(boolean optimise_ae_for_dro);
 
-    public abstract void setRaw(boolean want_raw);
+    /**
+     * @param want_raw       Whether to enable taking photos in RAW (DNG) format.
+     * @param max_raw_images The maximum number of unclosed DNG images that may be held in memory at any one
+     *                       time. Trying to take a photo, when the number of unclosed DNG images is already
+     *                       equal to this number, will result in an exception (java.lang.IllegalStateException
+     *                       - note, the exception will come from a CameraController2 callback, so can't be
+     *                       caught by the callera).
+     */
+    public abstract void setRaw(boolean want_raw, int max_raw_images);
 
     public abstract void setVideoHighSpeed(boolean setVideoHighSpeed);
 
@@ -402,6 +450,8 @@ public abstract class CameraController {
     public abstract void setVideoStabilization(boolean enabled);
 
     public abstract boolean getVideoStabilization();
+
+    public abstract void setLogProfile(boolean use_log_profile, float log_profile_strength);
 
     public abstract int getJpegQuality();
 
@@ -445,13 +495,13 @@ public abstract class CameraController {
 
     public abstract void enableShutterSound(boolean enabled);
 
-    public abstract boolean setFocusAndMeteringArea(List<Area> areas);
+    public abstract boolean setFocusAndMeteringArea(List<CameraController.Area> areas);
 
     public abstract void clearFocusAndMetering();
 
-    public abstract List<Area> getFocusAreas();
+    public abstract List<CameraController.Area> getFocusAreas();
 
-    public abstract List<Area> getMeteringAreas();
+    public abstract List<CameraController.Area> getMeteringAreas();
 
     public abstract boolean supportsAutoFocus();
 
@@ -507,9 +557,20 @@ public abstract class CameraController {
 
     public abstract void unlock();
 
+    /**
+     * Call to initialise video recording, should call before MediaRecorder.prepare().
+     *
+     * @param video_recorder The media recorder object.
+     */
     public abstract void initVideoRecorderPrePrepare(MediaRecorder video_recorder);
 
-    public abstract void initVideoRecorderPostPrepare(MediaRecorder video_recorder) throws CameraControllerException;
+    /**
+     * Call to initialise video recording, should call after MediaRecorder.prepare(), but before MediaRecorder.start().
+     *
+     * @param video_recorder             The media recorder object.
+     * @param want_photo_video_recording Whether support for taking photos whilst video recording is required. If this feature isn't supported, the option has no effect.
+     */
+    public abstract void initVideoRecorderPostPrepare(MediaRecorder video_recorder, boolean want_photo_video_recording) throws CameraControllerException;
 
     public abstract String getParametersString();
 
@@ -521,6 +582,13 @@ public abstract class CameraController {
      * @return whether flash will fire; returns false if not known
      */
     public boolean needsFlash() {
+        return false;
+    }
+
+    /**
+     * @return whether front screen "flash" will fire; returns false if not known
+     */
+    public boolean needsFrontScreenFlash() {
         return false;
     }
 
@@ -547,7 +615,7 @@ public abstract class CameraController {
     public long captureResultExposureTime() {
         return 0;
     }
-    /*public boolean captureResultHasFrameDuration() {
+	/*public boolean captureResultHasFrameDuration() {
 		return false;
 	}*/
 	/*public long captureResultFrameDuration() {
