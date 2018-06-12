@@ -103,6 +103,18 @@ class ExoPlayer242 : AppCompatActivity() {
             player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
                     DefaultTrackSelector(adaptiveTrackSelectionFactory), DefaultLoadControl())
             player?.addListener(object : ExoPlayer.EventListener {
+                override fun onSeekProcessed() {
+
+                }
+
+                override fun onRepeatModeChanged(repeatMode: Int) {
+
+                }
+
+                override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+
+                }
+
                 override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
                     Log.d("DEBUG", playbackParameters.toString())
                 }
@@ -130,7 +142,7 @@ class ExoPlayer242 : AppCompatActivity() {
                     Log.d("DEBUG", "onLoadingChanged:$isLoading")
                 }
 
-                override fun onPositionDiscontinuity() {
+                override fun onPositionDiscontinuity(reason: Int) {
                     Log.d("DEBUG", "onPositionDiscontinuity")
                 }
 

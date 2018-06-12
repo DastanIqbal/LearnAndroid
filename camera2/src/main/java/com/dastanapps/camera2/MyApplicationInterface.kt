@@ -31,6 +31,7 @@ import java.util.*
  * 10/02/2018 5:15
  */
 class MyApplicationInterface(private val mainActivity: MainActivity, private val savedInstanceState: Bundle?) : ApplicationInterface {
+    override fun cameraNotSupported() {}
     override fun getAntiBandingPref(): String {
         return sharedPreferences.getString(PreferenceKeys.AntiBandingPreferenceKey, CameraController.ANTIBANDING_DEFAULT)
     }

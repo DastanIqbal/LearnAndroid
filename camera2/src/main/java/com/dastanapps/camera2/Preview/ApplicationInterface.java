@@ -21,6 +21,7 @@ import java.util.List;
  * ApplicationInterface.
  */
 public interface ApplicationInterface {
+    void cameraNotSupported();
     class NoFreeStorageException extends Exception {
         private static final long serialVersionUID = -2021932609486148748L;
     }

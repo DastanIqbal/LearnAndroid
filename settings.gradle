@@ -2,7 +2,7 @@
 //include  ':mediaeffectswithopengles'
 //include  ':tutsopengles', ':launchmode'
 //include ':audioprocessing', ':processbuilderex'
-include  ':camera2'
+//include  ':camera2'
 //include  ':verticaledittext', ':hijricalendar'
 //include  ':camera'
 //include ':webviewfeatures'
@@ -12,3 +12,4 @@ include ':players', ':deviceuniqueid'
 //include ':gameframework', ':testframework', ':mrnom'
 //include ':mediaapi'
 //include ':removeorientationtest'
+
