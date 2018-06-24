@@ -8,8 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/deviceuniqueid" />
-            <option value="$PROJECT_DIR$/players" />
+            <option value="$PROJECT_DIR$/ffmpegjni" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
