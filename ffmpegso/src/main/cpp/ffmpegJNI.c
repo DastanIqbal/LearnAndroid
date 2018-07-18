@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "ffmpegJNI.h"
 #include "ffmpeg.h"
+#include "andlogs.h"
 //Log
 #ifdef ANDROID
 
@@ -14,18 +15,13 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 #include <libavfilter/avfilter.h>
-
-#define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "(>_<)", format, ##__VA_ARGS__)
-#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO, "(>_<)", format, ##__VA_ARGS__)
-#else
-#define LOGE(format, ...)  printf("(>_<) " format "\n", ##__VA_ARGS__)
 #endif
 
 /**
- * com.ihubin.ffmpegstudy.MainActivity.avformatinfo()
+ * com.dastanapps.ffmpegso_.MainActivity.avformatinfo()
  * AVFormat Support Information
  */
-JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_MainActivity_avformatinfo
+JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_VideoKit_avformatinfo
         (JNIEnv *env, jobject obj) {
 
     char info[40000] = {0};
@@ -49,11 +45,11 @@ JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_MainActivity_avformatinfo
 }
 
 /**
- * com.ihubin.ffmpegstudy.MainActivity.avcodecinfo()
+ * com.dastanapps.ffmpegso_.VideoKit.avcodecinfo()
  * AVCodec Support Information
  */
 JNIEXPORT jstring JNICALL
-Java_com_dastanapps_ffmpegso_MainActivity_avcodecinfo(JNIEnv *env, jobject obj) {
+Java_com_dastanapps_ffmpegso_VideoKit_avcodecinfo(JNIEnv *env, jobject obj) {
     char info[40000] = {0};
 
     av_register_all();
@@ -88,12 +84,12 @@ Java_com_dastanapps_ffmpegso_MainActivity_avcodecinfo(JNIEnv *env, jobject obj) 
 }
 
 /**
- * com.ihubin.ffmpegstudy.MainActivity.avfilterinfo()
+ * com.dastanapps.ffmpegso_.VideoKit.avfilterinfo()
  * AVFilter SupportInformation
  *
  */
 JNIEXPORT jstring JNICALL
-Java_com_dastanapps_ffmpegso_MainActivity_avfilterinfo(JNIEnv *env, jobject obj) {
+Java_com_dastanapps_ffmpegso_VideoKit_avfilterinfo(JNIEnv *env, jobject obj) {
     char info[40000] = {0};
     avfilter_register_all();
     AVFilter *f_temp = (AVFilter *) avfilter_next(NULL);
@@ -108,11 +104,11 @@ Java_com_dastanapps_ffmpegso_MainActivity_avfilterinfo(JNIEnv *env, jobject obj)
 }
 
 /**
- * com.ihubin.ffmpegstudy.MainActivity.urlprotocolinfo()
+ * com.dastanapps.ffmpegso_.VideoKit.urlprotocolinfo()
  * Protocol Support Information
  */
 JNIEXPORT jstring JNICALL
-Java_com_dastanapps_ffmpegso_MainActivity_configurationinfo(JNIEnv *env, jobject obj) {
+Java_com_dastanapps_ffmpegso_VideoKit_configurationinfo(JNIEnv *env, jobject obj) {
     char info[10000] = {0};
     av_register_all();
 
@@ -124,7 +120,7 @@ Java_com_dastanapps_ffmpegso_MainActivity_configurationinfo(JNIEnv *env, jobject
 }
 
 JNIEXPORT jint
-JNICALL Java_com_dastanapps_ffmpegso_MainActivity_run
+JNICALL Java_com_dastanapps_ffmpegso_VideoKit_run
         (JNIEnv *env, jobject obj, jobjectArray commands) {
     int argc = (*env)->GetArrayLength(env, commands);
     char *argv[argc];
