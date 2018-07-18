@@ -19,4 +19,7 @@ JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_MainActivity_avfilterinfo
 JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_MainActivity_configurationinfo
         (JNIEnv *, jobject);
 
+JNIEXPORT int JNICALL Java_com_dastanapps_ffmpegso_MainActivity_run
+        (JNIEnv *, jobject,jobjectArray);
+
 #endif //LEARNANDROID_FFMPEGJNI_H

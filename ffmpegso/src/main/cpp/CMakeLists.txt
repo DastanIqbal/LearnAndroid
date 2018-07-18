@@ -21,36 +21,36 @@ add_library(swscale SHARED IMPORTED)
 
 
 set_target_properties(
-    avcodec PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libavcodec-57.so)
+        avcodec PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavcodec-57.so)
 
 #set_target_properties(
 #    avdevice PROPERTIES IMPORTED_LOCATION
 #    ${prebuilt_DIR}/${ANDROID_ABI}/lib/libavdevice.a)
 
 set_target_properties(
-    avfilter PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libavfilter-6.so)
+        avfilter PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavfilter-6.so)
 
 set_target_properties(
-    avformat PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libavformat-57.so)
+        avformat PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavformat-57.so)
 
 set_target_properties(
-    avutil PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libavutil-55.so)
+        avutil PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavutil-55.so)
 
 #set_target_properties(
 #    postproc PROPERTIES IMPORTED_LOCATION
 #    ${prebuilt_DIR}/${ANDROID_ABI}/libpostproc.a)
 
 set_target_properties(
-    swresample PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libswresample-2.so)
+        swresample PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libswresample-2.so)
 
 set_target_properties(
-    swscale PROPERTIES IMPORTED_LOCATION
-    ${prebuilt_DIR}/${ANDROID_ABI}/libswscale-4.so)
+        swscale PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libswscale-4.so)
 
 #set_target_properties(
 #    freetype PROPERTIES IMPORTED_LOCATION
@@ -85,53 +85,53 @@ set_target_properties(
 #    ${prebuilt_DIR}/${ANDROID_ABI}/libexpat.a)
 
 set(
-    CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -std=gnu++11")
+        CMAKE_CXX_FLAGS
+        "${CMAKE_CXX_FLAGS} -std=gnu++11")
 
 include_directories(${CMAKE_SOURCE_DIR})
 set(
-    HEADER_FILES
-#    cmdutils.h
-#    config.h
-#    ffmpeg.h
-    ffmpegJNI.h
+        HEADER_FILES
+        cmdutils.h
+        config.h
+        ffmpeg.h
+        ffmpegJNI.h
 )
 
 add_library(ffmpegso SHARED
         ffmpegJNI.c
-#            ffmpeg.c
-#            cmdutils.c
-#            ffmpeg_opt.c
-#            ffmpeg_filter.c
+        ffmpeg.c
+        cmdutils.c
+        ffmpeg_opt.c
+        ffmpeg_filter.c
         )
-#
+
 target_include_directories(
-    ffmpegso PUBLIC
-    ${prebuilt_DIR}/include
+        ffmpegso PUBLIC
+        ${prebuilt_DIR}/include
 )
 
 target_link_libraries(
-    ffmpegso
-    android
-    jnigraphics
-    log
-    avutil
-    swscale
-    swresample
-    avcodec
-    #avdevice
-    avfilter
-    #postproc
-    avformat
-    dl
-    m
-    z
-    #ass
-    #fontconfig
-    #freetype
-    #fribidi
-    #x264
-    #mp3lame
-    #png
-    #expat
-    )
+        ffmpegso
+        android
+        jnigraphics
+        log
+        avutil
+        swscale
+        swresample
+        avcodec
+        #avdevice
+        avfilter
+        #postproc
+        avformat
+        dl
+        m
+        z
+        #ass
+        #fontconfig
+        #freetype
+        #fribidi
+        #x264
+        #mp3lame
+        #png
+        #expat
+)

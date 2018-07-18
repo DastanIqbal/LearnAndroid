@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include "ffmpegJNI.h"
+#include "ffmpeg.h"
 //Log
 #ifdef ANDROID
 
@@ -15,6 +16,7 @@
 #include <libavfilter/avfilter.h>
 
 #define LOGE(format, ...)  __android_log_print(ANDROID_LOG_ERROR, "(>_<)", format, ##__VA_ARGS__)
+#define LOGI(format, ...)  __android_log_print(ANDROID_LOG_INFO, "(>_<)", format, ##__VA_ARGS__)
 #else
 #define LOGE(format, ...)  printf("(>_<) " format "\n", ##__VA_ARGS__)
 #endif
@@ -42,7 +44,7 @@ JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegso_MainActivity_avformatinfo
         sprintf(info, "%s[Out][%10s]\n", info, of_temp->name);
         of_temp = of_temp->next;
     }
-    //LOGE("%s", info);
+    LOGI("%s", info);
     return (*env)->NewStringUTF(env, info);
 }
 
@@ -80,21 +82,16 @@ Java_com_dastanapps_ffmpegso_MainActivity_avcodecinfo(JNIEnv *env, jobject obj) 
 
         c_temp = c_temp->next;
     }
-    //LOGE("%s", info);
+    LOGI("%s", info);
 
     return (*env)->NewStringUTF(env, info);
 }
 
 /**
-* com.ihubin.ffmpegstudy.MainActivity.
-
-avfilterinfo()
-
-*
-AVFilter Support
-Information
-*/
-
+ * com.ihubin.ffmpegstudy.MainActivity.avfilterinfo()
+ * AVFilter SupportInformation
+ *
+ */
 JNIEXPORT jstring JNICALL
 Java_com_dastanapps_ffmpegso_MainActivity_avfilterinfo(JNIEnv *env, jobject obj) {
     char info[40000] = {0};
@@ -106,7 +103,7 @@ Java_com_dastanapps_ffmpegso_MainActivity_avfilterinfo(JNIEnv *env, jobject obj)
         f_temp = f_temp->next;
     }
 
-
+    LOGI("%s", info);
     return (*env)->NewStringUTF(env, info);
 }
 
@@ -122,6 +119,21 @@ Java_com_dastanapps_ffmpegso_MainActivity_configurationinfo(JNIEnv *env, jobject
 
     sprintf(info, "%s\n", avcodec_configuration());
 
-    //LOGE("%s", info);
+    LOGI("%s", info);
     return (*env)->NewStringUTF(env, info);
+}
+
+JNIEXPORT jint
+JNICALL Java_com_dastanapps_ffmpegso_MainActivity_run
+        (JNIEnv *env, jobject obj, jobjectArray commands) {
+    int argc = (*env)->GetArrayLength(env, commands);
+    char *argv[argc];
+    LOGI("Inside JNI Run");
+    int i;
+    for (i = 0; i < argc; i++) {
+        jstring js = (jstring) (*env)->GetObjectArrayElement(env, commands, i);
+        argv[i] = (char *) (*env)->GetStringUTFChars(env, js, 0);
+        LOGI("Cmds: %s", argv[i]);
+    }
+    return run(argc, argv);
 }
