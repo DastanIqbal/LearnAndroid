@@ -5,33 +5,22 @@ import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import processing.ffmpeg.videokit.AsyncCommandExecutor
-import processing.ffmpeg.videokit.ProcessingListener
+import com.dastanapps.processing.CmdlineBuilder
+import com.dastanapps.processing.FFmpegExecutor
+import io.reactivex.disposables.CompositeDisposable
 
 
 //Reference Link:
 // http://www.ihubin.com/blog/android-ffmpeg-demo-1/
 // https://blog.csdn.net/leixiaohua1020/article/details/47008825
 
-class MainActivity : AppCompatActivity(), ProcessingListener {
-    override fun onSuccess(path: String?) {
-        runOnUiThread {
-            Toast.makeText(this@MainActivity, "onSuccess", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onFailure(returnCode: Int) {
-        runOnUiThread {
-            Toast.makeText(this@MainActivity, "onFailure", Toast.LENGTH_SHORT).show()
-        }
-    }
-
+class MainActivity : AppCompatActivity() {
     init {
         System.loadLibrary("ffmpegso")
     }
 
+    val compositeDisposable = CompositeDisposable()
     private val videoKit = VideoKit()
-
     lateinit var textView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,24 +30,52 @@ class MainActivity : AppCompatActivity(), ProcessingListener {
     }
 
     fun format(view: View) {
-        textView.text = videoKit.avformatinfo()
+        compositeDisposable.add(FFmpegExecutor.avformatinfo()
+                .subscribe({
+                    textView.text = it
+                }, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                })
+        )
     }
 
     fun codec(view: View) {
-        textView.text = videoKit.avcodecinfo()
+        compositeDisposable.add(FFmpegExecutor.avcodecinfo()
+                .subscribe({
+                    textView.text = it
+                }, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                }))
     }
 
     fun filter(view: View) {
-        textView.text = videoKit.avfilterinfo()
+        compositeDisposable.add(FFmpegExecutor.avfilterinfo()
+                .subscribe({
+                    textView.text = it
+                }, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                }))
     }
 
     fun config(view: View) {
-        textView.text = videoKit.configurationinfo()
+        compositeDisposable.add(FFmpegExecutor.configurationinfo()
+                .subscribe({
+                    textView.text = it
+                }, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                }))
     }
 
 
     fun play(view: View) {
-        //Thread {
         //MP3
         //val comand="ffmpeg -y -i /sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4 -codec:a libmp3lame -qscale:a 2 /sdcard/KrusoTestVideo/Mp3Test.mp3"
         //SRT
@@ -75,27 +92,24 @@ class MainActivity : AppCompatActivity(), ProcessingListener {
         //val comand = "ffmpeg -y -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -filter_complex scale=250:250,pad=300:300:color=#0000ff -strict -2 /sdcard/ffmpegso.mp4"
         //Libx264
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
-//        val args = comand.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-//        for (i in args.indices) {
-//            Log.d("ffmpeg-jni", args[i])
-//        }
-//        val result = videoKit.run(args)
-//        if (result == 0) {
-//            Log.i("JNI::", "$result Done")
-//            runOnUiThread {
-//                Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-        //}.start()
-        val command = videoKit.createCommand()
-                .overwriteOutput()
-                .inputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
-                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
+
+        val cmds = CmdlineBuilder()
+                .addInputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
                 .customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
-                .experimentalFlag()
+                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
                 .build()
 
-        AsyncCommandExecutor(command, this).execute()
-        textView.text = videoKit.configurationinfo()
+        compositeDisposable.add(FFmpegExecutor.execute(cmds)
+                .subscribe({}, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    textView.text = videoKit.configurationinfo()
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                }))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.clear()
     }
 }
