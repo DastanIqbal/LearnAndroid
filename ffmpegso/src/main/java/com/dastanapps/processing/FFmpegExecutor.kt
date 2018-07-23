@@ -1,6 +1,7 @@
 package com.dastanapps.processing
 
 import android.text.TextUtils
+import android.util.Log
 import com.dastanapps.ffmpegso.VideoKit
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -12,10 +13,17 @@ import io.reactivex.schedulers.Schedulers
  * 18/07/2018 7:03
  */
 object FFmpegExecutor {
-    var videoKit = VideoKit()
+
+    private var videoKit = VideoKit()
 
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
+            videoKit.videoKitListener = object : VideoKit.IVideoKit {
+                override fun progress(progress: String) {
+                    it.onNext(progress)
+                    Log.d("JNI:FFmpegExecutor Next", progress)
+                }
+            }
             val result = videoKit.run(cmds)
             if (result == 0) it.onComplete()
             else it.onError(Throwable("FFmpeg command failed"))

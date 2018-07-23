@@ -110,6 +110,8 @@ target_include_directories(
         ${prebuilt_DIR}/include
 )
 
+#set(CMAKE_SHARED_LINKER_FLAGS "-Wall -v -Wl, -Wpointer-sign")
+
 target_link_libraries(
         ffmpegso
         android

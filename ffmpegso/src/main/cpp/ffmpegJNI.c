@@ -15,8 +15,73 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 #include <libavfilter/avfilter.h>
+
 #endif
 
+typedef struct ffmpegJNI_context {
+    JavaVM *javaVM;
+    jclass jniHelperClz;
+    jobject jniHelperObj;
+} FFmpegJNIContext;
+
+// Android log function wrappers
+static const char *kTAG = "ffmpegJNI";
+FFmpegJNIContext g_ctxt;
+
+void sendJavaMsg(JNIEnv *env, jobject instance,
+                 jmethodID func, const char *msg) {
+    jstring javaMsg = (*env)->NewStringUTF(env, msg);
+    (*env)->CallVoidMethod(env, instance, func, javaMsg);
+    (*env)->DeleteLocalRef(env, javaMsg);
+}
+
+void showProgress(char *c) {
+    LOGD("JNI::", "Progress: %s", c);
+    JNIEnv *env;
+    jint res = (*g_ctxt.javaVM)->AttachCurrentThread(g_ctxt.javaVM, &env, NULL);
+    if (res != JNI_OK) {
+        LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
+        return;
+    }
+    jmethodID showProgressId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showProgress",
+                                                   "(Ljava/lang/String;)V");
+    sendJavaMsg(env, g_ctxt.jniHelperObj, showProgressId, c);
+}
+
+JNIEXPORT jint
+JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
+    JNIEnv *env;
+    memset(&g_ctxt, 0, sizeof(g_ctxt));
+    g_ctxt.javaVM = vm;
+
+
+    jint res = (*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6);
+    if (res != JNI_OK) {
+        LOGD(kTAG, "JNI version not supported");
+        return JNI_ERR;
+    }
+
+    jclass clz = (*env)->FindClass(env, "com/dastanapps/ffmpegso/VideoKit");
+    g_ctxt.jniHelperClz = (*env)->NewGlobalRef(env, clz);
+//
+//    jmethodID jniHelperCtr = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "<init>", "()V");
+//    jobject handler = (*env)->NewObject(env, g_ctxt.jniHelperClz, jniHelperCtr);
+//
+//    g_ctxt.jniHelperObj = (*env)->NewGlobalRef(env, handler);
+
+    return JNI_VERSION_1_6;
+}
+
+//JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
+//    JNIEnv *env;
+//    (*vm)->DetachCurrentThread;
+//    jint res = (*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6);
+//    if (JNI_OK != res) {
+//        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperObj);
+//        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperClz);
+//        (*g_ctxt.javaVM)->DestroyJavaVM;
+//    }
+//}
 /**
  * com.dastanapps.ffmpegso_.MainActivity.avformatinfo()
  * AVFormat Support Information
@@ -122,6 +187,10 @@ Java_com_dastanapps_ffmpegso_VideoKit_configurationinfo(JNIEnv *env, jobject obj
 JNIEXPORT jint
 JNICALL Java_com_dastanapps_ffmpegso_VideoKit_run
         (JNIEnv *env, jobject obj, jobjectArray commands) {
+
+    //To be in same thread
+    g_ctxt.jniHelperObj = (*env)->NewGlobalRef(env, obj);
+
     int argc = (*env)->GetArrayLength(env, commands);
     char *argv[argc];
     LOGI("Inside JNI Run");
@@ -131,5 +200,5 @@ JNICALL Java_com_dastanapps_ffmpegso_VideoKit_run
         argv[i] = (char *) (*env)->GetStringUTFChars(env, js, 0);
         LOGI("Cmds: %s", argv[i]);
     }
-    return run(argc, argv);
+    return run(argc, argv, showProgress);
 }

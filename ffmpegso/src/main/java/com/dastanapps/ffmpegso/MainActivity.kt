@@ -20,7 +20,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     val compositeDisposable = CompositeDisposable()
-    private val videoKit = VideoKit()
     lateinit var textView: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,10 +99,12 @@ class MainActivity : AppCompatActivity() {
                 .build()
 
         compositeDisposable.add(FFmpegExecutor.execute(cmds)
-                .subscribe({}, {
+                .subscribe({
+                    textView.text = it
+                }, {
                     Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
                 }, {
-                    textView.text = videoKit.configurationinfo()
+                    textView.text = "Done"
                     Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
                 }))
     }

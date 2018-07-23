@@ -1,5 +1,7 @@
 package com.dastanapps.ffmpegso
 
+import android.util.Log
+
 /**
  * Created by dastaniqbal on 19/07/2018.
  * dastanIqbal@marvelmedia.com
@@ -8,11 +10,13 @@ package com.dastanapps.ffmpegso
 class VideoKit {
     init {
         try {
-            System.loadLibrary("ffmpegso");
+            System.loadLibrary("ffmpegso")
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
         }
     }
+
+    var videoKitListener: IVideoKit? = null
 
     external fun avformatinfo(): String
 
@@ -23,4 +27,15 @@ class VideoKit {
     external fun configurationinfo(): String
 
     external fun run(args: Array<String>): Int
+
+    fun showProgress(progress: String) {
+        Log.d("JNI:VidKit", progress)
+        videoKitListener?.run {
+            progress(progress)
+        }
+    }
+
+    interface IVideoKit {
+        fun progress(progress: String)
+    }
 }

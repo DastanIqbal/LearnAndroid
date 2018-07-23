@@ -143,7 +143,7 @@ double parse_number_or_die(const char *context, const char *numstr, int type,
     else
         return d;
     LOGD(TAG,error, context, numstr, min, max);
-    exit_program(1);
+    exit_program(7001);
     return 0;
 }
 
@@ -154,7 +154,7 @@ int64_t parse_time_or_die(const char *context, const char *timestr,
     if (av_parse_time(&us, timestr, is_duration) < 0) {
         LOGD(TAG,"Invalid %s specification for %s: %s\n",
                is_duration ? "duration" : "date", context, timestr);
-        exit_program(1);
+        exit_program(7002);
     }
     return us;
 }
@@ -328,7 +328,7 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt,
         }
     }
     if (po->flags & OPT_EXIT)
-        exit_program(0);
+        exit_program(7003);
 
     return 0;
 }
@@ -388,7 +388,7 @@ void parse_options(void *optctx, int argc, char **argv, const OptionDef *options
             opt++;
 
             if ((ret = parse_option(optctx, opt, argv[optindex], options)) < 0)
-                exit_program(1);
+                exit_program(7004);
             optindex += ret;
         } else {
             if (parse_arg_function)
@@ -699,7 +699,7 @@ static void init_parse_context(OptionParseContext *octx,
     octx->nb_groups = nb_groups;
     octx->groups    = av_mallocz_array(octx->nb_groups, sizeof(*octx->groups));
     if (!octx->groups)
-        exit_program(1);
+        exit_program(7005);
 
     for (i = 0; i < octx->nb_groups; i++)
         octx->groups[i].group_def = &groups[i];
@@ -898,7 +898,7 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
                "Possible levels are numbers or:\n", arg);
         for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++)
             LOGD(TAG,"\"%s\"\n", log_levels[i].name);
-        exit_program(1);
+        exit_program(7006);
     }
     av_log_set_level(level);
     return 0;
@@ -966,7 +966,7 @@ static int init_report(const char *env)
             report_file_level = strtol(val, &tail, 10);
             if (*tail) {
                 LOGD(TAG,"Invalid report file level\n");
-                exit_program(1);
+                exit_program(7007);
             }
         } else {
             LOGD(TAG, "Unknown key '%s' in FFREPORT\n", key);
@@ -1016,7 +1016,7 @@ int opt_max_alloc(void *optctx, const char *opt, const char *arg)
     max = strtol(arg, &tail, 10);
     if (*tail) {
         LOGD(TAG,"Invalid max_alloc \"%s\".\n", arg);
-        exit_program(1);
+        exit_program(7008);
     }
     av_max_alloc(max);
     return 0;
@@ -1441,7 +1441,7 @@ static unsigned get_codecs_sorted(const AVCodecDescriptor ***rcodecs)
         nb_codecs++;
     if (!(codecs = av_calloc(nb_codecs, sizeof(*codecs)))) {
         LOGD(TAG, "Out of memory\n");
-        exit_program(1);
+        exit_program(7009);
     }
     desc = NULL;
     while ((desc = avcodec_descriptor_next(desc)))
@@ -2008,7 +2008,7 @@ AVDictionary *filter_codec_opts(AVDictionary *opts, enum AVCodecID codec_id,
             switch (check_stream_specifier(s, st, p + 1)) {
             case  1: *p = 0; break;
             case  0:         continue;
-            default:         exit_program(1);
+            default:         exit_program(7010);
             }
 
         if (av_opt_find(&cc, t->key, NULL, flags, AV_OPT_SEARCH_FAKE_OBJ) ||
@@ -2052,13 +2052,13 @@ void *grow_array(void *array, int elem_size, int *size, int new_size)
 {
     if (new_size >= INT_MAX / elem_size) {
         LOGD(TAG, "Array too big.\n");
-        exit_program(1);
+        exit_program(7011);
     }
     if (*size < new_size) {
         uint8_t *tmp = av_realloc_array(array, new_size, elem_size);
         if (!tmp) {
             LOGD(TAG, "Could not alloc buffer.\n");
-            exit_program(1);
+            exit_program(7012);
         }
         memset(tmp + *size*elem_size, 0, (new_size-*size) * elem_size);
         *size = new_size;
