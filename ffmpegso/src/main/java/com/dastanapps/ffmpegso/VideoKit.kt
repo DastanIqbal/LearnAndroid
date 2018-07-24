@@ -1,6 +1,8 @@
 package com.dastanapps.ffmpegso
 
 import android.util.Log
+import processing.ffmpeg.videokit.CommandBuilder
+import processing.ffmpeg.videokit.VideoCommandBuilder
 
 /**
  * Created by dastaniqbal on 19/07/2018.
@@ -33,6 +35,14 @@ class VideoKit {
         videoKitListener?.run {
             progress(progress)
         }
+    }
+
+    fun process(args: Array<String>): Int {
+        return run(args)
+    }
+
+    fun createCommand(): CommandBuilder {
+        return VideoCommandBuilder(this)
     }
 
     interface IVideoKit {

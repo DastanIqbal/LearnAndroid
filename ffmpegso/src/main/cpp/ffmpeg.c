@@ -36,9 +36,7 @@
 #include <io.h>
 #endif
 #if HAVE_UNISTD_H
-
 #include <unistd.h>
-
 #endif
 
 #include "libavformat/avformat.h"
@@ -69,11 +67,9 @@
 # include "libavfilter/buffersink.h"
 
 #if HAVE_SYS_RESOURCE_H
-
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/resource.h>
-
 #elif HAVE_GETPROCESSTIMES
 #include <windows.h>
 #endif
@@ -167,11 +163,7 @@ static int restore_tty;
 #endif
 
 #if HAVE_PTHREADS
-
 static void free_input_threads(void);
-
-void (*progress_callback)(char *);
-
 #endif
 
 /* sub2video hack:
@@ -179,6 +171,7 @@ void (*progress_callback)(char *);
    This is a temporary solution until libavfilter gets real subtitles support.
  */
 #define TAG "JNI::FFMPEG.C"
+void (*progress_callback)(char *);
 
 static int sub2video_get_blank_frame(InputStream *ist) {
     int ret;
@@ -4368,6 +4361,22 @@ void setProgressCallback(void (*callback)(char *)) {
 }
 
 int run(int argc, char **argv, void (*callback)(char *)) {
+    received_sigterm = 0;
+    received_nb_signals = 0;
+
+    transcode_init_done = 0;
+    ffmpeg_exited = 0;
+    main_return_code = 0;
+    run_as_daemon  = 0;
+
+    nb_frames_dup = 0;
+    nb_frames_drop = 0;
+    nb_input_streams = 0;
+    nb_input_files   = 0;
+    nb_output_streams = 0;
+    nb_output_files   = 0;
+    nb_filtergraphs = 0;
+
     int ret;
     int64_t ti;
     setProgressCallback(callback);

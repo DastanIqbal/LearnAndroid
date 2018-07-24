@@ -15,10 +15,6 @@ import io.reactivex.disposables.CompositeDisposable
 // https://blog.csdn.net/leixiaohua1020/article/details/47008825
 
 class MainActivity : AppCompatActivity() {
-    init {
-        System.loadLibrary("ffmpegso")
-    }
-
     val compositeDisposable = CompositeDisposable()
     lateinit var textView: TextView
 
@@ -107,6 +103,32 @@ class MainActivity : AppCompatActivity() {
                     textView.text = "Done"
                     Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
                 }))
+
+//        val videoKit = VideoKit()
+//        val command = videoKit.createCommand()
+//                .overwriteOutput()
+//                .inputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
+//                .inputPath("/sdcard/KrusoTestVideo/repeat.png")
+//                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
+//                .customCommand("-filter_complex [0:v][1:v]overlay=(W-w)/2:(H-h)/2:enable='between(t,3,6)")
+//                //.copyVideoCodec()
+//                .experimentalFlag()
+//                .build()
+//
+//        AsyncCommandExecutor(command, object : ProcessingListener {
+//            override fun onSuccess(path: String?) {
+//                runOnUiThread {
+//                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onFailure(returnCode: Int) {
+//                runOnUiThread {
+//                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//        }).execute()
     }
 
     override fun onDestroy() {

@@ -46,6 +46,8 @@ void showProgress(char *c) {
     jmethodID showProgressId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showProgress",
                                                    "(Ljava/lang/String;)V");
     sendJavaMsg(env, g_ctxt.jniHelperObj, showProgressId, c);
+
+    (*g_ctxt.javaVM)->DetachCurrentThread;
 }
 
 JNIEXPORT jint
@@ -72,16 +74,16 @@ JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 
-//JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
-//    JNIEnv *env;
-//    (*vm)->DetachCurrentThread;
-//    jint res = (*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6);
-//    if (JNI_OK != res) {
-//        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperObj);
-//        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperClz);
-//        (*g_ctxt.javaVM)->DestroyJavaVM;
-//    }
-//}
+JNIEXPORT void JNI_OnUnload(JavaVM *vm, void *reserved) {
+    JNIEnv *env;
+    (*vm)->DetachCurrentThread;
+    jint res = (*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_6);
+    if (JNI_OK != res) {
+        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperObj);
+        (*env)->DeleteGlobalRef(env, g_ctxt.jniHelperClz);
+        (*g_ctxt.javaVM)->DestroyJavaVM;
+    }
+}
 /**
  * com.dastanapps.ffmpegso_.MainActivity.avformatinfo()
  * AVFormat Support Information
@@ -187,18 +189,29 @@ Java_com_dastanapps_ffmpegso_VideoKit_configurationinfo(JNIEnv *env, jobject obj
 JNIEXPORT jint
 JNICALL Java_com_dastanapps_ffmpegso_VideoKit_run
         (JNIEnv *env, jobject obj, jobjectArray commands) {
+    LOGI("Inside JNI Run");
 
     //To be in same thread
     g_ctxt.jniHelperObj = (*env)->NewGlobalRef(env, obj);
 
     int argc = (*env)->GetArrayLength(env, commands);
-    char *argv[argc];
-    LOGI("Inside JNI Run");
+    char **argv = (char **) malloc(sizeof(char *) * argc);
+    jstring *strr = (jstring *) malloc(sizeof(jstring) * argc);
     int i;
+
     for (i = 0; i < argc; i++) {
-        jstring js = (jstring) (*env)->GetObjectArrayElement(env, commands, i);
-        argv[i] = (char *) (*env)->GetStringUTFChars(env, js, 0);
+        strr[i] = (jstring) (*env)->GetObjectArrayElement(env, commands, i);
+        argv[i] = (char *) (*env)->GetStringUTFChars(env, strr[i], 0);
         LOGI("Cmds: %s", argv[i]);
     }
-    return run(argc, argv, showProgress);
+    jint retcode = 0;
+    retcode = run(argc, argv, showProgress);
+
+    for (i = 0; i < argc; ++i) {
+        (*env)->ReleaseStringUTFChars(env, strr[i], argv[i]);
+    }
+    free(argv);
+    free(strr);
+
+    return retcode;
 }
