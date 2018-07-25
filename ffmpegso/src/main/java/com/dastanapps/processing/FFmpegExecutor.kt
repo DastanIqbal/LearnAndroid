@@ -16,6 +16,11 @@ object FFmpegExecutor {
 
     private var videoKit = VideoKit()
 
+    fun execute(cmds: Array<String>, videoKitListener: VideoKit.IVideoKit): Int {
+        videoKit.videoKitListener = videoKitListener
+        return videoKit.run(cmds)
+    }
+
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
             videoKit.videoKitListener = object : VideoKit.IVideoKit {

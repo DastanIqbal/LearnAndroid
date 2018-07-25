@@ -103,6 +103,7 @@ class MainActivity : AppCompatActivity() {
                     textView.text = "Done"
                     Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
                 }))
+        //startService(Intent(this, TranscodingService::class.java))
 
 //        val videoKit = VideoKit()
 //        val command = videoKit.createCommand()
