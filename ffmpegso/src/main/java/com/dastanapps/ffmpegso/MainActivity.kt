@@ -90,7 +90,8 @@ class MainActivity : AppCompatActivity() {
 
         val cmds = CmdlineBuilder()
                 .addInputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
-                .customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
+                //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
+                .customCommand("-vcodec libx264 -acodec aac ")
                 .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
                 .build()
 
@@ -103,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                     textView.text = "Done"
                     Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
                 }))
-        //startService(Intent(this, TranscodingService::class.java))
+   //     startService(Intent(this, TranscodingService::class.java))
 
 //        val videoKit = VideoKit()
 //        val command = videoKit.createCommand()
