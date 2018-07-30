@@ -577,5 +577,6 @@ int vda_init(AVCodecContext *s);
 int videotoolbox_init(AVCodecContext *s);
 int qsv_init(AVCodecContext *s);
 int qsv_transcode_init(OutputStream *ost);
+int run(int argc, char **argv,void (*callback)(char *));
 
 #endif /* FFMPEG_H */

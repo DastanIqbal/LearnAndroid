@@ -173,6 +173,8 @@ static void free_input_threads(void);
 #define TAG "JNI::FFMPEG.C"
 void (*progress_callback)(char *);
 
+void resetValues();
+
 static int sub2video_get_blank_frame(InputStream *ist) {
     int ret;
     AVFrame *frame = ist->sub2video.frame;
@@ -4361,21 +4363,7 @@ void setProgressCallback(void (*callback)(char *)) {
 }
 
 int run(int argc, char **argv, void (*callback)(char *)) {
-    received_sigterm = 0;
-    received_nb_signals = 0;
-
-    transcode_init_done = 0;
-    ffmpeg_exited = 0;
-    main_return_code = 0;
-    run_as_daemon  = 0;
-
-    nb_frames_dup = 0;
-    nb_frames_drop = 0;
-    nb_input_streams = 0;
-    nb_input_files   = 0;
-    nb_output_streams = 0;
-    nb_output_files   = 0;
-    nb_filtergraphs = 0;
+    resetValues();
 
     int ret;
     int64_t ti;
@@ -4446,4 +4434,22 @@ int run(int argc, char **argv, void (*callback)(char *)) {
 
     exit_program(received_nb_signals ? 6042 : main_return_code);
     return main_return_code;
+}
+
+void resetValues() {
+    received_sigterm = 0;
+    received_nb_signals = 0;
+
+    transcode_init_done = 0;
+    ffmpeg_exited = 0;
+    main_return_code = 0;
+    run_as_daemon  = 0;
+
+    nb_frames_dup = 0;
+    nb_frames_drop = 0;
+    nb_input_streams = 0;
+    nb_input_files   = 0;
+    nb_output_streams = 0;
+    nb_output_files   = 0;
+    nb_filtergraphs = 0;
 }
