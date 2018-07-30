@@ -332,7 +332,7 @@ sigterm_handler(int sig)
         write(2/*STDERR_FILENO*/, "Received > 3 system signals, hard exiting\n",
                            strlen("Received > 3 system signals, hard exiting\n"));
 
-        exit(123);
+        exit_program(123);
     }
 }
 
@@ -559,6 +559,7 @@ static void ffmpeg_cleanup(int ret)
         avcodec_free_context(&ist->dec_ctx);
 
         av_freep(&input_streams[i]);
+        input_streams[i]=NULL;
     }
 
     if (vstats_file) {
@@ -570,9 +571,20 @@ static void ffmpeg_cleanup(int ret)
     av_freep(&vstats_filename);
 
     av_freep(&input_streams);
+    input_streams=NULL;
+    nb_input_streams=0;
+
     av_freep(&input_files);
+    input_files=NULL;
+    nb_input_files=0;
+
     av_freep(&output_streams);
+    output_streams=NULL;
+    nb_output_streams=0;
+
     av_freep(&output_files);
+    output_files=NULL;
+    nb_output_files=0;
 
     uninit_opts();
 

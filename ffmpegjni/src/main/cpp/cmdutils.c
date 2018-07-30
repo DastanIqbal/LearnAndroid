@@ -62,6 +62,11 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef FFMPEG_RUN_LIB
+#include <setjmp.h>
+extern jmp_buf jmp_exit;
+#endif
+
 static int init_report(const char *env);
 
 AVDictionary *sws_dict;
@@ -114,13 +119,17 @@ void register_exit(void (*cb)(int ret))
     program_exit = cb;
 }
 
-int exit_program(int ret)
+void exit_program(int ret)
 {
-//    if (program_exit)
-//        program_exit(ret);
+    if (program_exit)
+        program_exit(ret);
 
-    return ret;
-  //  exit(ret);
+#ifdef FFMPEG_RUN_LIB
+    av_log(NULL, AV_LOG_INFO, "exit_program code : %d\n", ret);
+    longjmp(jmp_exit, ret);
+#else
+    exit(ret);
+#endif
 }
 
 double parse_number_or_die(const char *context, const char *numstr, int type,

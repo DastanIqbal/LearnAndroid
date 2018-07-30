@@ -17,9 +17,10 @@
 #include <libavutil/avutil.h>
 #include <libavfilter/avfilter.h>
 #include <prebuilt/include/libavcodec/jni.h>
+#include <setjmp.h>
 
 #endif
-
+//https://blog.csdn.net/matrix_laboratory/article/details/56677084
 typedef struct ffmpegJNI_context {
     JavaVM *javaVM;
     jclass jniHelperClz;
@@ -189,6 +190,19 @@ Java_com_dastanapps_ffmpegjni_VideoKit_configurationinfo(JNIEnv *env, jobject ob
     return (*env)->NewStringUTF(env, info);
 }
 
+jmp_buf jmp_exit;
+
+int run_cmd(int argc, char **argv, void (*callback)(char *)) {
+    int res = 0;
+    res = setjmp(jmp_exit);
+    if (res) {
+        return res;
+    }
+
+    res = run(argc, argv, callback);
+    return res;
+}
+
 JNIEXPORT jint
 JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
         (JNIEnv *env, jobject obj, jobjectArray commands) {
@@ -208,7 +222,7 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
         LOGI("Cmds: %s", argv[i]);
     }
     jint retcode = 0;
-    retcode = run(argc, argv, showProgress);
+    retcode = run_cmd(argc, argv, showProgress);
 
     for (i = 0; i < argc; ++i) {
         (*env)->ReleaseStringUTFChars(env, strr[i], argv[i]);
@@ -222,25 +236,25 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
 jboolean FFMPEG_ANDROID_DEBUG = 0;
 
 void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list vl) {
+    static int print_prefix = 1;
+    static int count;
+    static char prev[1024];
+    char line[1024];
+    static int is_atty;
+
+    av_log_format_line(ptr, level, fmt, vl, line, sizeof(line), &print_prefix);
+
+    strcpy(prev, line);
+    //sanitize((uint8_t *)line);
+
     if (FFMPEG_ANDROID_DEBUG) {
-        switch (level) {
-            case AV_LOG_DEBUG:
-                ALOGD(fmt, vl);
-                break;
-            case AV_LOG_VERBOSE:
-                ALOGV(fmt, vl);
-                break;
-            case AV_LOG_INFO:
-                ALOGI(fmt, vl);
-                break;
-            case AV_LOG_WARNING:
-                ALOGW(fmt, vl);
-                break;
-            case AV_LOG_ERROR:
-                ALOGE (fmt, vl);
-                break;
+        if (level <= AV_LOG_WARNING) {
+            LOGE("%s", line);
+        } else {
+            LOGD("%s", line);
         }
     }
+
 }
 
 JNIEXPORT jint

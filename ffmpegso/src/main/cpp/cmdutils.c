@@ -117,7 +117,7 @@ void register_exit(void (*cb)(int ret)) {
     program_exit = cb;
 }
 
-int exit_program(int ret) {
+void exit_program(int ret) {
 //    if (program_exit)
 //        program_exit(ret);
 //

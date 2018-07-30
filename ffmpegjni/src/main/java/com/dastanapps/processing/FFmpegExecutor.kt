@@ -30,7 +30,7 @@ object FFmpegExecutor {
                     Log.d("JNI:FFmpegExecutor Next", progress)
                 }
             }
-          //  videoKit.setDebug(true)
+            videoKit.setDebug(true)
             val result = videoKit.run(cmds)
             if (result == 0) it.onComplete()
             else it.onError(Throwable("FFmpeg command failed"))
