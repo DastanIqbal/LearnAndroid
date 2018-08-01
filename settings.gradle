@@ -2,7 +2,8 @@
 //include  ':mediaeffectswithopengles'
 //include  ':tutsopengles'
 //include ':launchmode'
-//include ':audioprocessing', ':processbuilderex'
+//include ':audioprocessing'
+include ':processbuilderex'
 //include  ':camera2'
 //include  ':verticaledittext', ':hijricalendar'
 //include  ':camera'
@@ -13,6 +14,6 @@
 //include ':gameframework', ':testframework', ':mrnom'
 //include ':mediaapi'
 //include ':removeorientationtest'
-include ':ffmpegjni'
-include ':ffmpegso'
+//include ':ffmpegjni'
+//include ':ffmpegso'
 

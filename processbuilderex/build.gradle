@@ -12,14 +12,14 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters 'armeabi-v7a'
-        }
-        externalNativeBuild {
-            cmake {
-                cppFlags "-frtti -fexceptions"
-            }
-        }
+//        ndk {
+//            abiFilters 'armeabi-v7a'
+//        }
+//        externalNativeBuild {
+//            cmake {
+//                cppFlags "-frtti -fexceptions"
+//            }
+//        }
     }
 
     buildTypes {
@@ -34,11 +34,18 @@ android {
         }
     }
 
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
+    sourceSets{
+        main {
+            // let gradle pack the shared library into apk
+            jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
+
+//    externalNativeBuild {
+//        cmake {
+//            path "CMakeLists.txt"
+//        }
+//    }
 }
 
 dependencies {

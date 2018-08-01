@@ -10,8 +10,10 @@ import android.os.IBinder
 import android.os.Messenger
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
+import com.androvid.ffmpeg.NativeWrapper
 import com.dastanapps.MyService
-import com.dastanapps.NativeWrapper
+import kotlinx.android.synthetic.main.activity_main.*
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
@@ -56,12 +58,31 @@ class MainActivity : AppCompatActivity() {
         //loadFFMPEGLibrary()
         //processBuilder()
         val ffmpegCommand = arrayOf("ffmpeg", "-y", "-i", Environment.getExternalStorageDirectory().path + "/MP4_20170202_183449.mp4", "-filter_complex", "scale=640:640", "-strict", "experimental", filesDir.path + "/outuput.mp4")
-        Log.d("DEBUG", NativeWrapper.init(ffmpegCommand))
+        //Log.d("DEBUG", )
+        NativeWrapper.a().a(this)
+        NativeWrapper.a().c()
+        NativeWrapper.a().runFFmpeg(arrayOf("ffmpeg","-y","-i","/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4","/sdcard/KrusoTestVideo/output.mp4"))
         //      startService(Intent(this, MyService::class.java))
 //        NativeWrapper.a().a(this)
 //        NativeWrapper.a().c()
     }
 
+/*    public static int[] combine(int[] a, int[] b){
+        int length = a.length + b.length;
+        int[] result = new int[length];
+        System.arraycopy(a, 0, result, 0, a.length);
+        System.arraycopy(b, 0, result, a.length, b.length);
+        return result;
+    }*/
+
+    fun runFFmpeg(view: View){
+        val cmds=editText.text.split(" ")
+        val combined=ArrayList<String>()
+        combined.add("ffmpeg")
+        combined.addAll(cmds)
+
+        NativeWrapper.a().runFFmpeg(combined.toTypedArray())
+    }
     override fun onStart() {
         super.onStart()
         bindService(Intent(this, MyService::class.java), mConnection,

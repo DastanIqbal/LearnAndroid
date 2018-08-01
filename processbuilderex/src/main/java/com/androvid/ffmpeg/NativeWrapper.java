@@ -11,6 +11,11 @@ public class NativeWrapper {
     private StringBuilder e;
     private boolean f = false;
 
+    static {
+        System.loadLibrary("videokit");
+        System.loadLibrary("ffmpeg");
+    }
+
     private native void cancelAction();
 
     private native Object getAVInfo(String str);
@@ -37,6 +42,10 @@ public class NativeWrapper {
         return a;
     }
 
+    public void runFFmpeg(String str[]) {
+        Log.d("DEBUG", "runFFmpeg " + run(str));
+    }
+
     public void a(Context context) {
         Log.d("DEBUG", "NativeWrapper.initFFMPEG");
         if (this.c == null) {
@@ -60,8 +69,8 @@ public class NativeWrapper {
         }
 
         if (loadFFMPEGLibrary != 0) {
-            Log.d("DEBUG","NativeWrapper.loadFFMPEGLibrary NORMAL failed!");
-           // unloadFFMPEGLibrary();
+            Log.d("DEBUG", "NativeWrapper.loadFFMPEGLibrary NORMAL failed!");
+            // unloadFFMPEGLibrary();
         }
     }
 }
