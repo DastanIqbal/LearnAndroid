@@ -1,7 +1,5 @@
 package com.dastanapps.ffmpegjni
 
-import android.util.Log
-
 /**
  * Created by dastaniqbal on 19/07/2018.
  * dastanIqbal@marvelmedia.com
@@ -30,8 +28,12 @@ class VideoKit {
 
     external fun setDebug(debug: Boolean)
 
+    fun showBenchmark(bench:String){
+        videoKitListener?.run {
+            benchmark(bench)
+        }
+    }
     fun showProgress(progress: String) {
-        Log.d("JNI:VidKit", progress)
         videoKitListener?.run {
             progress(progress)
         }
@@ -44,5 +46,6 @@ class VideoKit {
 
     interface IVideoKit {
         fun progress(progress: String)
+        fun benchmark(bench:String)
     }
 }

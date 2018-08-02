@@ -25,6 +25,10 @@ object FFmpegExecutor {
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
             videoKit.videoKitListener = object : VideoKit.IVideoKit {
+                override fun benchmark(bench: String) {
+                    it.onNext(bench)
+                }
+
                 override fun progress(progress: String) {
                     it.onNext(progress)
                     Log.d("JNI:FFmpegExecutor Next", progress)

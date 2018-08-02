@@ -56,8 +56,9 @@ class CmdlineBuilder {
         checkOutputPathAndThrowIfEmpty()
 
         val newFlags = ArrayList<String>()
-       // newFlags.add("ffmpeg")
+        newFlags.add("ffmpeg")
         newFlags.add(OVERWRITE_FLAG)
+        newFlags.add("-benchmark")
 
         addInputPathsToFlags(newFlags)
         copyFlagsToNewDestination(newFlags)

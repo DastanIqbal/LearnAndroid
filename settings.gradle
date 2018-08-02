@@ -15,5 +15,5 @@
 //include ':mediaapi'
 //include ':removeorientationtest'
 include ':ffmpegjni'
-include ':ffmpegso'
+//include ':ffmpegso'
 

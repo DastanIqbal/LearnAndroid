@@ -2,15 +2,12 @@ package com.dastanapps.ffmpegjni
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.dastanapps.processing.CmdlineBuilder
 import com.dastanapps.processing.FFmpegExecutor
 import io.reactivex.disposables.CompositeDisposable
-import nl.bravobit.ffmpeg.ExecuteBinaryResponseHandler
-import nl.bravobit.ffmpeg.FFmpeg
 
 
 //Reference Link:
@@ -93,23 +90,28 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/Kruso/Video_kruso_20180620080700.mp4")
+                .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
+                //.addInputPath("/sdcard/Kruso/Video_kruso_20180725123603.mp4")
                 .addInputPath("/sdcard/KrusoTestVideo/watermark.png")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
-                .customCommand("-filter_complex [0:v]setpts=PTS-STARTPTS,scale=640:640:force_original_aspect_ratio=decrease,pad=640:640:(ow-iw)/2:(oh-ih)/2:color=#000000[0v];[1:v]scale=127.54448:47.829178:[1v];[0v][1v]overlay=W-w:H-h -ac 2 -ar 44100 -vcodec libx264 -bf 2 -g 75 -preset ultrafast")
+                .customCommand("-filter_complex [1:v]scale=127.54448:47.829178:[1v];[0:v][1v]overlay=W-w:H-h -ac 2 -ar 44100-preset ultrafast -tune zerolatency")
+
                 .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
                 .build()
 
-//        compositeDisposable.add(FFmpegExecutor.execute(cmds)
-//                .subscribe({
-//                    textView.text = it
-//                }, {
-//                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
-//                }, {
-//                    textView.text = "Done"
-//                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-//                }))
-        //    startService(Intent(this, TranscodingService::class.java))
+        compositeDisposable.add(FFmpegExecutor.execute(cmds)
+                .subscribe({
+                    textView.text = it
+                    if (it.contains("[bench]")) {
+                        textView.text = it
+                    }
+                }, {
+                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
+                }, {
+                    textView.append(" DONE")
+                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                }))
+        // startService(Intent(this, TranscodingService::class.java))
 
 //        val videoKit = VideoKit()
 //        val command = videoKit.createCommand()
@@ -137,34 +139,34 @@ class MainActivity : AppCompatActivity() {
 //
 //        }).execute()
 
-        val ffmpeg = FFmpeg.getInstance(this);
-        if (ffmpeg.isSupported) {
-            ffmpeg.execute(cmds, object : ExecuteBinaryResponseHandler() {
-
-                override fun onStart() {
-                    Log.d("DEBUG","onStart")
-                }
-
-                override fun onProgress(message: String?) {
-                    Log.d("DEBUG",message)
-                }
-
-                override fun onFailure(message: String?) {
-                    Log.d("DEBUG",message)
-                }
-
-                override fun onSuccess(message: String?) {
-                    Log.d("DEBUG",message)
-                }
-
-                override fun onFinish() {
-                    Log.d("DEBUG","onFinish")
-                }
-
-            })
-        } else {
-            // ffmpeg is not supported
-        }
+//        val ffmpeg = FFmpeg.getInstance(this);
+//        if (ffmpeg.isSupported) {
+//            ffmpeg.execute(cmds, object : ExecuteBinaryResponseHandler() {
+//
+//                override fun onStart() {
+//                    Log.d("DEBUG","onStart")
+//                }
+//
+//                override fun onProgress(message: String?) {
+//                    Log.d("DEBUG",message)
+//                }
+//
+//                override fun onFailure(message: String?) {
+//                    Log.d("DEBUG",message)
+//                }
+//
+//                override fun onSuccess(message: String?) {
+//                    Log.d("DEBUG",message)
+//                }
+//
+//                override fun onFinish() {
+//                    Log.d("DEBUG","onFinish")
+//                }
+//
+//            })
+//        } else {
+//            // ffmpeg is not supported
+//        }
     }
 
     override fun onDestroy() {
