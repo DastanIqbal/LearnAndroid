@@ -8,6 +8,9 @@ import android.widget.Toast
 import com.dastanapps.processing.CmdlineBuilder
 import com.dastanapps.processing.FFmpegExecutor
 import io.reactivex.disposables.CompositeDisposable
+import processing.async.FFmpeg
+import processing.async.LoadBinaryResponseHandler
+import processing.async.exceptions.FFmpegNotSupportedException
 
 
 //Reference Link:
@@ -17,11 +20,32 @@ import io.reactivex.disposables.CompositeDisposable
 class MainActivity : AppCompatActivity() {
     val compositeDisposable = CompositeDisposable()
     lateinit var textView: TextView
+    lateinit var ffmpeg: FFmpeg
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         textView = findViewById(R.id.textview)
+        ffmpeg= FFmpeg.getInstance(this)
+        loadFFMpegBinary()
+    }
+
+    private fun loadFFMpegBinary() {
+        try {
+            ffmpeg.loadBinary(object : LoadBinaryResponseHandler() {
+                override fun onFailure() {
+                    showMsg("Failed")
+                }
+            })
+        } catch (e: FFmpegNotSupportedException) {
+            e.printStackTrace()
+            showMsg(e.message)
+        }
+
+    }
+
+    fun showMsg(msg: String?) {
+        Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
     }
 
     fun format(view: View) {
@@ -89,11 +113,37 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
+                .addInputPath("/sdcard/TestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
-                .customCommand("-vcodec libx264 -acodec aac ")
-                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
+                //.customCommand("-vcodec libx264 -acodec aac ")
+                .outputPath("/sdcard/TestVideo/TranscodingVideo/FFmpegDrawText.mp4")
                 .build()
+
+        /*ffmpeg.execute(cmds,object :FFmpegExecuteResponseHandler {
+            override fun onFinish() {
+                showMsg("onFinish")
+            }
+
+            override fun onSuccess(message: String?) {
+                showMsg("onSuccess")
+                Log.d("DEBUG",message)
+            }
+
+            override fun onFailure(message: String?) {
+                showMsg("onFailure $message")
+                Log.d("DEBUG",message)
+            }
+
+            override fun onStart() {
+                showMsg("onStart")
+            }
+
+            override fun onProgress(message: String?) {
+                showMsg("onProgess $message")
+                Log.d("DEBUG",message)
+            }
+
+        })*/
 
         compositeDisposable.add(FFmpegExecutor.execute(cmds)
                 .subscribe({
@@ -104,7 +154,9 @@ class MainActivity : AppCompatActivity() {
                     textView.text = "Done"
                     Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
                 }))
-   //     startService(Intent(this, TranscodingService::class.java))
+
+
+        //     startService(Intent(this, TranscodingService::class.java))
 
 //        val videoKit = VideoKit()
 //        val command = videoKit.createCommand()

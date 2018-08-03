@@ -37,7 +37,7 @@ object FFmpegExecutor {
             videoKit.setDebug(true)
             val result = videoKit.run(cmds)
             if (result == 0) it.onComplete()
-            else it.onError(Throwable("FFmpeg command failed"))
+            else it.onError(Throwable("FFmpeg command failed $result"))
         }.observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.newThread())
     }

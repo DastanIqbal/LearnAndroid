@@ -271,7 +271,7 @@ void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list 
 
 }
 
-JNIEXPORT jint
+JNIEXPORT void
 JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
         (JNIEnv *env, jobject obj, jboolean debug) {
     FFMPEG_ANDROID_DEBUG = debug;

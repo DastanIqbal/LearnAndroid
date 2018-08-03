@@ -30,7 +30,10 @@ JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegjni_MainActivity_avfilterinf
 JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegjni_MainActivity_configurationinfo
         (JNIEnv *, jobject);
 
-JNIEXPORT int JNICALL Java_com_dastanapps_ffmpegjni_MainActivity_run
+JNIEXPORT jint JNICALL Java_com_dastanapps_ffmpegjni_MainActivity_run
         (JNIEnv *, jobject, jobjectArray);
+
+JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
+        (JNIEnv *, jobject, jboolean);
 
 #endif //LEARNANDROID_FFMPEGJNI_H
