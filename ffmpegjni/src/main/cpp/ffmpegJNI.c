@@ -281,3 +281,13 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
         av_log_set_callback(NULL);
     }
 }
+
+JNIEXPORT void
+JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopTranscoding
+        (JNIEnv *env, jobject obj, jboolean stop) {
+    if (stop == JNI_TRUE) {
+        stop_ffmpeg(1);
+    } else {
+        stop_ffmpeg(0);
+    }
+}

@@ -90,13 +90,13 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/TestVideo/big_buck_bunny_720p_stereo.mp4")
+                .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.addInputPath("/sdcard/Kruso/Video_kruso_20180725123603.mp4")
-                .addInputPath("/sdcard/TestVideo/watermark.png")
+                .addInputPath("/sdcard/KrusoTestVideo/watermark.png")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
                 .customCommand("-filter_complex [1:v]scale=127.54448:47.829178:[1v];[0:v][1v]overlay=W-w:H-h -ac 2 -ar 44100")
 
-                .outputPath("/sdcard/TestVideo/FFmpegDrawText.mp4")
+                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
                 .build()
 
         compositeDisposable.add(FFmpegExecutor.execute(cmds)
@@ -106,6 +106,7 @@ class MainActivity : AppCompatActivity() {
                         textView.text = it
                     }
                 }, {
+                    textView.text = "Got Error ${it.message}"
                     Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
                 }, {
                     textView.append(" DONE")
@@ -168,7 +169,9 @@ class MainActivity : AppCompatActivity() {
 //            // ffmpeg is not supported
 //        }
     }
-
+    fun stop(view: View) {
+        FFmpegExecutor.stop(true)
+    }
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.clear()

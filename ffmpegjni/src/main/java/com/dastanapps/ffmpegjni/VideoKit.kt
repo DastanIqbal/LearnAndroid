@@ -27,12 +27,13 @@ class VideoKit {
     external fun run(args: Array<String>): Int
 
     external fun setDebug(debug: Boolean)
-
-    fun showBenchmark(bench:String){
+    external fun stopTranscoding(stop: Boolean)
+    fun showBenchmark(bench: String) {
         videoKitListener?.run {
             benchmark(bench)
         }
     }
+
     fun showProgress(progress: String) {
         videoKitListener?.run {
             progress(progress)
@@ -46,6 +47,6 @@ class VideoKit {
 
     interface IVideoKit {
         fun progress(progress: String)
-        fun benchmark(bench:String)
+        fun benchmark(bench: String)
     }
 }

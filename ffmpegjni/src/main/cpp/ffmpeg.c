@@ -115,6 +115,8 @@
 #include "ffmpegJNI.h"
 
 #define TAG "JNI::FFMPEG.C"
+int stop_ffmpeg_transcoding = 0;
+
 
 void (*progress_callback)(char *);
 
@@ -4652,7 +4654,11 @@ static int transcode(void) {
         if (stdin_interaction)
             if (check_keyboard_interaction(cur_time) < 0)
                 break;
-
+        if (stop_ffmpeg_transcoding == 1) {
+            stop_ffmpeg_transcoding=0;
+            exit_program(6043);
+            break;
+        }
         /* check if there's any stream where output is still needed */
         if (!need_output()) {
             av_log(NULL, AV_LOG_VERBOSE, "No more output streams to write to, finishing.\n");
@@ -4898,4 +4904,8 @@ void resetValues() {
     nb_output_streams = 0;
     nb_output_files = 0;
     nb_filtergraphs = 0;
+}
+
+void stop_ffmpeg(int stop) {
+    stop_ffmpeg_transcoding = stop;
 }

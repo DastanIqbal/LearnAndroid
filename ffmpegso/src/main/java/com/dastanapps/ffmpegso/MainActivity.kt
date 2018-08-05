@@ -113,10 +113,10 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/TestVideo/big_buck_bunny_720p_stereo.mp4")
+                .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
                 //.customCommand("-vcodec libx264 -acodec aac ")
-                .outputPath("/sdcard/TestVideo/TranscodingVideo/FFmpegDrawText.mp4")
+                .outputPath("/sdcard/KrusoTestVideo/TranscodingVideo/FFmpegDrawText.mp4")
                 .build()
 
         /*ffmpeg.execute(cmds,object :FFmpegExecuteResponseHandler {
