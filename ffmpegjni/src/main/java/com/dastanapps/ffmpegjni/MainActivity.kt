@@ -93,12 +93,15 @@ class MainActivity : AppCompatActivity() {
                 .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.addInputPath("/sdcard/Kruso/Video_kruso_20180725123603.mp4")
                 .addInputPath("/sdcard/KrusoTestVideo/watermark.png")
+                .addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
-                .customCommand("-filter_complex [1:v]scale=127.54448:47.829178:[1v];[0:v][1v]overlay=W-w:H-h -ac 2 -ar 44100")
-
+                //.customCommand("-filter_complex [0:v]scale=996:996:force_original_aspect_ratio=decrease,transpose=1,pad=996:996:0:(oh-ih)/2:color=#000000[0v];[1:v]scale=200.0:60.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10;[2:0]volume=0.5[a];[2:0]volume=0.1[b];[a][b]amix=inputs=2:duration=shortest -strict -2")
+                .customCommand("-vcodec libx264 -acodec aac -tune zerolatency -preset ultrafast -strict -2")
                 .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
                 .build()
-
+        val cmd2=ArrayList<String>()
+        cmd2.add("ffmpeg")
+        cmd2.add("-encoders")
         compositeDisposable.add(FFmpegExecutor.execute(cmds)
                 .subscribe({
                     textView.text = it

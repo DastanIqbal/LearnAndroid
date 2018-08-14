@@ -2,19 +2,20 @@ cmake_minimum_required(VERSION 3.4.1)
 
 set(prebuilt_DIR ${CMAKE_SOURCE_DIR}/prebuilt)
 
-add_library(avcodec SHARED IMPORTED)
-add_library(avdevice SHARED IMPORTED)
-add_library(avfilter SHARED IMPORTED)
-add_library(avformat SHARED IMPORTED)
-add_library(avutil SHARED IMPORTED)
-add_library(postproc SHARED IMPORTED)
-add_library(swresample SHARED IMPORTED)
-add_library(swscale SHARED IMPORTED)
+add_library(avcodec STATIC IMPORTED)
+add_library(avdevice STATIC IMPORTED)
+add_library(avfilter STATIC IMPORTED)
+add_library(avformat STATIC IMPORTED)
+add_library(avutil STATIC IMPORTED)
+add_library(postproc STATIC IMPORTED)
+add_library(swresample STATIC IMPORTED)
+add_library(swscale STATIC IMPORTED)
 
 #add_library(fdk-aac STATIC IMPORTED)
 #add_library(mp3lame STATIC IMPORTED)
 #add_library(shine STATIC IMPORTED)
-#add_library(x264 STATIC IMPORTED)
+add_library(x264 STATIC IMPORTED)
+
 #add_library(crypto STATIC IMPORTED)
 #add_library(opus STATIC IMPORTED)
 #add_library(ogg STATIC IMPORTED)
@@ -26,34 +27,34 @@ add_library(swscale SHARED IMPORTED)
 
 set_target_properties(
         avcodec PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libavcodec.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavcodec.a)
 
 set_target_properties(
         avdevice PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libavdevice.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavdevice.a)
 
 set_target_properties(
         avfilter PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libavfilter.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavfilter.a)
 
 set_target_properties(
         avformat PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libavformat.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavformat.a)
 
 set_target_properties(
         avutil PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libavutil.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libavutil.a)
 
 set_target_properties(
         swresample PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libswresample.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libswresample.a)
 
 set_target_properties(
         swscale PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libswscale.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libswscale.a)
 set_target_properties(
         postproc PROPERTIES IMPORTED_LOCATION
-        ${prebuilt_DIR}/${ANDROID_ABI}/libpostproc.so)
+        ${prebuilt_DIR}/${ANDROID_ABI}/libpostproc.a)
 
 
 
@@ -68,11 +69,11 @@ set_target_properties(
 #set_target_properties(
 #        shine PROPERTIES IMPORTED_LOCATION
 #        ${prebuilt_DIR}/${ANDROID_ABI}/libshine.a)
-#
-#
-#set_target_properties(
-#        x264 PROPERTIES IMPORTED_LOCATION
-#        ${prebuilt_DIR}/${ANDROID_ABI}/libx264.a)
+
+
+set_target_properties(
+        x264 PROPERTIES IMPORTED_LOCATION
+        ${prebuilt_DIR}/${ANDROID_ABI}/libx264.a)
 
 #set_target_properties(
 #        opus PROPERTIES IMPORTED_LOCATION
@@ -116,7 +117,7 @@ set(
 #    include_directories(${ANDROID_SYSROOT}/usr/include/arm-linux-androideabi)
 #endif()
 
-#set(CMAKE_SHARED_LINKER_FLAGS " -Wall -v -Wl,--no-warn-shared-textrel")
+#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wall -v -Wl,--no-warn-shared-textrel")
 
 include_directories(${CMAKE_SOURCE_DIR})
 set(
@@ -164,7 +165,7 @@ target_link_libraries(
         #vorbisfile
         #ogg
         #ssl
-        #x264
+        x264
         #fdk-aac
         #crypto
 )
