@@ -91,15 +91,19 @@ class MainActivity : AppCompatActivity() {
 
         val cmds = CmdlineBuilder()
                 .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
-                //.addInputPath("/sdcard/Kruso/Video_kruso_20180725123603.mp4")
-                .addInputPath("/sdcard/KrusoTestVideo/watermark.png")
-                .addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
+                //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
+                //.addInputPath("/sdcard/KrusoTestVideo/watermark.png")
+                //.concatInput("/sdcard/KrusoTestVideo/concat.txt")
+                .customCommand("-c:v libx264 -preset ultrafast -strict -2")
+                //.loopInput("/sdcard/KrusoTestVideo/inUsepatterns.png")
+                //.addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
                 //.customCommand("-filter_complex [0:v]scale=996:996:force_original_aspect_ratio=decrease,transpose=1,pad=996:996:0:(oh-ih)/2:color=#000000[0v];[1:v]scale=200.0:60.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10;[2:0]volume=0.5[a];[2:0]volume=0.1[b];[a][b]amix=inputs=2:duration=shortest -strict -2")
-                .customCommand("-vcodec libx264 -acodec aac -tune zerolatency -preset ultrafast -strict -2")
-                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
+                //.addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=640:640:force_original_aspect_ratio=decrease,pad=640:640:(ow-iw)/2:(oh-ih)/2:color=#00000000[0v];[1:v]scale=96.0:36.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10[bg];[2:v][bg]overlay=(W-w)/2:(H-h)/2:shortest=1 -vcodec libx264 -crf 22 -tune zerolatency -strict -2")
+                //.customCommand("[0:v]setpts=PTS-STARTPTS,scale=1088:1088:force_original_aspect_ratio=decrease,pad=1088:1088:(ow-iw)/2:(oh-ih)/2:color=#000000[0v];[1:v]scale=163.0:61.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10 -ac 2 -ar 44100 -vcodec libx264 -bf 2 -g 75 -b:v 10M -bufsize 1M -profile:v baseline -level 3.0 -preset -ultrafast -strict 2")
+                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.ts")
                 .build()
-        val cmd2=ArrayList<String>()
+        val cmd2 = ArrayList<String>()
         cmd2.add("ffmpeg")
         cmd2.add("-encoders")
         compositeDisposable.add(FFmpegExecutor.execute(cmds)
@@ -172,9 +176,11 @@ class MainActivity : AppCompatActivity() {
 //            // ffmpeg is not supported
 //        }
     }
+
     fun stop(view: View) {
         FFmpegExecutor.stop(true)
     }
+
     override fun onDestroy() {
         super.onDestroy()
         compositeDisposable.clear()

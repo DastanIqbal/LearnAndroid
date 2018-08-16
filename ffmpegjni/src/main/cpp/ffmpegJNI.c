@@ -43,7 +43,7 @@ void showBenchmark(char *c) {
         return;
     }
     jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showBenchmark",
-                                                   "(Ljava/lang/String;)V");
+                                             "(Ljava/lang/String;)V");
     sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
 
     (*g_ctxt.javaVM)->DetachCurrentThread;
@@ -58,7 +58,7 @@ void showProgress(char *c) {
         return;
     }
     jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showProgress",
-                                                   "(Ljava/lang/String;)V");
+                                             "(Ljava/lang/String;)V");
     sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
 
     (*g_ctxt.javaVM)->DetachCurrentThread;
