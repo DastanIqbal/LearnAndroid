@@ -13,12 +13,12 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-//        externalNativeBuild {
-//            cmake {
-//                abiFilters 'x86'
-//                //abiFilters 'armeabi-v7a'
-//            }
-//        }
+        externalNativeBuild {
+            cmake {
+                //abiFilters 'x86'
+                abiFilters 'armeabi-v7a'
+            }
+        }
     }
 
     buildTypes {
@@ -31,16 +31,16 @@ android {
     sourceSets {
         main {
             // let gradle pack the shared library into apk
-            //jniLibs.srcDirs = ['src/main/cpp/prebuilt']
-            jniLibs.srcDirs = ['src/main/jniLibs']
+            jniLibs.srcDirs = ['src/main/cpp/prebuilt']
+            //jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
 
-//    externalNativeBuild {
-//        cmake {
-//            path "src/main/cpp/CMakeLists.txt"
-//        }
-//    }
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
 }
 
 dependencies {

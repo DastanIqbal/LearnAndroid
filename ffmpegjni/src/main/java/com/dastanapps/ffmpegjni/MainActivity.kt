@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                 //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
                 //.addInputPath("/sdcard/KrusoTestVideo/watermark.png")
                 //.concatInput("/sdcard/KrusoTestVideo/concat.txt")
-                .customCommand("-c:v libx264 -preset ultrafast -strict -2")
+                .customCommand("-c:v libx264 -preset ultrafast -tune zerolatency -strict -2")
                 //.loopInput("/sdcard/KrusoTestVideo/inUsepatterns.png")
                 //.addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
