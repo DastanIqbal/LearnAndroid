@@ -21,6 +21,10 @@
             android:name="com.dastanapps.services.MyBoundService"
             android:enabled="true"
             android:exported="true"></service>
+        <service
+            android:name="com.dastanapps.services.MyService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

@@ -12,9 +12,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dastanapps.services.MyBoundService
+import com.dastanapps.services.MyService
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -92,6 +94,8 @@ class MainActivity : AppCompatActivity() {
                     when (adapterPosition) {
                         0 -> {
                             showMsg("Service")
+                            ContextCompat.startForegroundService(this@MainActivity,
+                                    Intent(this@MainActivity, MyService::class.java))
                         }
                         1 -> {
                             showMsg("Bound Service")

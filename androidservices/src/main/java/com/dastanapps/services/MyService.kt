@@ -8,16 +8,21 @@ import android.content.Intent
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.app.NotificationCompat
+import androidx.core.app.NotificationCompat
+import com.dastanapps.androidservices.R
 
 class MyService : Service() {
 
-    inner class LocalBinder: Binder() {
-        fun getLocalService():MyService{
+    inner class LocalBinder : Binder() {
+        fun getLocalService(): MyService {
             return this@MyService
         }
     }
-    val mBinder=LocalBinder()
+
+    val mBinder = LocalBinder()
+    private val mNM by lazy {
+        getSystemService(NOTIFICATION_SERVICE) as NotificationManager?
+    }
 
     override fun onBind(intent: Intent): IBinder {
         return mBinder
@@ -28,30 +33,37 @@ class MyService : Service() {
         return START_NOT_STICKY
     }
 
+    private val channelId = "id_myservice_channel"
     private fun buildNotificationChannel(appContext: Context?) {
         if (appContext != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val chan1 = NotificationChannel("hello",
-                    "hello2",
+            val chan1 = NotificationChannel(channelId,
+                    "myservice",
                     NotificationManager.IMPORTANCE_DEFAULT)
 
-            val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.createNotificationChannel(chan1)
+            mNM?.createNotificationChannel(chan1)
         }
     }
 
     fun buildNotification() {
         buildNotificationChannel(applicationContext)
-        val notificationManager: NotificationManager? =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager?.let {
+        mNM?.let {
             val mBuilder = NotificationCompat.Builder(applicationContext,
-                    "hello")
+                    channelId)
             val notification = mBuilder
-                    .setContentTitle("Title")
-                    .setContentText("Description")
+                    .setContentTitle("MyService")
+                    .setContentText("Testing background service notification")
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .build()
             startForeground(20, notification)
         } ?: stopSelf()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mNM?.cancel(20)
+    }
+
+    fun stopService() {
+        stopSelf()
     }
 }
