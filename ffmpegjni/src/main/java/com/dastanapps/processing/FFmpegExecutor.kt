@@ -57,9 +57,12 @@ object FFmpegExecutor {
     fun configurationinfo(): Observable<String> {
         return createObserable { videoKit.configurationinfo() }
     }
+
     fun stop(stop: Boolean) {
         videoKit.stopTranscoding(stop)
+        videoKit.error("Video Stopped")
     }
+
     private fun createObserable(func: (Unit) -> (String)): Observable<String> {
         return Observable.create<String> {
             val result = func.invoke(Unit)

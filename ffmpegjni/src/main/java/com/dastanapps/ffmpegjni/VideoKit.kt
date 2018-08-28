@@ -1,5 +1,7 @@
 package com.dastanapps.ffmpegjni
 
+import android.util.Log
+
 /**
  * Created by dastaniqbal on 19/07/2018.
  * dastanIqbal@marvelmedia.com
@@ -28,6 +30,11 @@ class VideoKit {
 
     external fun setDebug(debug: Boolean)
     external fun stopTranscoding(stop: Boolean)
+    fun error(error: String) {
+        val fFmpegError = FFmpegError(error)
+        Log.d("DEBUG", "Error: $error me${fFmpegError.message}too")
+    }
+
     fun showBenchmark(bench: String) {
         videoKitListener?.run {
             benchmark(bench)

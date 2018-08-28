@@ -128,7 +128,7 @@ set(
         ffmpegJNI.h
 )
 
-add_library(ffmpegjni SHARED
+add_library(ffmpeg SHARED
         ffmpegJNI.c
         ffmpeg.c
         cmdutils.c
@@ -138,11 +138,11 @@ add_library(ffmpegjni SHARED
         )
 
 target_include_directories(
-        ffmpegjni PUBLIC
+        ffmpeg PUBLIC
         ${prebuilt_DIR}/include)
 
 target_link_libraries(
-        ffmpegjni
+        ffmpeg
         android
         jnigraphics
         log

@@ -34,6 +34,21 @@ void sendJavaMsg(JNIEnv *env, jobject instance,
     (*env)->DeleteLocalRef(env, javaMsg);
 }
 
+void ffmpegError(char *c) {
+    LOGD("JNI::Benchmark %s", c);
+    JNIEnv *env;
+    jint res = (*g_ctxt.javaVM)->AttachCurrentThread(g_ctxt.javaVM, &env, NULL);
+    if (res != JNI_OK) {
+        LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
+        return;
+    }
+    jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "error",
+                                             "(Ljava/lang/String;)V");
+    sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
+
+    (*g_ctxt.javaVM)->DetachCurrentThread;
+}
+
 void showBenchmark(char *c) {
     LOGD("JNI::Benchmark %s", c);
     JNIEnv *env;
@@ -261,6 +276,9 @@ void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list 
     strcpy(prev, line);
     //sanitize((uint8_t *)line);
 
+    if (level <= AV_LOG_WARNING) {
+        ffmpegError(line);
+    }
     if (FFMPEG_ANDROID_DEBUG) {
         if (level <= AV_LOG_WARNING) {
             LOGE("%s", line);

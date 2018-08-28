@@ -90,11 +90,11 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
+                //.addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
-                //.addInputPath("/sdcard/KrusoTestVideo/watermark.png")
-                //.concatInput("/sdcard/KrusoTestVideo/concat.txt")
-                .customCommand("-c:v libx264 -preset ultrafast -tune zerolatency -strict -2")
+                .concatInput("/sdcard/KrusoTestVideo/merge.txt")
+                .addInputPath("/sdcard/KrusoTestVideo/watermark.png")
+                .customCommand("-vcodec libx264 -crf 22 -preset veryfast -tune zerolatency -strict -2")
                 //.loopInput("/sdcard/KrusoTestVideo/inUsepatterns.png")
                 //.addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
