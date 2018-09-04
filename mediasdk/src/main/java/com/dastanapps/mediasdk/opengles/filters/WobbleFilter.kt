@@ -1,5 +1,6 @@
 package com.dastanapps.mediasdk.opengles.filters
 
+import android.opengl.GLES20
 import com.dastanapps.mediasdk.opengles.utils.GLDrawer2D
 
 /**
@@ -19,5 +20,26 @@ class WobbleFilter : GLDrawer2D() {
                 "    texcoord.x += sin(texcoord.y * 4.0 * 2.0 * 3.14159 + offset) / 100.0;\n" +
                 "    gl_FragColor = texture2D(sTexture, texcoord);\n"
                 + "}")
+    }
+
+    private val UNIFORM_OFFSET = "offset"
+    private var mOffsetHandler: Int = 0
+    private var mOffset: Float = 0.toFloat()
+    private var mStartTime: Long = 0
+
+    override fun bindShaderValues(hProgram: Int) {
+        super.bindShaderValues(hProgram)
+        mOffsetHandler = GLES20.glGetUniformLocation(hProgram, UNIFORM_OFFSET)
+        GLES20.glUniform1f(mOffsetHandler, mOffset)
+    }
+
+    override fun onDraw() {
+        super.onDraw()
+        val time = System.currentTimeMillis() - mStartTime
+        if (time > 20000) {
+            mStartTime = System.currentTimeMillis()
+        }
+
+        mOffset = time / 1000f * 2f * 3.14159f * 0.75f
     }
 }

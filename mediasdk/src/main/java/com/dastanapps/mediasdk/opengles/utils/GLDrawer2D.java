@@ -141,8 +141,10 @@ public class GLDrawer2D {
         hProgram = -1;
     }
 
+    protected void onDraw(){}
     public void draw(int program, final int tex_id, final float[] tex_matrix) {
         hProgram = program;
+        onDraw();
         draw(tex_id, tex_matrix);
     }
 
