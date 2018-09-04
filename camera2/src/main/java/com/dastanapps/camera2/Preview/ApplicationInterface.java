@@ -8,6 +8,7 @@ import android.util.Pair;
 import android.view.MotionEvent;
 
 import com.dastanapps.camera2.CameraController.RawImage;
+import com.dastanapps.mediasdk.opengles.encoder.VideoProfile;
 
 import java.io.File;
 import java.io.IOException;

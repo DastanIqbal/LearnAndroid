@@ -20,7 +20,7 @@ import com.dastanapps.camera2.CameraController.CameraUtils
 import com.dastanapps.camera2.CameraController.RawImage
 import com.dastanapps.camera2.Preview.ApplicationInterface
 import com.dastanapps.camera2.Preview.ApplicationInterface.*
-import com.dastanapps.camera2.Preview.VideoProfile
+import com.dastanapps.mediasdk.opengles.encoder.VideoProfile
 import com.dastanapps.camera2.settings.PreferenceKeys
 import java.io.File
 import java.util.*

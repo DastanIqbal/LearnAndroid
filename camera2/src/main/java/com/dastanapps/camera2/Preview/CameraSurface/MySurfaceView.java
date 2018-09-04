@@ -15,8 +15,8 @@ import com.dastanapps.camera2.CameraController.CameraController;
 import com.dastanapps.camera2.CameraController.CameraControllerException;
 import com.dastanapps.camera2.MyDebug;
 import com.dastanapps.camera2.Preview.Preview;
-import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
-import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
+import com.dastanapps.mediasdk.opengles.CameraSurfaceRenderer;
+import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder;
 
 /**
  * Provides support for the surface used for the preview, using a SurfaceView.
@@ -28,7 +28,7 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
     private int[] measure_spec = new int[2];
     private Handler handler = new Handler();
     private Runnable tick;
-    private CameraSurfaceRenderer mRenderer;
+    private MyCameraSurfaceRenderer mRenderer;
 
     @SuppressWarnings("deprecation")
     public MySurfaceView(Context context, final Preview preview) {
@@ -54,7 +54,7 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
             }
         };
 
-        mRenderer = new CameraSurfaceRenderer();
+        mRenderer = new MyCameraSurfaceRenderer();
         setEGLContextClientVersion(2);    // GLES 2.0, API >= 8
         setRenderer(mRenderer);
     }
@@ -128,7 +128,7 @@ public class MySurfaceView extends GLSurfaceView implements CameraSurface {
 
     @Override
     public void setVideoEncoder(MediaVideoEncoder encoder) {
-        mRenderer.setVideoEnocder(this,encoder);
+        mRenderer.setVideoEnocder(this, encoder);
     }
 
     @Override

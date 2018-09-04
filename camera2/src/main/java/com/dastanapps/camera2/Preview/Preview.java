@@ -64,11 +64,12 @@ import com.dastanapps.camera2.Preview.CameraSurface.MyTextureView;
 import com.dastanapps.camera2.R;
 import com.dastanapps.camera2.TakePhoto;
 import com.dastanapps.camera2.ToastBoxer;
-import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
-import com.dastanapps.camera2.opengles.encoder.MediaAudioEncoder;
-import com.dastanapps.camera2.opengles.encoder.MediaEncoder;
-import com.dastanapps.camera2.opengles.encoder.MediaMuxerWrapper;
-import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
+import com.dastanapps.mediasdk.opengles.CameraSurfaceRenderer;
+import com.dastanapps.mediasdk.opengles.encoder.MediaAudioEncoder;
+import com.dastanapps.mediasdk.opengles.encoder.MediaEncoder;
+import com.dastanapps.mediasdk.opengles.encoder.MediaMuxerWrapper;
+import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder;
+import com.dastanapps.mediasdk.opengles.encoder.VideoProfile;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -4682,12 +4683,12 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
             mMuxer = new MediaMuxerWrapper(".mp4");    // if you record audio only, ".m4a" is also OK.
             final VideoProfile profile = getVideoProfile();
             if (true) {
-                int width = profile.videoFrameWidth;
-                int height = profile.videoFrameHeight;
-//                if (current_rotation == 90 || current_rotation == 270) {
-//                    width = 720;//profile.videoFrameHeight;
-//                    height = 1280;//profile.videoFrameWidth;
-//                }
+                int width = 1280;//profile.videoFrameWidth;
+                int height = 720;//profile.videoFrameHeight;
+                if (current_rotation == 90 || current_rotation == 270) {
+                    width = 720;//profile.videoFrameHeight;
+                    height = 1280;//profile.videoFrameWidth;
+                }
                 // for video capturing
                 MediaVideoEncoder mediaVideoEncoder = new MediaVideoEncoder(mMuxer, mMediaEncoderListener, width, height);
                 mediaVideoEncoder.setFilterEffect(cameraSurface.currentFilter());

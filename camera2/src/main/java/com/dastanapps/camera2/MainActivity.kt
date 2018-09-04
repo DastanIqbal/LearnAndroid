@@ -2,6 +2,7 @@ package com.dastanapps.camera2
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.Fragment
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -18,7 +19,6 @@ import com.dastanapps.camera2.CameraController.CameraUtils.showPhotoVideoToast
 import com.dastanapps.camera2.CameraController.CameraUtils.supports_auto_stabilise
 import com.dastanapps.camera2.CameraController.CameraUtils.supports_force_video_4k
 import com.dastanapps.camera2.Preview.Preview
-import com.dastanapps.camera2.settings.MyPreferenceFragment
 import com.dastanapps.camera2.settings.PreferenceKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
@@ -184,8 +184,8 @@ class MainActivity : Activity() {
         preview.onDestroy()
     }
 
-    private fun getPreferenceFragment(): MyPreferenceFragment {
-        return fragmentManager.findFragmentByTag("PREFERENCE_FRAGMENT") as MyPreferenceFragment
+    private fun getPreferenceFragment(): Fragment? {
+        return fragmentManager?.findFragmentByTag("PREFERENCE_FRAGMENT")
     }
 
     override fun onBackPressed() {

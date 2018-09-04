@@ -3,7 +3,7 @@ package com.dastanapps.camera2
 import android.app.Activity
 import android.hardware.Camera
 import android.os.Bundle
-import com.dastanapps.camera2.opengles.CameraSurfaceRenderer
+import com.dastanapps.mediasdk.opengles.CameraSurfaceRenderer
 import java.io.IOException
 
 /**
