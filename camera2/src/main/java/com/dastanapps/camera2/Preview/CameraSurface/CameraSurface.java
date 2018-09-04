@@ -5,8 +5,8 @@ import android.media.MediaRecorder;
 import android.view.View;
 
 import com.dastanapps.camera2.CameraController.CameraController;
-import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
-import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
+import com.dastanapps.mediasdk.opengles.CameraSurfaceRenderer;
+import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder;
 
 
 /** Provides support for the surface used for the preview - this can either be

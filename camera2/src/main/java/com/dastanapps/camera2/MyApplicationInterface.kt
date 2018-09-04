@@ -4,10 +4,9 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Canvas
-import android.hardware.camera2.DngCreator
 import android.location.Location
-import android.media.Image
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
@@ -18,9 +17,10 @@ import android.util.Pair
 import android.view.MotionEvent
 import com.dastanapps.camera2.CameraController.CameraController
 import com.dastanapps.camera2.CameraController.CameraUtils
+import com.dastanapps.camera2.CameraController.RawImage
 import com.dastanapps.camera2.Preview.ApplicationInterface
 import com.dastanapps.camera2.Preview.ApplicationInterface.*
-import com.dastanapps.camera2.Preview.VideoProfile
+import com.dastanapps.mediasdk.opengles.encoder.VideoProfile
 import com.dastanapps.camera2.settings.PreferenceKeys
 import java.io.File
 import java.util.*
@@ -31,6 +31,236 @@ import java.util.*
  * 10/02/2018 5:15
  */
 class MyApplicationInterface(private val mainActivity: MainActivity, private val savedInstanceState: Bundle?) : ApplicationInterface {
+    override fun cameraNotSupported() {}
+    override fun getAntiBandingPref(): String {
+        return sharedPreferences.getString(PreferenceKeys.AntiBandingPreferenceKey, CameraController.ANTIBANDING_DEFAULT)
+    }
+
+    override fun canTakeNewPhoto(): Boolean {
+        if (MyDebug.LOG)
+            Log.d(TAG, "canTakeNewPhoto")
+        var n_raw: Int
+        var n_jpegs: Int
+        if (mainActivity.preview.isVideo()) {
+            // video snapshot mode
+            n_raw = 0
+            n_jpegs = 1
+        } else {
+            if (mainActivity.preview.supportsRaw() && this.rawPref === RawPref.RAWPREF_JPEG_DNG) {
+                // note, even in RAW only mode, the CameraController will still take JPEG+RAW (we still need to JPEG to
+                // generate a bitmap from for thumbnail and pause preview option), so this still generates a request in
+                // the ImageSaver
+                n_raw = 1
+                n_jpegs = 1
+            } else {
+                n_raw = 0
+                n_jpegs = 1
+            }
+
+            if (mainActivity.preview.supportsExpoBracketing() && this.isExpoBracketingPref) {
+                n_raw = 0
+                n_jpegs = this.expoBracketingNImagesPref
+            } else if (mainActivity.preview.supportsBurst() && this.isCameraBurstPref) {
+                n_raw = 0
+                if (this.burstForNoiseReduction) {
+                    n_jpegs = 8
+                } else {
+                    n_jpegs = this.burstNImages
+                }
+            }
+        }
+
+//        val photo_cost = imageSaver.computePhotoCost(n_raw > 0, n_jpegs)
+//        if (imageSaver.queueWouldBlock(photo_cost))
+//            return false
+//
+//        // even if the queue isn't full, we may apply additional limits
+//        val photo_mode = getPhotoMode()
+//        if (photo_mode == PhotoMode.FastBurst || photo_mode == PhotoMode.NoiseReduction) {
+//            // only allow one fast burst at a time, so require queue to be empty
+//            if (imageSaver.getNImagesToSave() > 0) {
+//                return false
+//            }
+//        }
+//        if (n_jpegs > 1) {
+//            // if in any other kind of burst mode (e.g., expo burst, HDR), allow a max of 3 photos in memory
+//            if (imageSaver.getNImagesToSave() >= 3 * photo_cost) {
+//                return false
+//            }
+//        }
+//        if (n_raw > 0) {
+//            // if RAW mode, allow a max of photos
+//            if (imageSaver.getNImagesToSave() >= 3 * photo_cost) {
+//                return false
+//            }
+//        }
+//        // otherwise, still have a max limit of 5 photos
+//        return if (imageSaver.getNImagesToSave() >= 5 * photo_cost) {
+//            false
+//        } else true
+        return true
+    }
+
+    override fun getVideoCaptureRateFactor(): Float {
+        var capture_rate_factor = sharedPreferences.getFloat(PreferenceKeys.getVideoCaptureRatePreferenceKey(mainActivity.preview.cameraId), 1.0f)
+        if (MyDebug.LOG)
+            Log.d(TAG, "capture_rate_factor: $capture_rate_factor")
+        if (Math.abs(capture_rate_factor - 1.0f) > 1.0e-5) {
+            // check stored capture rate is valid
+            if (MyDebug.LOG)
+                Log.d(TAG, "check stored capture rate is valid")
+            val supported_capture_rates = getSupportedVideoCaptureRates()
+            if (MyDebug.LOG)
+                Log.d(TAG, "supported_capture_rates: $supported_capture_rates")
+            var found = false
+            for (this_capture_rate in supported_capture_rates) {
+                if (Math.abs(capture_rate_factor - this_capture_rate) < 1.0e-5) {
+                    found = true
+                    break
+                }
+            }
+            if (!found) {
+                Log.e(TAG, "stored capture_rate_factor: $capture_rate_factor not supported")
+                capture_rate_factor = 1.0f
+            }
+        }
+        return capture_rate_factor
+    }
+
+    /** This will always return 1, even if slow motion isn't supported (i.e.,
+     * slow motion should only be considered as supported if at least 2 entries
+     * are returned. Entries are returned in increasing order.
+     */
+    fun getSupportedVideoCaptureRates(): List<Float> {
+        val rates = ArrayList<Float>()
+        if (mainActivity.preview.supportsVideoHighSpeed()) {
+            // We consider a slow motion rate supported if we can get at least 30fps in slow motion.
+            // If this code is updated, see if we also need to update how slow motion fps is chosen
+            // in getVideoFPSPref().
+            if (mainActivity.preview.videoQualityHander.videoSupportsFrameRateHighSpeed(240) || mainActivity.preview.videoQualityHander.videoSupportsFrameRate(240)) {
+                rates.add(1.0f / 8.0f)
+                rates.add(1.0f / 4.0f)
+                rates.add(1.0f / 2.0f)
+            } else if (mainActivity.preview.videoQualityHander.videoSupportsFrameRateHighSpeed(120) || mainActivity.preview.videoQualityHander.videoSupportsFrameRate(120)) {
+                rates.add(1.0f / 4.0f)
+                rates.add(1.0f / 2.0f)
+            } else if (mainActivity.preview.videoQualityHander.videoSupportsFrameRateHighSpeed(60) || mainActivity.preview.videoQualityHander.videoSupportsFrameRate(60)) {
+                rates.add(1.0f / 2.0f)
+            }
+        }
+        rates.add(1.0f)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // add timelapse options
+            // in theory this should work on any Android version, though video fails to record in timelapse mode on Galaxy Nexus...
+            rates.add(2.0f)
+            rates.add(3.0f)
+            rates.add(4.0f)
+            rates.add(5.0f)
+            rates.add(10.0f)
+            rates.add(20.0f)
+            rates.add(30.0f)
+            rates.add(60.0f)
+        }
+        return rates
+    }
+
+    override fun useVideoLogProfile(): Boolean {
+        val video_log = sharedPreferences.getString(PreferenceKeys.VideoLogPreferenceKey, "off")
+        // only return true for values recognised by getVideoLogProfileStrength()
+        when (video_log) {
+            "off" -> return false
+            "low", "medium", "strong", "extra_strong" -> return true
+        }
+        return false
+    }
+
+    override fun getVideoLogProfileStrength(): Float {
+        val video_log = sharedPreferences.getString(PreferenceKeys.VideoLogPreferenceKey, "off")
+        // remember to update useVideoLogProfile() if adding/changing modes
+        when (video_log) {
+            "off" -> return 0.0f
+            "low" -> return 5.0f
+            "medium" -> return 10.0f
+            "strong" -> return 100.0f
+            "extra_strong" -> return 500.0f
+        }
+        return 0.0f
+    }
+
+    override fun getBurstNImages(): Int {
+        val photo_mode = getPhotoMode()
+        if (photo_mode == PhotoMode.FastBurst) {
+            val n_images_value = sharedPreferences.getString(PreferenceKeys.FastBurstNImagesPreferenceKey, "5")
+            var n_images: Int
+            try {
+                n_images = Integer.parseInt(n_images_value!!)
+            } catch (e: NumberFormatException) {
+                if (MyDebug.LOG)
+                    Log.e(TAG, "failed to parse FastBurstNImagesPreferenceKey value: " + n_images_value!!)
+                e.printStackTrace()
+                n_images = 5
+            }
+
+            return n_images
+        }
+        return 1
+    }
+
+    override fun getBurstForNoiseReduction(): Boolean {
+        val photo_mode = getPhotoMode()
+        return photo_mode == PhotoMode.NoiseReduction
+    }
+
+    override fun getRawPref(): RawPref {
+        if (isImageCaptureIntent())
+            return RawPref.RAWPREF_JPEG_ONLY
+        if (mainActivity.preview.isVideo)
+            return RawPref.RAWPREF_JPEG_ONLY // video snapshot mode
+        val photo_mode = getPhotoMode()
+        if (photo_mode == PhotoMode.FastBurst) {
+            // don't allow fast burst with RAW!
+            return RawPref.RAWPREF_JPEG_ONLY
+        }
+        when (sharedPreferences.getString(PreferenceKeys.RawPreferenceKey, "preference_raw_no")) {
+            "preference_raw_yes", "preference_raw_only" -> return RawPref.RAWPREF_JPEG_DNG
+        }
+        return RawPref.RAWPREF_JPEG_ONLY
+    }
+
+    override fun getMaxRawImages(): Int {
+        return 0;//imageSaver.getMaxDNG()
+    }
+
+    override fun usePhotoVideoRecording(): Boolean {
+        // we only show the preference for Camera2 API (since there's no point disabling the feature for old API)
+        return if (!useCamera2()) true else sharedPreferences.getBoolean(PreferenceKeys.Camera2PhotoVideoRecordingPreferenceKey, true)
+    }
+
+    override fun onRawPictureTaken(raw_image: RawImage?, current_date: Date?): Boolean {
+//        if (MyDebug.LOG)
+//            Log.d(TAG, "onRawPictureTaken")
+//        System.gc()
+//
+//        val do_in_background = saveInBackground(false)
+//
+//        val success = imageSaver.saveImageRaw(do_in_background, raw_image, current_date)
+//
+//        if (MyDebug.LOG)
+//            Log.d(TAG, "onRawPictureTaken complete")
+        return true
+    }
+
+    private fun saveInBackground(image_capture_intent: Boolean): Boolean {
+        var do_in_background = true
+        /*if( !sharedPreferences.getBoolean(PreferenceKeys.BackgroundPhotoSavingPreferenceKey, true) )
+			do_in_background = false;
+		else*/ if (image_capture_intent)
+            do_in_background = false
+        else if (pausePreviewPref)
+            do_in_background = false
+        return do_in_background
+    }
+
     private val storageUtils: StorageUtils
     private val sharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(mainActivity);
     private var cameraId: Int = 0;
@@ -161,10 +391,6 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun onBurstPictureTaken(images: MutableList<ByteArray>?, current_date: Date?): Boolean {
-        return false
-    }
-
-    override fun onRawPictureTaken(dngCreator: DngCreator?, image: Image?, current_date: Date?): Boolean {
         return false
     }
 
@@ -329,11 +555,11 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun getRepeatPref(): String {
-        return sharedPreferences.getString(PreferenceKeys.getBurstModePreferenceKey(), "1")
+        return sharedPreferences.getString(PreferenceKeys.getRepeatModePreferenceKey(), "1")
     }
 
     override fun getRepeatIntervalPref(): Long {
-        val timer_value = sharedPreferences.getString(PreferenceKeys.getBurstIntervalPreferenceKey(), "0")
+        val timer_value = sharedPreferences.getString(PreferenceKeys.getRepeatIntervalPreferenceKey(), "0")
         var timer_delay: Long
         try {
             timer_delay = Integer.parseInt(timer_value).toLong() * 1000
@@ -471,9 +697,9 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
         return photo_mode == PhotoMode.DRO
     }
 
-    override fun isRawPref(): Boolean {
-        return if (isImageCaptureIntent()) false else sharedPreferences.getString(PreferenceKeys.RawPreferenceKey, "preference_raw_no") == "preference_raw_yes"
-    }
+    /* override fun isRawPref(): Boolean {
+         return if (isImageCaptureIntent()) false else sharedPreferences.getString(PreferenceKeys.RawPreferenceKey, "preference_raw_no") == "preference_raw_yes"
+     }*/
 
     override fun useCamera2FakeFlash(): Boolean {
         return sharedPreferences.getBoolean(PreferenceKeys.Camera2FakeFlashPreferenceKey, false)
@@ -592,8 +818,15 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
 
     override fun setVideoQualityPref(video_quality: String) {
         val editor = sharedPreferences.edit()
-        editor.putString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId), video_quality)
+        editor.putString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, fpsIsHighSpeed()), video_quality)
         editor.apply()
+    }
+
+    /** Returns whether the current fps preference is one that requires a "high speed" video size/
+     * frame rate.
+     */
+    fun fpsIsHighSpeed(): Boolean {
+        return mainActivity.preview.fpsIsHighSpeed(videoFPSPref)
     }
 
     override fun setZoomPref(zoom: Int) {
@@ -753,7 +986,7 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun getVideoQualityPref(): String {
-        return sharedPreferences.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId), "")
+        return sharedPreferences.getString(PreferenceKeys.getVideoQualityPreferenceKey(cameraId, fpsIsHighSpeed()), "")
     }
 
     override fun getVideoStabilizationPref(): Boolean {
@@ -769,7 +1002,29 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
     }
 
     override fun getVideoFPSPref(): String {
-        return sharedPreferences.getString(PreferenceKeys.getVideoFPSPreferenceKey(), "default")
+        val capture_rate_factor = videoCaptureRateFactor
+        if (capture_rate_factor < 1.0f - 1.0e-5f) {
+            if (MyDebug.LOG)
+                Log.d(TAG, "set fps for slow motion, capture rate: $capture_rate_factor")
+            var preferred_fps = (30.0 / capture_rate_factor + 0.5).toInt()
+            if (MyDebug.LOG)
+                Log.d(TAG, "preferred_fps: $preferred_fps")
+            if (mainActivity.preview.videoQualityHander.videoSupportsFrameRateHighSpeed(preferred_fps) || mainActivity.preview.videoQualityHander.videoSupportsFrameRate(preferred_fps))
+                return "" + preferred_fps
+            // just in case say we support 120fps but NOT 60fps, getSupportedSlowMotionRates() will have returned that 2x slow
+            // motion is supported, but we need to set 120fps instead of 60fps
+            while (preferred_fps < 240) {
+                preferred_fps *= 2
+                if (MyDebug.LOG)
+                    Log.d(TAG, "preferred_fps not supported, try: $preferred_fps")
+                if (mainActivity.preview.videoQualityHander.videoSupportsFrameRateHighSpeed(preferred_fps) || mainActivity.preview.videoQualityHander.videoSupportsFrameRate(preferred_fps))
+                    return "" + preferred_fps
+            }
+            // shouln't happen based on getSupportedSlowMotionRates()
+            Log.e(TAG, "can't find valid fps for slow motion")
+            return "default"
+        }
+        return sharedPreferences.getString(PreferenceKeys.getVideoFPSPreferenceKey(cameraId), "default")
     }
 
     override fun getVideoMaxDurationPref(): Long {
@@ -948,6 +1203,7 @@ class MyApplicationInterface(private val mainActivity: MainActivity, private val
         DRO, // single image "fake" HDR
         HDR, // HDR created from multiple (expo bracketing) images
         ExpoBracketing, // take multiple expo bracketed images, without combining to a single image
+        FastBurst,
         NoiseReduction
     }
 }

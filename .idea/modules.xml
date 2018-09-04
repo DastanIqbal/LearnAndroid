@@ -3,7 +3,12 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/audioprocessing/audioprocessing.iml" filepath="$PROJECT_DIR$/audioprocessing/audioprocessing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/camera2/camera2.iml" filepath="$PROJECT_DIR$/camera2/camera2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/camera2/camera2.iml" filepath="$PROJECT_DIR$/camera2/camera2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" filepath="$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" filepath="$PROJECT_DIR$/mediaeffectswithopengles/mediaeffectswithopengles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediasdk/mediasdk.iml" filepath="$PROJECT_DIR$/mediasdk/mediasdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mediasdk/mediasdk.iml" filepath="$PROJECT_DIR$/mediasdk/mediasdk.iml" />
     </modules>
   </component>
 </project>

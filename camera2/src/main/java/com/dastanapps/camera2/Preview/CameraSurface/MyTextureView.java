@@ -12,9 +12,9 @@ import com.dastanapps.camera2.CameraController.CameraController;
 import com.dastanapps.camera2.CameraController.CameraControllerException;
 import com.dastanapps.camera2.MyDebug;
 import com.dastanapps.camera2.Preview.Preview;
-import com.dastanapps.camera2.opengles.CameraSurfaceRenderer;
-import com.dastanapps.camera2.opengles.GLTextureView;
-import com.dastanapps.camera2.opengles.encoder.MediaVideoEncoder;
+import com.dastanapps.mediasdk.opengles.CameraSurfaceRenderer;
+import com.dastanapps.mediasdk.opengles.GLTextureView;
+import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder;
 
 
 /**
@@ -25,7 +25,7 @@ public class MyTextureView extends GLTextureView implements CameraSurface {
 
     private final Preview preview;
     private final int[] measure_spec = new int[2];
-    private CameraSurfaceRenderer mRenderer;
+    private MyCameraSurfaceRenderer mRenderer;
 
     public MyTextureView(Context context, Preview preview) {
         super(context);
@@ -37,7 +37,7 @@ public class MyTextureView extends GLTextureView implements CameraSurface {
         // Install a TextureView.SurfaceTextureListener so we get notified when the
         // underlying surface is created and destroyed.
         //this.setSurfaceTextureListener(preview);
-        mRenderer = new CameraSurfaceRenderer();
+        mRenderer = new MyCameraSurfaceRenderer();
         setEGLContextClientVersion(2);    // GLES 2.0, API >= 8
         setRenderer(mRenderer);
     }

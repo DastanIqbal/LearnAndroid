@@ -2,6 +2,7 @@ package com.dastanapps.camera2
 
 import android.app.Activity
 import android.app.ActivityManager
+import android.app.Fragment
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
@@ -12,12 +13,13 @@ import android.view.*
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.RelativeLayout
 import com.dastanapps.camera2.CameraController.CameraUtils
+import com.dastanapps.camera2.CameraController.CameraUtils.setDeviceDefaults
 import com.dastanapps.camera2.CameraController.CameraUtils.setWindowFlagsForCamera
 import com.dastanapps.camera2.CameraController.CameraUtils.showPhotoVideoToast
 import com.dastanapps.camera2.CameraController.CameraUtils.supports_auto_stabilise
 import com.dastanapps.camera2.CameraController.CameraUtils.supports_force_video_4k
 import com.dastanapps.camera2.Preview.Preview
-import com.dastanapps.camera2.settings.MyPreferenceFragment
+import com.dastanapps.camera2.settings.PreferenceKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -53,6 +55,14 @@ class MainActivity : Activity() {
         // also added the check for having 128MB standard heap, to support modded LG G2, which has 128MB standard, 256MB large - see https://sourceforge.net/p/opencamera/tickets/9/
         if (activityManager.memoryClass >= 128 || activityManager.largeMemoryClass >= 512) {
             supports_force_video_4k = true
+        }
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val has_done_first_time = sharedPreferences.contains(PreferenceKeys.FirstTimePreferenceKey)
+        if (MyDebug.LOG)
+            Log.d(TAG, "has_done_first_time: $has_done_first_time")
+        if (!has_done_first_time) {
+            setDeviceDefaults(this)
+            setFirstTimeFlag()
         }
 
         // listen for orientation event change
@@ -101,6 +111,15 @@ class MainActivity : Activity() {
         wb.setOnClickListener { v -> clickedWhiteBalance(v) }
         imv_play.setOnClickListener { v -> clickedRecordVideo(v) }
         filters.setOnClickListener { v-> clickedFilters(v) }
+    }
+
+    private fun setFirstTimeFlag() {
+        if (MyDebug.LOG)
+            Log.d(TAG, "setFirstTimeFlag")
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean(PreferenceKeys.FirstTimePreferenceKey, true)
+        editor.apply()
     }
 
     fun reLayoutUI() {
@@ -165,8 +184,8 @@ class MainActivity : Activity() {
         preview.onDestroy()
     }
 
-    private fun getPreferenceFragment(): MyPreferenceFragment {
-        return fragmentManager.findFragmentByTag("PREFERENCE_FRAGMENT") as MyPreferenceFragment
+    private fun getPreferenceFragment(): Fragment? {
+        return fragmentManager?.findFragmentByTag("PREFERENCE_FRAGMENT")
     }
 
     override fun onBackPressed() {

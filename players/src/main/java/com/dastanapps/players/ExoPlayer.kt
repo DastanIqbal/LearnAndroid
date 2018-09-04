@@ -27,7 +27,7 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener
  * dastanIqbal@marvelmedia.com
  * 10/01/2018 6:11
  */
-class ExoPlayer: AppCompatActivity() {
+class ExoPlayer : AppCompatActivity() {
     // bandwidth meter to measure and estimate bandwidth
     private val BANDWIDTH_METER = DefaultBandwidthMeter()
     private val TAG = "PlayerActivity"
@@ -126,11 +126,11 @@ class ExoPlayer: AppCompatActivity() {
     private fun buildMediaSource(uri: Uri): MediaSource {
         val dataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "exoplayer2example"), BANDWIDTH_METER)
         return ExtractorMediaSource(uri, dataSourceFactory, DefaultExtractorsFactory(), null, null)
-        //DataSource.Factory manifestDataSourceFactory = new DefaultHttpDataSourceFactory("ua");
-        //        DashChunkSource.Factory dashChunkSourceFactory = new DefaultDashChunkSource.Factory(
-        //                new DefaultHttpDataSourceFactory("ua", BANDWIDTH_METER));
-        //        return new DashMediaSource.Factory(dashChunkSourceFactory, manifestDataSourceFactory)
-        //                .createMediaSource(uri);
+//        DataSource.Factory manifestDataSourceFactory = new DefaultHttpDataSourceFactory("ua");
+//        DashChunkSource.Factory dashChunkSourceFactory = new DefaultDashChunkSource.Factory(
+//                new DefaultHttpDataSourceFactory ("ua", BANDWIDTH_METER));
+//        return new DashMediaSource . Factory (dashChunkSourceFactory, manifestDataSourceFactory)
+//        .createMediaSource(uri);
     }
 
     @SuppressLint("InlinedApi")

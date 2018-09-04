@@ -2,6 +2,7 @@ package com.dastanapps.camera2.CameraController
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -10,14 +11,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.preference.PreferenceManager
+import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import com.dastanapps.camera2.MyApplicationInterface
-import com.dastanapps.camera2.MyDebug
+import com.dastanapps.camera2.*
 import com.dastanapps.camera2.Preview.Preview
-import com.dastanapps.camera2.R
-import com.dastanapps.camera2.ToastBoxer
+import com.dastanapps.camera2.R.id.preview
 import com.dastanapps.camera2.settings.MyPreferenceFragment
 import com.dastanapps.camera2.settings.PreferenceKeys
 import java.util.*
@@ -33,7 +33,7 @@ object CameraUtils {
     var supports_camera2: Boolean = false
     var supports_force_video_4k: Boolean = false
     var supports_auto_stabilise: Boolean = false
-
+    private val CHOOSE_GHOST_IMAGE_SAF_CODE = 43
     /**
      * Determine whether we support Camera2 API.
      */
@@ -267,7 +267,7 @@ object CameraUtils {
         // waitUntilImageQueueEmpty() // in theory not needed as we could continue running in the background, but best to be safe
         // closePopup()
         preview.cancelTimer() // best to cancel any timer, in case we take a photo while settings window is open, or when changing settings
-        preview.cancelBurst() // similarly cancel the auto-repeat burst mode!
+        preview.cancelRepeat() // similarly cancel the auto-repeat burst mode!
         preview.stopVideo(false) // important to stop video, as we'll be changing camera parameters when the settings window closes
         //  stopAudioListeners()
 
@@ -617,7 +617,11 @@ object CameraUtils {
             preview.showToast(switch_video_toast, toast_string)
     }
 
-    fun setDeviceDefaults(context: Context) {
+    /* This method sets the preference defaults which are set specific for a particular device.
+	 * This method should be called when Open Camera is run for the very first time after installation,
+	 * or when the user has requested to "Reset settings".
+	 */
+    fun setDeviceDefaults(context:Context) {
         if (MyDebug.LOG)
             Log.d(TAG, "setDeviceDefaults")
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -628,8 +632,8 @@ object CameraUtils {
         //boolean is_pixel_phone = Build.DEVICE != null && Build.DEVICE.equals("sailfish");
         //boolean is_pixel_xl_phone = Build.DEVICE != null && Build.DEVICE.equals("marlin");
         if (MyDebug.LOG) {
-            Log.d(TAG, "is_samsung? " + is_samsung)
-            Log.d(TAG, "is_oneplus? " + is_oneplus)
+            Log.d(TAG, "is_samsung? $is_samsung")
+            Log.d(TAG, "is_oneplus? $is_oneplus")
             //Log.d(TAG, "is_nexus? " + is_nexus);
             //Log.d(TAG, "is_nexus6? " + is_nexus6);
             //Log.d(TAG, "is_pixel_phone? " + is_pixel_phone);
@@ -715,5 +719,27 @@ object CameraUtils {
             entry = value
         }
         return entry
+    }
+
+    /** Opens the Storage Access Framework dialog to select a file for ghost image.
+     * @param from_preferences Whether called from the Preferences
+     */
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    internal fun openGhostImageChooserDialogSAF(mainActivity: MainActivity,from_preferences: Boolean) {
+        if (MyDebug.LOG)
+            Log.d(TAG, "openGhostImageChooserDialogSAF: $from_preferences")
+        this.saf_dialog_from_preferences = from_preferences
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "image/*"
+        try {
+            mainActivity.startActivityForResult(intent, CHOOSE_GHOST_IMAGE_SAF_CODE)
+        } catch (e: ActivityNotFoundException) {
+            // see https://stackoverflow.com/questions/34021039/action-open-document-not-working-on-miui/34045627
+            mainActivity.preview.showToast(null, R.string.open_files_saf_exception_ghost)
+            Log.e(TAG, "ActivityNotFoundException from startActivityForResult")
+            e.printStackTrace()
+        }
+
     }
 }
