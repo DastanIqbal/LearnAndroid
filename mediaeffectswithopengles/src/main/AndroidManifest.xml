@@ -21,6 +21,11 @@
         </activity>
         <activity android:name=".record.RecordSurfaceActivity" />
         <activity android:name=".record.GLSurfaceViewPlayerActivity" />
+        <activity android:name=".fbo.FBOActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
