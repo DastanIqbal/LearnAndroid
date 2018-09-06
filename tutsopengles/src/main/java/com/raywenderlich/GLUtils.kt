@@ -156,7 +156,6 @@ object GLUtils {
         return body.toString()
     }
 
-
     fun loadTexture(context: Context, resourceId: Int): Int {
         val textureHandle = IntArray(1)
 
