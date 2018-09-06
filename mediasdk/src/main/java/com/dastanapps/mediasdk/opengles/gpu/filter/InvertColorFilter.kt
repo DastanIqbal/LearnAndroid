@@ -1,8 +1,8 @@
 package com.dastanapps.mediasdk.opengles.gpu.filter
 
-class InvertColorFilter : NoneFilter(NoneFilter.defalutVS, COLOR_INVERT_FRAGMENT_SHADER) {
+class InvertColorFilter : ImageFilter(ImageFilter.defalutVS, COLOR_INVERT_FRAGMENT_SHADER) {
     companion object {
-        val COLOR_INVERT_FRAGMENT_SHADER = "" +
+        const val COLOR_INVERT_FRAGMENT_SHADER = "" +
                 "varying highp vec2 textureCoordinate;\n" +
                 "\n" +
                 "uniform sampler2D inputImageTexture;\n" +

@@ -23,7 +23,7 @@ import android.opengl.GLES20;
  * <br>
  * sharpness: from -4.0 to 4.0, with 0.0 as the normal level
  */
-public class SharpenFilter extends NoneFilter {
+public class SharpenFilter extends ImageFilter {
     public static final String SHARPEN_VERTEX_SHADER = "" +
             "attribute vec4 position;\n" +
             "attribute vec4 inputTextureCoordinate;\n" +
@@ -105,13 +105,6 @@ public class SharpenFilter extends NoneFilter {
         mImageHeightFactorLocation = GLES20.glGetUniformLocation(getProgId(), "imageHeightFactor");
         setSharpness(mSharpness);
     }
-
-//    @Override
-//    public void onOutputSizeChanged(final int width, final int height) {
-//        super.onOutputSizeChanged(width, height);
-//        setFloat(mImageWidthFactorLocation, 1.0f / width);
-//        setFloat(mImageHeightFactorLocation, 1.0f / height);
-//    }
 
     public void setSharpness(final float sharpness) {
         mSharpness = sharpness;

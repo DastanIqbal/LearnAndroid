@@ -49,15 +49,15 @@ class FramesActivity : Activity() {
         rv.adapter = MyFiltersAdapter(this, populateFitlers(),renderer)
     }
 
-    override fun onPause() {
-        super.onPause()
-        glSurfaceView.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        glSurfaceView.onResume()
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        glSurfaceView.onPause()
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        glSurfaceView.onResume()
+//    }
 
     fun populateFitlers(): ArrayList<FiltersB> {
         val filtersList = ArrayList<FiltersB>()
