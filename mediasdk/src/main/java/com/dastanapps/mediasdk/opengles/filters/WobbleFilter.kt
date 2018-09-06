@@ -33,8 +33,8 @@ class WobbleFilter : GLDrawer2D() {
         GLES20.glUniform1f(mOffsetHandler, mOffset)
     }
 
-    override fun onDraw() {
-        super.onDraw()
+    override fun onDrawFrame() {
+        super.onDrawFrame()
         val time = System.currentTimeMillis() - mStartTime
         if (time > 20000) {
             mStartTime = System.currentTimeMillis()

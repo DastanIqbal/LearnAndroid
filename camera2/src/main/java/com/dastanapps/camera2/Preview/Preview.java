@@ -901,6 +901,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     }
 
     private void videoRecordingStopped() {
+        Toast.makeText(getContext(), "Video recording stoped", Toast.LENGTH_LONG).show();
         if (MyDebug.LOG)
             Log.d(TAG, "reset video_recorder");
         video_recorder.reset();
@@ -4740,6 +4741,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
      */
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void startVideoRecording(final boolean max_filesize_restart) {
+        Toast.makeText(getContext(), "Video recording started", Toast.LENGTH_LONG).show();
         focus_success = FOCUS_DONE; // clear focus rectangle (don't do for taking photos yet)
         // initialise just in case:
         boolean created_video_file = false;

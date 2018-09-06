@@ -182,7 +182,9 @@ public final class RenderHandler implements Runnable {
                 if ((mEgl != null) && mTexId >= 0) {
                     mInputSurface.makeCurrent();
                     mDrawer.setMatrix(mMatrix, 16);
-                    mDrawer.draw(mTexId, mMatrix);
+                    mDrawer.setCameraSurfaceGlTexture(mTexId);
+                    //mDrawer.draw(mMatrix);
+                    mDrawer.onDrawFrame();
                     mInputSurface.swap();
                 }
             } else {

@@ -6,7 +6,7 @@ import android.util.Log;
 
 import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder;
 import com.dastanapps.mediasdk.opengles.filters.FilterFactory;
-import com.dastanapps.mediasdk.opengles.filters.NoneFilter;
+import com.dastanapps.mediasdk.opengles.filters.WobbleFilter;
 import com.dastanapps.mediasdk.opengles.utils.GLDrawer2D;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -37,12 +37,16 @@ public class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTextureV
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        mCameraSurfaceGlTexture = GLDrawer2D.initTex();
+        mDrawer = new WobbleFilter();
+
+        mCameraSurfaceGlTexture= mDrawer.cameraSurfaceTexture();
+
         mCameraSurfaceTexture = new SurfaceTexture(mCameraSurfaceGlTexture);
         mCameraSurfaceTexture.setOnFrameAvailableListener(this);
+
         if (listener != null)
             listener.onSurfaceTextureReady(mCameraSurfaceTexture);
-        mDrawer = new NoneFilter();
+
         mDrawer.setupShader();
     }
 
@@ -70,7 +74,7 @@ public class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTextureV
             // get texture matrix
             mCameraSurfaceTexture.getTransformMatrix(mDrawer.mStMatrix);
         }
-        mDrawer.draw(mCameraSurfaceGlTexture, mDrawer.mStMatrix);
+        mDrawer.onDrawFrame();
         synchronized (this) {
             if (mVideoEncoder != null) {
                 mVideoEncoder.frameAvailableSoon();
@@ -87,7 +91,7 @@ public class CameraSurfaceRenderer implements GLSurfaceView.Renderer, GLTextureV
             mDrawer = null;
         }
         mCameraSurfaceTexture.release();
-        GLDrawer2D.deleteTex(mCameraSurfaceGlTexture);
+        mDrawer.deleteTex();
     }
 
     public interface EGLSurfaceTextureListener {

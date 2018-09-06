@@ -20,7 +20,7 @@ package com.dastanapps.mediasdk.opengles.utils;
  *  limitations under the License.
  *
  * All files in the folder are under this Apache License, Version 2.0.
-*/
+ */
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
@@ -86,7 +86,7 @@ public class GLDrawer2D {
     int muMVPMatrixLoc;
     int muTexMatrixLoc;
     private final float[] mMvpMatrix = new float[16];
-    public final float[] mStMatrix = new float[16];
+    public float[] mStMatrix = new float[16];
 
     private static final int FLOAT_SZ = Float.SIZE / 8;
     private static final int VERTEX_NUM = 4;
@@ -124,6 +124,7 @@ public class GLDrawer2D {
         Matrix.setIdentityM(mMvpMatrix, 0);
         GLES20.glUniformMatrix4fv(muMVPMatrixLoc, 1, false, mMvpMatrix, 0);
         GLES20.glUniformMatrix4fv(muTexMatrixLoc, 1, false, mMvpMatrix, 0);
+
         GLES20.glVertexAttribPointer(maPositionLoc, 2, GLES20.GL_FLOAT, false, VERTEX_SZ, pVertex);
         GLES20.glVertexAttribPointer(maTextureCoordLoc, 2, GLES20.GL_FLOAT, false, VERTEX_SZ, pTexCoord);
         GLES20.glEnableVertexAttribArray(maPositionLoc);
@@ -141,12 +142,14 @@ public class GLDrawer2D {
         hProgram = -1;
     }
 
-    protected void onDraw(){}
-    public void draw(int program, final int tex_id, final float[] tex_matrix) {
-        hProgram = program;
-        onDraw();
-        draw(tex_id, tex_matrix);
+    public void onDrawFrame() {
+        draw(mStMatrix);
     }
+
+//    public void draw(int program, final int tex_id, final float[] tex_matrix) {
+//        hProgram = program;
+//        draw(tex_id, tex_matrix);
+//    }
 
     /**
      * draw specific texture with specific texture matrix
@@ -154,18 +157,24 @@ public class GLDrawer2D {
      * @param tex_id     texture ID
      * @param tex_matrix texture matrix、if this is null, the last one use(we don't check size of this array and needs at least 16 of float)
      */
-    public void draw(final int tex_id, final float[] tex_matrix) {
+    public void draw(final float[] tex_matrix) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-        GLES20.glUseProgram(hProgram);
-        if (tex_matrix != null)
-            GLES20.glUniformMatrix4fv(muTexMatrixLoc, 1, false, tex_matrix, 0);
-        GLES20.glUniformMatrix4fv(muMVPMatrixLoc, 1, false, mMvpMatrix, 0);
+
+        //GLES20.glUseProgram(hProgram);
+        bindShaderValues(hProgram);
+
+        if (tex_matrix != null) {
+            //tex_matrix = tex_matrix;
+            GLES20.glUniformMatrix4fv(muTexMatrixLoc, 1, false, mMvpMatrix, 0);
+        }
+        //GLES20.glUniformMatrix4fv(muMVPMatrixLoc, 1, false, mMvpMatrix, 0);
+
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, tex_id);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, mCameraSurfaceGlTexture);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, VERTEX_NUM);
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
-        GLES20.glUseProgram(0);
+        //GLES20.glUseProgram(0);
     }
 
     /**
@@ -201,6 +210,10 @@ public class GLDrawer2D {
         GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,
                 GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST);
         return tex[0];
+    }
+
+    public void deleteTex() {
+        deleteTex(mCameraSurfaceGlTexture);
     }
 
     /**
@@ -267,6 +280,17 @@ public class GLDrawer2D {
 
     boolean negative = false;
     String currentFss = "";
+
+    public void setCameraSurfaceGlTexture(int mCameraSurfaceGlTexture) {
+        this.mCameraSurfaceGlTexture = mCameraSurfaceGlTexture;
+    }
+
+    protected int mCameraSurfaceGlTexture;
+
+    public int cameraSurfaceTexture() {
+        mCameraSurfaceGlTexture = GLDrawer2D.initTex();
+        return mCameraSurfaceGlTexture;
+    }
 
     public void updateFs(String fss2) {
         if (negative) {
