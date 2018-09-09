@@ -138,4 +138,12 @@ public class OpenGlUtils {
         float fRandNum = (float) Math.random();
         return min + (max - min) * fRandNum;
     }
+
+    public static void checkGlError() {
+        int error = GLES20.glGetError();
+        if (error != GLES20.GL_NO_ERROR) {
+            Log.e("GLERROR", "GL error = 0x" + Integer.toHexString(error));
+            throw new RuntimeException("GL ERROR");
+        }
+    }
 }

@@ -2,7 +2,6 @@ package com.iaandroid.tutsopengles.frames
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -12,7 +11,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.TextView
+import com.dastanapps.mediasdk.opengles.gpu.FBORender
 import com.dastanapps.mediasdk.opengles.gpu.ImageRenderer
+import com.dastanapps.mediasdk.opengles.gpu.fbo.RTTRenderer
+import com.dastanapps.mediasdk.opengles.gpu.filter.ImageFilter
 import com.dastanapps.mediasdk.opengles.gpu.filter.InvertColorFilter
 import com.dastanapps.mediasdk.opengles.gpu.filter.NoneFilter
 import com.dastanapps.mediasdk.opengles.gpu.filter.SharpenFilter
@@ -29,8 +31,12 @@ class FramesActivity : Activity() {
         findViewById<GLSurfaceView>(R.id.glsurfaceview)
     }
 
-    private val renderer:ImageRenderer by lazy{
-        ImageRenderer(NoneFilter(NoneFilter.defalutVS,NoneFilter.defalutFS))
+    private val renderer1: ImageRenderer by lazy {
+        ImageRenderer(NoneFilter())
+    }
+
+    private val renderer: FBORender by lazy {
+        FBORender()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,15 +44,15 @@ class FramesActivity : Activity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(R.layout.activity_frames)
         glSurfaceView.setEGLContextClientVersion(2)
-        renderer.setGLSurfaceView(glSurfaceView)
-        glSurfaceView.setRenderer(renderer)
-        renderer.setTexture(
-                BitmapFactory.decodeResource(resources, R.drawable.image),
-                false
-        )
+        //renderer.setGLSurfaceView(glSurfaceView)
+//        renderer.setTexture(
+//                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher),
+//                false
+//        )
+        glSurfaceView.setRenderer(RTTRenderer(glSurfaceView))
 
         rv.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        rv.adapter = MyFiltersAdapter(this, populateFitlers(),renderer)
+        rv.adapter = MyFiltersAdapter(this, populateFitlers(), renderer1)
     }
 
 //    override fun onPause() {
@@ -61,13 +67,13 @@ class FramesActivity : Activity() {
 
     fun populateFitlers(): ArrayList<FiltersB> {
         val filtersList = ArrayList<FiltersB>()
-        filtersList.add(FiltersB("None", NoneFilter(NoneFilter.defalutVS, NoneFilter.defalutFS)))
+        filtersList.add(FiltersB("None", NoneFilter()))
         filtersList.add(FiltersB("Invert", InvertColorFilter()))
         filtersList.add(FiltersB("Sharpen", SharpenFilter()))
         return filtersList
     }
 
-    data class FiltersB(var name: String, var filter: NoneFilter)
+    data class FiltersB(var name: String, var filter: ImageFilter)
 
     class MyFiltersAdapter(
             private val context: Context,

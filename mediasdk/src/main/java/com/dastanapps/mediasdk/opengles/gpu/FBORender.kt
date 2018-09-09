@@ -17,7 +17,7 @@ import javax.microedition.khronos.opengles.GL10
  * dastanIqbal@marvelmedia.com
  * 06/09/2018 11:20
  */
-open class ImageRenderer(private var filter: ImageFilter) : GLSurfaceView.Renderer {
+open class FBORender : GLSurfaceView.Renderer {
     private val SQUARE = floatArrayOf(
             -1.0f, -1.0f,
             1.0f, -1.0f,
@@ -35,6 +35,9 @@ open class ImageRenderer(private var filter: ImageFilter) : GLSurfaceView.Render
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
     }
+    private val filter: ImageFilter by lazy {
+        ImageFilter(ImageFilter.defalutVS, ImageFilter.defalutFS)
+    }
     private var textId = -1
     private val mRunOnDraw: Queue<Runnable> = LinkedList<Runnable>()
 
@@ -48,16 +51,28 @@ open class ImageRenderer(private var filter: ImageFilter) : GLSurfaceView.Render
     override fun onDrawFrame(p0: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         runAll(mRunOnDraw)
-        filter.onDraw(textId, squareBuffer, textureBuffer)
+        fboDraw();
     }
 
+    private fun fboDraw() {
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffers[0])
+        filter.onDraw(textId, squareBuffer, textureBuffer)
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+    }
+
+    private var mOutputWidth: Int = 0
+    private var mOutputHeight: Int = 0
+
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        mOutputWidth = width
+        mOutputHeight = height
         GLES20.glViewport(0, 0, width, height)
         GLES20.glUseProgram(filter.progId)
     }
 
     override fun onSurfaceCreated(p0: GL10?, p1: EGLConfig?) {
         GLES20.glClearColor(1f, 0f, 0f, 1f)
+        initFBO()
         filter.init()
     }
 
@@ -89,19 +104,32 @@ open class ImageRenderer(private var filter: ImageFilter) : GLSurfaceView.Render
         })
     }
 
-    fun setFilter(filter: ImageFilter) {
-        runOnDraw(Runnable {
-            val oldFilter = this.filter
-            oldFilter.destroy()
+    private val mFrameBuffers = IntArray(1)
+    private val mFrameBufferTextures = IntArray(1)
 
-            this.filter = filter
-            filter.init()
-            GLES20.glUseProgram(filter.progId)
-        })
-        glSurfaceView?.requestRender()
-    }
+    fun initFBO() {
+        val i = 0
+        GLES20.glGenFramebuffers(1, mFrameBuffers, i)
+        GLES20.glGenTextures(1, mFrameBufferTextures, i)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFrameBufferTextures[i])
+        GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, mOutputWidth, mOutputWidth, 0,
+                GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null)
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE.toFloat())
 
-    fun setGLSurfaceView(glSurfaceView: GLSurfaceView) {
-        this.glSurfaceView = glSurfaceView
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffers[i])
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+                GLES20.GL_TEXTURE_2D, mFrameBufferTextures[i], 0)
+
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+
+        OpenGlUtils.checkGlError()
     }
 }

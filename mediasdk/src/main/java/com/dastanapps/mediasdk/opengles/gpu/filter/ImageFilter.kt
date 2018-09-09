@@ -53,6 +53,7 @@ open class ImageFilter(var vs: String, var fs: String) {
         uniformTexture = GLES20.glGetUniformLocation(progId, "inputImageTexture")
     }
 
+
     fun onDraw(textId: Int, squareBuffer: FloatBuffer, textBuffer: FloatBuffer) {
         GLES20.glUseProgram(progId)
 
@@ -75,6 +76,7 @@ open class ImageFilter(var vs: String, var fs: String) {
         GLES20.glDisableVertexAttribArray(attribPos)
         GLES20.glDisableVertexAttribArray(attribTextureCoord)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+        OpenGlUtils.checkGlError()
     }
 
     protected fun runOnDraw(runnable: Runnable) {
