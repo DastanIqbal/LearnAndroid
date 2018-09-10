@@ -136,7 +136,7 @@ public class RTTRenderer implements Renderer {
                         "}";
 
         String strFShader =
-                        "varying highp vec2 v_texCoords;" +
+                "varying highp vec2 v_texCoords;" +
                         "uniform sampler2D u_texId;" +
 
                         "void main()" +
@@ -154,7 +154,7 @@ public class RTTRenderer implements Renderer {
 
         fbor.LoadShaders();
 
-       // fboId = Utils.LoadTexture(curView, "thick_gold_frame.png");
+        // fboId = Utils.LoadTexture(curView, "thick_gold_frame.png");
         OpenGlUtils.checkGlError();
     }
 
