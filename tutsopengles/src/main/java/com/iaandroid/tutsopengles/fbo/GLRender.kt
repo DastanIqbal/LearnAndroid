@@ -9,16 +9,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-/**
- * 滤镜核心类
- *
- *
- * 实现了OpenGL的渲染逻辑，是所有渲染器的父类
- *
- * @author like
- * @date 2017-09-15
- */
-class GLRender {
+open class GLRender {
 
     protected var mVertexShader = DEFAULT_VERTEX_SHADER
     protected var mFragmentShader = DEFAULT_FRAGMENT_SHADER
@@ -36,9 +27,18 @@ class GLRender {
     protected var mTextureIn: Int = -1
 
     private var mInitialized: Boolean = false
+    protected var mSizeChanged: Boolean = false
 
-    var width: Int = 0
-    var height: Int = 0
+    protected var mWidth: Int = 0
+        set(value) {
+            field = value
+            mSizeChanged = true
+        }
+    protected var mHeight: Int = 0
+        set(value) {
+            field = value
+            mSizeChanged = true
+        }
 
 
     protected var mFps: Int = 0
@@ -51,8 +51,9 @@ class GLRender {
     }
 
     fun setRenderSize(width: Int, height: Int) {
-        this.width = width
-        this.height = height
+        this.mWidth = width
+        this.mHeight = height
+        mSizeChanged = true
     }
 
     protected fun initWorldVertices() {
@@ -180,20 +181,23 @@ class GLRender {
             initGLContext()
             mInitialized = true
         }
-
+        if (mSizeChanged) {
+            onRenderSizeChanged()
+        }
         drawFrame()
 
-
+        mSizeChanged = false // Reset the state after the drawFrame is executed, because this state may be used in the drawFrame
         calculateFps()
     }
 
+    open fun onRenderSizeChanged() {}
 
-    protected fun drawFrame() {
+    protected open fun drawFrame() {
         if (mTextureIn == 0) {
             return
         }
-        if (width != 0 && height != 0) {
-            GLES20.glViewport(0, 0, width, height)
+        if (mWidth != 0 && mHeight != 0) {
+            GLES20.glViewport(0, 0, mWidth, mHeight)
         }
 
         GLES20.glUseProgram(mProgramHandle)
@@ -224,7 +228,7 @@ class GLRender {
     /**
      * 必须在GL线程执行，释放纹理等OpenGL资源
      */
-    fun destroy() {
+    open fun destroy() {
         mInitialized = false
         if (mProgramHandle != 0) {
             GLES20.glDeleteProgram(mProgramHandle)

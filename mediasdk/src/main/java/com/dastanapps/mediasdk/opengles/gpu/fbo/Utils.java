@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
+import android.support.v4.view.KeyEventDispatcher;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -241,6 +242,50 @@ public class Utils {
             }
         });
         return paths;
+    }
+
+    public static void convert(Context context, Component component) {
+        String names[] = null;
+        try {
+            names = context.getAssets().list(component.src);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        List<String> paths = new ArrayList<>();
+        if (names != null) {
+            for (String name : names) {
+                paths.add(component.src + "/" + name);
+            }
+        }
+
+        component.length = paths.size();
+
+        // 根据图片文件名进行排序
+        Collections.sort(paths, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                // 最后一个下划线_之后及小数点.之前的数字
+                String[] sp1 = o1.split("_");
+                String[] sp2 = o2.split("_");
+                String num1 = sp1[sp1.length - 1];
+                if (num1.contains(".")) {
+                    num1 = num1.substring(0, num1.indexOf("."));
+                }
+                if (!TextUtils.isDigitsOnly(num1)) {
+                    num1 = num1.substring(num1.length() - 2);
+                }
+                String num2 = sp2[sp2.length - 1];
+                if (num2.contains(".")) {
+                    num2 = num2.substring(0, num2.indexOf("."));
+                }
+                if (!TextUtils.isDigitsOnly(num2)) {
+                    num2 = num2.substring(num2.length() - 2);
+                }
+                return parseInt(num1) - parseInt(num2);
+            }
+        });
+        component.resources = paths;
     }
 
     public static int parseInt(String val) {
