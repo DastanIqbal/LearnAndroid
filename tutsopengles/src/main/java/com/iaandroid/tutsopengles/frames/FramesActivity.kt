@@ -19,6 +19,7 @@ import com.dastanapps.mediasdk.opengles.gpu.filter.InvertColorFilter
 import com.dastanapps.mediasdk.opengles.gpu.filter.NoneFilter
 import com.dastanapps.mediasdk.opengles.gpu.filter.SharpenFilter
 import com.iaandroid.tutsopengles.R
+import com.iaandroid.tutsopengles.fbo.EZRenderer
 import kotlinx.android.synthetic.main.activity_frames.*
 
 /**
@@ -49,7 +50,7 @@ class FramesActivity : Activity() {
 //                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher),
 //                false
 //        )
-        glSurfaceView.setRenderer(RTTRenderer(glSurfaceView))
+        glSurfaceView.setRenderer(EZRenderer(glSurfaceView))
 
         rv.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         rv.adapter = MyFiltersAdapter(this, populateFitlers(), renderer1)
