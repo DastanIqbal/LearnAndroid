@@ -3,7 +3,6 @@ package com.iaandroid.tutsopengles.fbo
 import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
 import android.view.MotionEvent
-import android.view.View
 import com.iaandroid.tutsopengles.R
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -27,12 +26,12 @@ class EZRenderer(val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer {
                     // mTouchingTextureView = true
                     //  startVideo()
                     glRender.start()
-                    glRender.setPosition(Math.round(event.x * glRender.getWidth() * 1f / glSurfaceView.getWidth()),
-                            Math.round(event.y * glRender.getHeight() * 1f / glSurfaceView.getHeight()))
+                    glRender.setPosition(Math.round(event.x * glRender.mWidth * 1f / glSurfaceView.getWidth()),
+                            Math.round(event.y * glRender.mHeight * 1f / glSurfaceView.getHeight()))
                     // mRenderPipeline.addFilterRender(mStickerRender)
                 }
-                MotionEvent.ACTION_MOVE -> glRender.setPosition(Math.round(event.x * glRender.getWidth() * 1f / mRenderView.getWidth()),
-                        Math.round(event.y * glRender.getHeight() * 1f / glSurfaceView.getHeight()))
+                MotionEvent.ACTION_MOVE -> glRender.setPosition(Math.round(event.x * glRender.mWidth * 1f / glSurfaceView.getWidth()),
+                        Math.round(event.y * glRender.mHeight * 1f / glSurfaceView.getHeight()))
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     // mTouchingTextureView = false
                     //pauseVideo()

@@ -1,6 +1,7 @@
 package com.iaandroid.tutsopengles.fbo
 
 import android.content.Context
+import android.graphics.PointF
 import com.dastanapps.mediasdk.opengles.gpu.fbo.*
 import java.util.*
 
@@ -16,7 +17,7 @@ class GraffitiStickerRender(context: Context, private val mTimeController: IStic
     private var mEndTime: Float = 0.toFloat()
 
     private var mIsPause = true
-
+    private val mPositionHistories = ArrayList<PointF>() // 贴纸位置历史
     interface IStickerTimeController {
         val currentTime: Float
     }
@@ -48,7 +49,15 @@ class GraffitiStickerRender(context: Context, private val mTimeController: IStic
         setScreenAnchor(screenAnchor)
     }
 
+    fun setPosition(x: Int, y: Int) {
+        if (!mSticker.components.isEmpty()) {
+            mScreenAnchor?.leftAnchor?.x = x - sticker.components[0].width.toFloat() / 2
+            mScreenAnchor?.leftAnchor?.y = y.toFloat()
 
+            mScreenAnchor?.rightAnchor?.x = x + sticker.components[0].width.toFloat() / 2 // 涂鸦贴纸只有一个元素
+            mScreenAnchor?.rightAnchor?.y = y.toFloat()
+        }
+    }
     fun start() {
         mIsPause = false
         mStartTime = mTimeController.currentTime

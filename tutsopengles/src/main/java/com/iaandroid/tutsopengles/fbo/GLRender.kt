@@ -29,12 +29,12 @@ open class GLRender {
     private var mInitialized: Boolean = false
     protected var mSizeChanged: Boolean = false
 
-    protected var mWidth: Int = 0
+    open var mWidth: Int = 0
         set(value) {
             field = value
             mSizeChanged = true
         }
-    protected var mHeight: Int = 0
+    open var mHeight: Int = 0
         set(value) {
             field = value
             mSizeChanged = true
