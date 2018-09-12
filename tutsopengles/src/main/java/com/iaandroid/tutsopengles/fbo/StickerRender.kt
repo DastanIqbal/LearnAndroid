@@ -2,11 +2,10 @@ package com.iaandroid.tutsopengles.fbo
 
 import android.content.Context
 import android.opengl.GLES20
-
-import java.util.ArrayList
-
 import com.dastanapps.mediasdk.opengles.gpu.fbo.IBitmapCache
 import com.dastanapps.mediasdk.opengles.gpu.fbo.LruBitmapCache
+import com.dastanapps.mediasdk.opengles.gpu.fbo.ScreenAnchor
+import java.util.*
 
 /**
  * 贴纸渲染器
@@ -16,11 +15,14 @@ import com.dastanapps.mediasdk.opengles.gpu.fbo.LruBitmapCache
  */
 open class StickerRender(protected var mContext: Context) : FilterRender() {
 
-    // 贴纸模型
+    // Sticker model
     protected lateinit var mSticker: Sticker
 
-    // 组件绘制器列表
+    // Component renderer list
     protected var mComponentRenders: MutableList<ComponentRender> = ArrayList()
+
+    // Anchor group
+    protected var mScreenAnchor: ScreenAnchor? = null
 
     /**
      * 设置贴纸模型
@@ -40,6 +42,15 @@ open class StickerRender(protected var mContext: Context) : FilterRender() {
             }
         }
 
+    /**
+     * 设置显示锚点
+     *
+     * @param screenAnchor
+     */
+    fun setScreenAnchor(screenAnchor: ScreenAnchor) {
+        mScreenAnchor = screenAnchor
+    }
+
     override fun destroy() {
         super.destroy()
 
@@ -58,6 +69,10 @@ open class StickerRender(protected var mContext: Context) : FilterRender() {
 
     override fun onRenderSizeChanged() {
         super.onRenderSizeChanged()
+        if (mScreenAnchor != null) {
+            mScreenAnchor?.width = mWidth
+            mScreenAnchor?.height = mHeight
+        }
     }
 
     override fun onDraw() {

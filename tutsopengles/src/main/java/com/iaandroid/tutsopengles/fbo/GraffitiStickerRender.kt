@@ -1,12 +1,8 @@
 package com.iaandroid.tutsopengles.fbo
 
 import android.content.Context
-import android.graphics.PointF
-
-import java.util.ArrayList
-
-import com.dastanapps.mediasdk.opengles.gpu.fbo.Component
-import com.dastanapps.mediasdk.opengles.gpu.fbo.Utils
+import com.dastanapps.mediasdk.opengles.gpu.fbo.*
+import java.util.*
 
 /**
  * GraffitiStickerRender
@@ -22,7 +18,6 @@ class GraffitiStickerRender(context: Context, private val mTimeController: IStic
     private var mIsPause = true
 
     interface IStickerTimeController {
-
         val currentTime: Float
     }
 
@@ -36,9 +31,21 @@ class GraffitiStickerRender(context: Context, private val mTimeController: IStic
         component.width = 245
         component.height = 245
 
+        val textureAnchor = TextureAnchor()
+        textureAnchor.leftAnchor = AnchorPoint(AnchorPoint.LEFT_BOTTOM, 0, 0)
+        textureAnchor.rightAnchor = AnchorPoint(AnchorPoint.RIGHT_BOTTOM, 0, 0)
+        textureAnchor.width = component.width
+        textureAnchor.height = component.height
+        component.textureAnchor = textureAnchor
+
         sticker1.components.add(component)
         Utils.convert(context, component)
         sticker = sticker1
+
+        val screenAnchor = ScreenAnchor()
+        screenAnchor.leftAnchor = AnchorPoint(AnchorPoint.LEFT_TOP, 0, 0)
+        screenAnchor.rightAnchor = AnchorPoint(AnchorPoint.LEFT_TOP, 0, 0)
+        setScreenAnchor(screenAnchor)
     }
 
 

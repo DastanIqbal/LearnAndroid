@@ -24,7 +24,7 @@ open class GLRender {
     protected var mPositionHandle: Int = 0
     protected var mTextureCoordHandle: Int = 0
 
-    protected var mTextureIn: Int = -1
+    protected var mTextureIn: Int = 0
 
     private var mInitialized: Boolean = false
     protected var mSizeChanged: Boolean = false
@@ -85,7 +85,7 @@ open class GLRender {
         // (0,0) -------> (1,0)
         // 正向纹理坐标
         var texData0 = floatArrayOf(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f)
-        texData0 = floatArrayOf(0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f)
+        //texData0 = floatArrayOf(0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f)
         mTextureVertices[0] = ByteBuffer.allocateDirect(texData0.size * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer()
         mTextureVertices[0]?.put(texData0)?.position(0)
