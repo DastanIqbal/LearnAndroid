@@ -1,4 +1,4 @@
-package com.iaandroid.tutsopengles.fbo;
+package com.iaandroid.tutsopengles.fbo.sticker;
 
 import com.dastanapps.mediasdk.opengles.gpu.fbo.Component;
 

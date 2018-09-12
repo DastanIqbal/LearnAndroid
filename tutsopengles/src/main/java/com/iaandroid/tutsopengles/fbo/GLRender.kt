@@ -17,6 +17,7 @@ open class GLRender {
     protected lateinit var mWorldVertices: FloatBuffer
     protected lateinit var mTextureVertices: Array<FloatBuffer?>
 
+    @JvmField
     protected var mProgramHandle: Int = 0
     protected var mVertexShaderHandle: Int = 0
     protected var mFragmentShaderHandle: Int = 0
@@ -121,7 +122,7 @@ open class GLRender {
     /**
      * 初始化参数句柄
      */
-    protected fun initShaderHandles() {
+    open fun initShaderHandles() {
         mPositionHandle = GLES20.glGetAttribLocation(mProgramHandle, ATTRIBUTE_POSITION)
         mTextureCoordHandle = GLES20.glGetAttribLocation(mProgramHandle, ATTRIBUTE_TEXTURE_COORD)
 
@@ -131,7 +132,7 @@ open class GLRender {
     /**
      * 绑定顶点、纹理等
      */
-    protected fun bindShaderValues() {
+    open fun bindShaderValues() {
         bindShaderVertices()
         bindShaderTextures()
     }
@@ -252,7 +253,8 @@ open class GLRender {
         val UNIFORM_TEXTURE = "inputImageTexture"
         val UNIFORM_TEXTURE_0 = UNIFORM_TEXTURE
 
-        val DEFAULT_VERTEX_SHADER = ("attribute vec4 " + ATTRIBUTE_POSITION + ";\n"
+        @JvmField
+        var DEFAULT_VERTEX_SHADER = ("attribute vec4 " + ATTRIBUTE_POSITION + ";\n"
                 + "attribute vec2 " + ATTRIBUTE_TEXTURE_COORD + ";\n"
                 + "varying vec2 " + VARYING_TEXTURE_COORD + ";\n"
                 + "void main() {\n"
@@ -260,7 +262,7 @@ open class GLRender {
                 + "   gl_Position = " + ATTRIBUTE_POSITION + ";\n"
                 + "}\n")
 
-        val DEFAULT_FRAGMENT_SHADER = ("precision mediump float;\n"
+        var DEFAULT_FRAGMENT_SHADER = ("precision mediump float;\n"
                 + "uniform sampler2D " + UNIFORM_TEXTURE_0 + ";\n"
                 + "varying vec2 " + VARYING_TEXTURE_COORD + ";\n"
                 + "void main(){\n"

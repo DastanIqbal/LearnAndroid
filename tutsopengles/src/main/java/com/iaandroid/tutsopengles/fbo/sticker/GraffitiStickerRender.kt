@@ -1,4 +1,4 @@
-package com.iaandroid.tutsopengles.fbo
+package com.iaandroid.tutsopengles.fbo.sticker
 
 import android.content.Context
 import android.graphics.PointF
@@ -70,5 +70,20 @@ class GraffitiStickerRender(context: Context, private val mTimeController: IStic
 
     override fun onDraw() {
         super.onDraw()
+
+        if (!mIsPause) {
+            val x = mScreenAnchor?.leftAnchor?.x!! + mSticker.components[0].width / 2
+            val y = mScreenAnchor?.leftAnchor?.y!!
+            mPositionHistories.add(PointF(x, y))
+        } else {
+            val currentTime = mTimeController.currentTime
+            if (currentTime >= mStartTime && mEndTime > mStartTime && !mPositionHistories.isEmpty()) {
+                val index = Math.round((mPositionHistories.size - 1) * (currentTime - mStartTime) / (mEndTime - mStartTime))
+                val pointF = mPositionHistories.get(if (index < mPositionHistories.size) index else mPositionHistories.size - 1)
+                setPosition(Math.round(pointF.x), Math.round(pointF.y))
+            } else {
+                setPosition(0, 0)
+            }
+        }
     }
 }

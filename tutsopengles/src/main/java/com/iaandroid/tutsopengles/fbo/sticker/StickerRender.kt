@@ -1,10 +1,11 @@
-package com.iaandroid.tutsopengles.fbo
+package com.iaandroid.tutsopengles.fbo.sticker
 
 import android.content.Context
 import android.opengl.GLES20
 import com.dastanapps.mediasdk.opengles.gpu.fbo.IBitmapCache
 import com.dastanapps.mediasdk.opengles.gpu.fbo.LruBitmapCache
 import com.dastanapps.mediasdk.opengles.gpu.fbo.ScreenAnchor
+import com.iaandroid.tutsopengles.fbo.FilterRender
 import java.util.*
 
 /**
@@ -83,6 +84,8 @@ open class StickerRender(protected var mContext: Context) : FilterRender() {
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
         for (componentRender in mComponentRenders) {
+            componentRender.setScreenAnchor(mScreenAnchor)
+            componentRender.updateRenderVertices(mWidth, mHeight)
             componentRender.onDraw(mTextureHandle, mPositionHandle, mTextureCoordHandle, mTextureVertices[2])
         }
 
