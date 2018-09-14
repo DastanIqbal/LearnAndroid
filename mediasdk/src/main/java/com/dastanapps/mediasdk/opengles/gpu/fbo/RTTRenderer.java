@@ -78,14 +78,17 @@ public class RTTRenderer implements Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         GLES20.glUseProgram(iProgId);
         OpenGlUtils.checkGlError();
+
         vertexBuffer.position(0);
         GLES20.glVertexAttribPointer(iPosition, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer);
         GLES20.glEnableVertexAttribArray(iPosition);
         OpenGlUtils.checkGlError();
+
         texBuffer.position(0);
         GLES20.glVertexAttribPointer(iTexCoords, 2, GLES20.GL_FLOAT, false, 0, texBuffer);
         GLES20.glEnableVertexAttribArray(iTexCoords);
         OpenGlUtils.checkGlError();
+
         if (fboId != -1) {
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, fboId);
