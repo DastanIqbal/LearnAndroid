@@ -16,7 +16,7 @@ include  ':tutsopengles'
 //include ':gameframework', ':testframework', ':mrnom'
 //include ':mediaapi'
 //include ':removeorientationtest'
-//include ':ffmpegjni'
+include ':ffmpegjni'
 //include ':ffmpegso'
 //include ':androidservices'
 
