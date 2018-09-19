@@ -2,7 +2,6 @@ package com.iaandroid.tutsopengles.fbo
 
 import android.graphics.Bitmap
 import android.opengl.GLES20
-import android.opengl.Matrix
 import com.dastanapps.mediasdk.opengles.gpu.OpenGlUtils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -108,13 +107,13 @@ class SimpleFBORender {
         GLES20.glViewport(0, 0, mWidth, mHeight)
         GLES20.glUseProgram(mProgramHandle)
 
-        mWorldVertices.position(0)
-        GLES20.glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 8, mWorldVertices)
-        GLES20.glEnableVertexAttribArray(mPositionHandle)
-
-        mTextureVertices.position(0)
-        GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 8, mTextureVertices)
-        GLES20.glEnableVertexAttribArray(mTextureCoordHandle)
+//        mWorldVertices.position(0)
+//        GLES20.glVertexAttribPointer(mPositionHandle, 2, GLES20.GL_FLOAT, false, 8, mWorldVertices)
+//        GLES20.glEnableVertexAttribArray(mPositionHandle)
+//
+//        mTextureVertices.position(0)
+//        GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 8, mTextureVertices)
+//        GLES20.glEnableVertexAttribArray(mTextureCoordHandle)
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mFBOTextureR[0])
