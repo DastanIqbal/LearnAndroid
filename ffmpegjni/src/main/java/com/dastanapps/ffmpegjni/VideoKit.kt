@@ -10,13 +10,15 @@ import android.util.Log
 class VideoKit {
     init {
         try {
-            System.loadLibrary("ffmpegjni")
+            System.loadLibrary("ffmpeg")
+            System.loadLibrary("ffprobe")
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
         }
     }
 
     var videoKitListener: IVideoKit? = null
+    var videoKitProbeListener: IVideoKitProbe? = null
 
     external fun avformatinfo(): String
 
@@ -28,11 +30,16 @@ class VideoKit {
 
     external fun run(args: Array<String>): Int
 
+    external fun runprobe(args: Array<String>): Int
+
     external fun setDebug(debug: Boolean)
     external fun stopTranscoding(stop: Boolean)
     fun error(error: String) {
         val fFmpegError = FFmpegError(error)
-        Log.d("DEBUG", "Error: $error me${fFmpegError.message}too")
+        Log.d("DEBUG", "Error: $error ${fFmpegError.message}")
+        videoKitListener?.run {
+            benchmark(error)
+        }
     }
 
     fun showBenchmark(bench: String) {
@@ -47,6 +54,18 @@ class VideoKit {
         }
     }
 
+    fun probeOutput(output: String) {
+        videoKitProbeListener?.run {
+            output(output)
+        }
+    }
+
+    fun probeError(error: String) {
+        videoKitProbeListener?.run {
+            error(error)
+        }
+    }
+
     fun process(args: Array<String>): Int {
         return run(args)
     }
@@ -55,5 +74,11 @@ class VideoKit {
     interface IVideoKit {
         fun progress(progress: String)
         fun benchmark(bench: String)
+        fun error(error: String)
+    }
+
+    interface IVideoKitProbe {
+        fun output(output: String)
+        fun error(error: String)
     }
 }

@@ -276,7 +276,7 @@ void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list 
     strcpy(prev, line);
     //sanitize((uint8_t *)line);
 
-    if (level <= AV_LOG_WARNING) {
+    if (level <= AV_LOG_ERROR || level <= AV_LOG_FATAL) {
         ffmpegError(line);
     }
     if (FFMPEG_ANDROID_DEBUG) {
@@ -293,11 +293,7 @@ JNIEXPORT void
 JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
         (JNIEnv *env, jobject obj, jboolean debug) {
     FFMPEG_ANDROID_DEBUG = debug;
-    if (debug) {
-        av_log_set_callback(ffmpeg_android_log_callback);
-    } else {
-        av_log_set_callback(NULL);
-    }
+    av_log_set_callback(ffmpeg_android_log_callback);
 }
 
 JNIEXPORT void
@@ -308,4 +304,9 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopTranscoding
     } else {
         stop_ffmpeg(0);
     }
+}
+
+JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_showStreams
+        (JNIEnv *env, jobject obj, jstring filename){
+
 }

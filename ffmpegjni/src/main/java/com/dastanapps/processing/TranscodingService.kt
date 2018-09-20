@@ -45,6 +45,10 @@ class TranscodingService : Service() {
 
 
         val resultCode = FFmpegExecutor.execute(cmds, object : VideoKit.IVideoKit {
+            override fun error(error: String) {
+                Log.d("JNI::DEBUG", error)
+            }
+
             override fun benchmark(bench: String) {
                 Log.d("JNI::DEBUG", bench)
             }

@@ -39,4 +39,7 @@ JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
 JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopTranscoding
         (JNIEnv *env, jobject obj, jboolean stop);
 
+JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_showStreams
+        (JNIEnv *env, jobject obj, jstring filename);
+
 #endif //LEARNANDROID_FFMPEGJNI_H

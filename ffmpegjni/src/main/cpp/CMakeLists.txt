@@ -169,3 +169,52 @@ target_link_libraries(
         #fdk-aac
         #crypto
 )
+
+## FFprobe
+set(
+        HEADER_FILES
+        cmdutils.h
+        config.h
+        ffprobe.h
+        ffprobeJNI.h
+)
+
+add_library(ffprobe SHARED
+        ffprobe.c
+        ffprobeJNI.c
+        cmdutils.c
+        )
+
+target_include_directories(
+        ffprobe PUBLIC
+        ${prebuilt_DIR}/include)
+
+
+target_link_libraries(
+        ffprobe
+        android
+        jnigraphics
+        log
+        avdevice
+        avfilter
+        postproc
+        avformat
+        avcodec
+        dl
+        m
+        z
+        swresample
+        swscale
+        avutil
+        #mp3lame
+        #opus
+        #shine
+        #vorbis
+        #vorbisenc
+        #vorbisfile
+        #ogg
+        #ssl
+        x264
+        #fdk-aac
+        #crypto
+)

@@ -2,6 +2,7 @@ package com.dastanapps.processing
 
 import android.text.TextUtils
 import android.util.Log
+import com.dastanapps.ffmpegjni.FFmpegError
 import com.dastanapps.ffmpegjni.VideoKit
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -22,9 +23,31 @@ object FFmpegExecutor {
         return videoKit.run(cmds)
     }
 
+    fun executeProbe(cmds: Array<String>): Observable<String> {
+        return Observable.create<String> {
+            videoKit.videoKitProbeListener = object : VideoKit.IVideoKitProbe {
+                override fun output(output: String) {
+                    it.onNext(output)
+                }
+
+                override fun error(error: String) {
+                    it.onError(FFmpegError(error))
+                }
+            }
+            val result = videoKit.runprobe(cmds)
+            if (result == 0) it.onComplete()
+            else it.onError(Throwable("FFmpeg command failed $result"))
+        }.observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.newThread())
+    }
+
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
             videoKit.videoKitListener = object : VideoKit.IVideoKit {
+                override fun error(error: String) {
+                    it.onError(FFmpegError(error))
+                }
+
                 override fun benchmark(bench: String) {
                     it.onNext(bench)
                 }
@@ -34,7 +57,7 @@ object FFmpegExecutor {
                     Log.d("JNI:FFmpegExecutor Next", progress)
                 }
             }
-            videoKit.setDebug(true)
+            videoKit.setDebug(false)
             val result = videoKit.run(cmds)
             if (result == 0) it.onComplete()
             else it.onError(Throwable("FFmpeg command failed $result"))
