@@ -17,7 +17,7 @@ class CmdlineBuilder {
 
 
     private val flags = ArrayList<String>()
-    private val inputPaths = ArrayList<String>()
+    private val inputPaths = ArrayList<InputPath>()
     private var outputPath: String? = null
 
     private var experimentalFlagSet: Boolean = true
@@ -28,7 +28,27 @@ class CmdlineBuilder {
             throw RuntimeException("File provided by you does not exists")
         }
 
-        inputPaths.add(inputFilePath)
+        inputPaths.add(InputPath(inputFilePath, false))
+        return this
+    }
+
+    fun loopInput(inputFilePath: String): CmdlineBuilder {
+        val inputFile = File(inputFilePath)
+        if (!inputFile.exists()) {
+            throw RuntimeException("File provided by you does not exists")
+        }
+        inputPaths.add(InputPath(inputFilePath, true))
+        return this
+    }
+
+    fun concatInput(inputFilePath: String): CmdlineBuilder {
+        val inputFile = File(inputFilePath)
+        if (!inputFile.exists()) {
+            throw RuntimeException("File provided by you does not exists")
+        }
+        val concatInput = InputPath(inputFilePath, false)
+        concatInput.concat = true
+        inputPaths.add(concatInput)
         return this
     }
 
@@ -38,6 +58,17 @@ class CmdlineBuilder {
         }
 
         this.outputPath = outputPath
+        return this
+    }
+
+    fun addFilterComplex(customCommand: String): CmdlineBuilder {
+        if (TextUtils.isEmpty(customCommand)) {
+            return this
+        }
+
+        val splitedCommand = customCommand.trim { it <= ' ' }.split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        flags.add("-filter_complex")
+        Collections.addAll(flags, *splitedCommand)
         return this
     }
 
@@ -56,8 +87,9 @@ class CmdlineBuilder {
         checkOutputPathAndThrowIfEmpty()
 
         val newFlags = ArrayList<String>()
-       // newFlags.add("ffmpeg")
+        newFlags.add("ffmpeg")
         newFlags.add(OVERWRITE_FLAG)
+        newFlags.add("-benchmark")
 
         addInputPathsToFlags(newFlags)
         copyFlagsToNewDestination(newFlags)
@@ -81,8 +113,18 @@ class CmdlineBuilder {
 
     private fun addInputPathsToFlags(flags: MutableList<String>) {
         for (path in inputPaths) {
+            if (path.loop) {
+                flags.add("-loop")
+                flags.add("1")
+            }
+            if(path.concat){
+                flags.add("-f")
+                flags.add("concat")
+                flags.add("-safe")
+                flags.add("0")
+            }
             flags.add(INPUT_FILE_FLAG)
-            flags.add(path)
+            flags.add(path.path)
         }
     }
 
@@ -98,4 +140,8 @@ class CmdlineBuilder {
             flags.add(EXPERIMENTAL_FLAG)
         }
     }
+}
+
+data class InputPath(var path: String, var loop: Boolean) {
+    var concat = false
 }

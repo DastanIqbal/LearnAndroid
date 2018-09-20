@@ -27,6 +27,14 @@ android {
         }
     }
 
+    sourceSets {
+        main {
+            // let gradle pack the shared library into apk
+            jniLibs.srcDirs = ['src/main/cpp/prebuilt']
+            //jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
@@ -46,5 +54,5 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.0'
 
-    implementation 'nl.bravobit:android-ffmpeg:1.1.5'
+    //implementation 'nl.bravobit:android-ffmpeg:1.1.5'
 }

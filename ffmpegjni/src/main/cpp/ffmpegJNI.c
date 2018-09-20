@@ -3,12 +3,13 @@
 //
 
 #include <stdio.h>
+#include <setjmp.h>
 #include "ffmpegJNI.h"
 #include "ffmpeg.h"
 #include "andlogs.h"
-#include "../../../../ffmpegso/src/main/cpp/ffmpeg.h"
+
 //Log
-#ifdef ANDROID
+//#ifdef ANDROID
 
 #include <jni.h>
 #include <android/log.h>
@@ -17,25 +18,50 @@
 #include <libavutil/avutil.h>
 #include <libavfilter/avfilter.h>
 #include <prebuilt/include/libavcodec/jni.h>
-#include <setjmp.h>
 
-#endif
+//#endif
 //https://blog.csdn.net/matrix_laboratory/article/details/56677084
-typedef struct ffmpegJNI_context {
-    JavaVM *javaVM;
-    jclass jniHelperClz;
-    jobject jniHelperObj;
-} FFmpegJNIContext;
 
 // Android log function wrappers
 static const char *kTAG = "ffmpegJNI";
 FFmpegJNIContext g_ctxt;
+Callback jni_callback;
 
 void sendJavaMsg(JNIEnv *env, jobject instance,
                  jmethodID func, const char *msg) {
     jstring javaMsg = (*env)->NewStringUTF(env, msg);
     (*env)->CallVoidMethod(env, instance, func, javaMsg);
     (*env)->DeleteLocalRef(env, javaMsg);
+}
+
+void ffmpegError(char *c) {
+    LOGD("JNI::Benchmark %s", c);
+    JNIEnv *env;
+    jint res = (*g_ctxt.javaVM)->AttachCurrentThread(g_ctxt.javaVM, &env, NULL);
+    if (res != JNI_OK) {
+        LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
+        return;
+    }
+    jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "error",
+                                             "(Ljava/lang/String;)V");
+    sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
+
+    (*g_ctxt.javaVM)->DetachCurrentThread;
+}
+
+void showBenchmark(char *c) {
+    LOGD("JNI::Benchmark %s", c);
+    JNIEnv *env;
+    jint res = (*g_ctxt.javaVM)->AttachCurrentThread(g_ctxt.javaVM, &env, NULL);
+    if (res != JNI_OK) {
+        LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
+        return;
+    }
+    jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showBenchmark",
+                                             "(Ljava/lang/String;)V");
+    sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
+
+    (*g_ctxt.javaVM)->DetachCurrentThread;
 }
 
 void showProgress(char *c) {
@@ -46,9 +72,9 @@ void showProgress(char *c) {
         LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
         return;
     }
-    jmethodID showProgressId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showProgress",
-                                                   "(Ljava/lang/String;)V");
-    sendJavaMsg(env, g_ctxt.jniHelperObj, showProgressId, c);
+    jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "showProgress",
+                                             "(Ljava/lang/String;)V");
+    sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
 
     (*g_ctxt.javaVM)->DetachCurrentThread;
 }
@@ -192,7 +218,7 @@ Java_com_dastanapps_ffmpegjni_VideoKit_configurationinfo(JNIEnv *env, jobject ob
 
 jmp_buf jmp_exit;
 
-int run_cmd(int argc, char **argv, void (*callback)(char *)) {
+int run_cmd(int argc, char **argv, Callback callback) {
     int res = 0;
     res = setjmp(jmp_exit);
     if (res) {
@@ -222,7 +248,10 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
         LOGI("Cmds: %s", argv[i]);
     }
     jint retcode = 0;
-    retcode = run_cmd(argc, argv, showProgress);
+    jni_callback.progress_callback = showProgress;
+    jni_callback.benchmark_callback = showBenchmark;
+
+    retcode = run_cmd(argc, argv, jni_callback);
 
     for (i = 0; i < argc; ++i) {
         (*env)->ReleaseStringUTFChars(env, strr[i], argv[i]);
@@ -247,6 +276,9 @@ void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list 
     strcpy(prev, line);
     //sanitize((uint8_t *)line);
 
+    if (level <= AV_LOG_WARNING) {
+        ffmpegError(line);
+    }
     if (FFMPEG_ANDROID_DEBUG) {
         if (level <= AV_LOG_WARNING) {
             LOGE("%s", line);
@@ -257,7 +289,7 @@ void ffmpeg_android_log_callback(void *ptr, int level, const char *fmt, va_list 
 
 }
 
-JNIEXPORT jint
+JNIEXPORT void
 JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
         (JNIEnv *env, jobject obj, jboolean debug) {
     FFMPEG_ANDROID_DEBUG = debug;
@@ -265,5 +297,15 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_setDebug
         av_log_set_callback(ffmpeg_android_log_callback);
     } else {
         av_log_set_callback(NULL);
+    }
+}
+
+JNIEXPORT void
+JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopTranscoding
+        (JNIEnv *env, jobject obj, jboolean stop) {
+    if (stop == JNI_TRUE) {
+        stop_ffmpeg(1);
+    } else {
+        stop_ffmpeg(0);
     }
 }

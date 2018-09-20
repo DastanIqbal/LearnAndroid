@@ -29,9 +29,19 @@ class VideoKit {
     external fun run(args: Array<String>): Int
 
     external fun setDebug(debug: Boolean)
+    external fun stopTranscoding(stop: Boolean)
+    fun error(error: String) {
+        val fFmpegError = FFmpegError(error)
+        Log.d("DEBUG", "Error: $error me${fFmpegError.message}too")
+    }
+
+    fun showBenchmark(bench: String) {
+        videoKitListener?.run {
+            benchmark(bench)
+        }
+    }
 
     fun showProgress(progress: String) {
-        Log.d("JNI:VidKit", progress)
         videoKitListener?.run {
             progress(progress)
         }
@@ -44,5 +54,6 @@ class VideoKit {
 
     interface IVideoKit {
         fun progress(progress: String)
+        fun benchmark(bench: String)
     }
 }

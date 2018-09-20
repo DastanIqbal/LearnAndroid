@@ -25,6 +25,10 @@ object FFmpegExecutor {
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
             videoKit.videoKitListener = object : VideoKit.IVideoKit {
+                override fun benchmark(bench: String) {
+                    it.onNext(bench)
+                }
+
                 override fun progress(progress: String) {
                     it.onNext(progress)
                     Log.d("JNI:FFmpegExecutor Next", progress)
@@ -33,7 +37,7 @@ object FFmpegExecutor {
             videoKit.setDebug(true)
             val result = videoKit.run(cmds)
             if (result == 0) it.onComplete()
-            else it.onError(Throwable("FFmpeg command failed"))
+            else it.onError(Throwable("FFmpeg command failed $result"))
         }.observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.newThread())
     }
@@ -52,6 +56,11 @@ object FFmpegExecutor {
 
     fun configurationinfo(): Observable<String> {
         return createObserable { videoKit.configurationinfo() }
+    }
+
+    fun stop(stop: Boolean) {
+        videoKit.stopTranscoding(stop)
+        videoKit.error("Video Stopped")
     }
 
     private fun createObserable(func: (Unit) -> (String)): Observable<String> {
