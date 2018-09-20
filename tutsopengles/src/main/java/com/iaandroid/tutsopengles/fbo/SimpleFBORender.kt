@@ -1,22 +1,26 @@
 package com.iaandroid.tutsopengles.fbo
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import com.dastanapps.mediasdk.opengles.gpu.OpenGlUtils
+import com.dastanapps.mediasdk.opengles.gpu.fbo.LruBitmapCache
+import com.dastanapps.mediasdk.opengles.gpu.fbo.Utils
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.util.*
 
 
 /**
  * Reference : http://opengles2learning.blogspot.com/2014/02/render-to-texture-rtt.html?m=1
  */
-class SimpleFBORender {
+class SimpleFBORender(val context: Context) {
     protected var mVertexShader = DEFAULT_VERTEX_SHADER
     protected var mFragmentShader = DEFAULT_FRAGMENT_SHADER
 
-    protected lateinit var mWorldVertices: FloatBuffer
-    protected lateinit var mTextureVertices: FloatBuffer
+    protected var mWorldVertices: FloatBuffer
+    protected var mTextureVertices: FloatBuffer
 
     @JvmField
     protected var mProgramHandle: Int = 0
@@ -27,6 +31,7 @@ class SimpleFBORender {
     protected var mTextureCoordHandle: Int = 0
 
     protected var mTextureIn: Int = 0
+    internal var paths: MutableList<String> = ArrayList()
 
     init {
         val vertices = floatArrayOf(-0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f)
@@ -38,6 +43,8 @@ class SimpleFBORender {
         mTextureVertices = ByteBuffer.allocateDirect(texData0.size * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer()
         mTextureVertices.put(texData0)?.position(0)
+
+        paths.addAll(Utils.convert(context, "lear"))
     }
 
     fun initHandlers(bitmap: Bitmap) {
@@ -46,7 +53,7 @@ class SimpleFBORender {
         mTextureCoordHandle = GLES20.glGetAttribLocation(mProgramHandle, ATTRIBUTE_TEXTURE_COORD)
         mTextureHandle = GLES20.glGetUniformLocation(mProgramHandle, UNIFORM_TEXTURE_0)
 
-        mTextureIn = OpenGlUtils.loadTexture(bitmap, mTextureIn, true)
+        //mTextureIn = OpenGlUtils.loadTexture(bitmap, mTextureIn, true)
     }
 
     private val mRenderToTextureFBO = IntArray(1)
@@ -99,6 +106,8 @@ class SimpleFBORender {
         useFBOTexture()
     }
 
+    private var mStartTime: Long = -1L
+    private val mBitmapCache = LruBitmapCache.getSingleInstance()
     fun useFBOTexture() {
         /** Use blue background color */
         GLES20.glClearColor(0.0f, 0.2f, 0.3f, 1.0f)
@@ -143,6 +152,25 @@ class SimpleFBORender {
         GLES20.glVertexAttribPointer(mTextureCoordHandle, 2, GLES20.GL_FLOAT, false, 8, mTextureVertices)
         GLES20.glEnableVertexAttribArray(mTextureCoordHandle)
 
+        if (mStartTime == -1L) {
+            mStartTime = System.currentTimeMillis()
+        }
+        val currentTime = System.currentTimeMillis()
+        val position = (currentTime - mStartTime) % 2000
+
+        val i = Math.round((paths.size - 1) * 1.0f / 2000 * position)
+        val path = paths[i]
+        var bitmap: Bitmap? = mBitmapCache.get(path)
+        if (bitmap == null || bitmap.isRecycled) {
+            bitmap = Utils.GetFromAssets(context, path)
+            if (bitmap != null && !bitmap.isRecycled) {
+                mBitmapCache.put(path, bitmap)
+            } else {
+                return
+            }
+        }
+        mTextureIn = OpenGlUtils.loadTexture(bitmap, mTextureIn, true)
+        
         /** set the Texture unit 0 active and bind the texture to it */
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mTextureIn)
@@ -153,6 +181,7 @@ class SimpleFBORender {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
     }
+
 
     companion object {
         val ATTRIBUTE_POSITION = "position"

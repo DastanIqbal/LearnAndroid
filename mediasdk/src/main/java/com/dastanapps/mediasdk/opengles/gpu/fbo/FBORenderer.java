@@ -168,7 +168,7 @@ public class FBORenderer {
         String path = paths.get(i);
         Bitmap bitmap = mBitmapCache.get(path);
         if (bitmap == null || bitmap.isRecycled()) {
-            bitmap = Utils.GetFromAssets(curView,path);
+            bitmap = Utils.GetFromAssets(curView.getContext(),path);
             if (bitmap != null && !bitmap.isRecycled()) {
                 mBitmapCache.put(path, bitmap);
             } else {

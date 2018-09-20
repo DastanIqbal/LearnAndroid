@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
-import android.support.v4.view.KeyEventDispatcher;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -27,10 +26,10 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class Utils {
 
-    public static Bitmap GetFromAssets(GLSurfaceView view, String name) {
+    public static Bitmap GetFromAssets(Context context, String name) {
         Bitmap img = null;
         //get asset manager
-        AssetManager assetManager = view.getContext().getAssets();
+        AssetManager assetManager = context.getAssets();
         InputStream istr;
         try {
             //open image to input stream
@@ -73,7 +72,7 @@ public class Utils {
     static public int LoadTexture(GLSurfaceView view, String name) {
         Log.d("Utils", "Loadtexture");
         int textures[] = new int[1];
-        Bitmap img = GetFromAssets(view, name);
+        Bitmap img = GetFromAssets(view.getContext(), name);
         try {
             GLES20.glGenTextures(1, textures, 0);
 

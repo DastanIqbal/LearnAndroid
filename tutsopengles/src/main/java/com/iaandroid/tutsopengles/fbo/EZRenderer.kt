@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
  * 11/09/2018 10:06
  */
 class EZRenderer(val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer {
-    private val glRender = SimpleFBORender()
+    private val glRender = SimpleFBORender(glSurfaceView.context)
 
     override fun onDrawFrame(gl: GL10?) {
         glRender.onDrawFrame()
@@ -23,6 +23,7 @@ class EZRenderer(val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceCreated(gl: GL10?, p1: EGLConfig?) {
+
         glRender.initHandlers(BitmapFactory.decodeResource(glSurfaceView.resources, R.mipmap.ic_launcher))
         glRender.initFBO()
         //glRender.setTexture(BitmapFactory.decodeResource(glSurfaceView.resources, R.mipmap.ic_launcher), false)
