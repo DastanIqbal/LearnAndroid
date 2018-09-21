@@ -144,3 +144,8 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_runprobe
 
     return retcode;
 }
+
+JNIEXPORT jint
+JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopFFprobe(JNIEnv *env, jobject obj) {
+    stop_ffprobe();
+}

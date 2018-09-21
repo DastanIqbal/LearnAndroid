@@ -5,3 +5,5 @@
 #include <jni.h>
 
 int run_probe(int argc, char **argv, ProbeCallback callback);
+
+void stop_ffprobe();

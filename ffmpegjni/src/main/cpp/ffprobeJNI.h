@@ -16,3 +16,6 @@ typedef struct probe_callback {
 
 JNIEXPORT jint JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_runprobe
         (JNIEnv *env, jobject obj, jobjectArray commands);
+
+JNIEXPORT jint JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopFFprobe
+        (JNIEnv *env, jobject obj);

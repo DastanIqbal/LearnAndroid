@@ -112,11 +112,9 @@ class MainActivity : AppCompatActivity() {
         cmd2.add("quiet")
         cmd2.add("-print_format")
         cmd2.add("json")
-//        cmd2.add("-show_format")
-//        cmd2.add("-show_packets")
         cmd2.add("-show_streams")
         cmd2.add("-i")
-        cmd2.add("/sdcard/KrusoTestVideo/merge/mergeVideo.mp4")
+        cmd2.add("/sdcard/KrusoTestVideo/merge/MixVideo.mp4")
         //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
         compositeDisposable.add(FFmpegExecutor.executeProbe(cmd2.toTypedArray())
                 .subscribe({
@@ -191,6 +189,7 @@ class MainActivity : AppCompatActivity() {
 
     fun stop(view: View) {
         FFmpegExecutor.stop(true)
+        FFmpegExecutor.stopProbe()
     }
 
     override fun onDestroy() {

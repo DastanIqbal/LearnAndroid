@@ -1733,7 +1733,7 @@ static av_cold int xml_init(WriterContext *wctx) {
         if (do_show_frames && do_show_packets) {
             av_log(wctx, AV_LOG_ERROR,
                    "Interleaved frames and packets are not allowed in XSD. "
-                           "Select only one between the -show_frames and the -show_packets options.\n");
+                   "Select only one between the -show_frames and the -show_packets options.\n");
             return AVERROR(EINVAL);
         }
     }
@@ -1779,8 +1779,8 @@ static void xml_print_section_header(WriterContext *wctx) {
 
     if (wctx->level == 0) {
         const char *qual = " xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' "
-                "xmlns:ffprobe='http://www.ffmpeg.org/schema/ffprobe' "
-                "xsi:schemaLocation='http://www.ffmpeg.org/schema/ffprobe ffprobe.xsd'";
+                           "xmlns:ffprobe='http://www.ffmpeg.org/schema/ffprobe' "
+                           "xsi:schemaLocation='http://www.ffmpeg.org/schema/ffprobe ffprobe.xsd'";
 
         printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
         printf("<%sffprobe%s>\n",
@@ -2432,7 +2432,7 @@ static int read_interval_packets(WriterContext *w, InputFile *ifile,
             if (*cur_ts == AV_NOPTS_VALUE) {
                 av_log(NULL, AV_LOG_ERROR,
                        "Could not seek to relative position since current "
-                               "timestamp is not defined\n");
+                       "timestamp is not defined\n");
                 ret = AVERROR(EINVAL);
                 goto end;
             }
@@ -3533,11 +3533,11 @@ static void print_section(SectionID id, int level) {
 
 static int opt_sections(void *optctx, const char *opt, const char *arg) {
     printf("Sections:\n"
-                   "W.. = Section is a wrapper (contains other sections, no local entries)\n"
-                   ".A. = Section contains an array of elements of the same type\n"
-                   "..V = Section may contain a variable number of fields with variable keys\n"
-                   "FLAGS NAME/UNIQUE_NAME\n"
-                   "---\n");
+           "W.. = Section is a wrapper (contains other sections, no local entries)\n"
+           ".A. = Section contains an array of elements of the same type\n"
+           "..V = Section may contain a variable number of fields with variable keys\n"
+           "FLAGS NAME/UNIQUE_NAME\n"
+           "---\n");
     print_section(SECTION_ID_ROOT, 0);
     return 0;
 }
@@ -3710,7 +3710,7 @@ int run_probe(int argc, char **argv, ProbeCallback callback) {
     if (do_bitexact && (do_show_program_version || do_show_library_versions)) {
         av_log(NULL, AV_LOG_ERROR,
                "-bitexact and -show_program_version or -show_library_versions "
-                       "options are incompatible\n");
+               "options are incompatible\n");
         ret = AVERROR(EINVAL);
         goto end;
     }
@@ -3799,4 +3799,8 @@ int run_probe(int argc, char **argv, ProbeCallback callback) {
     avformat_network_deinit();
 
     return ret < 0;
+}
+
+void stop_ffprobe() {
+    exit_program(3023);
 }

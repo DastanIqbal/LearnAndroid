@@ -33,6 +33,8 @@ class VideoKit {
     external fun runprobe(args: Array<String>): Int
 
     external fun setDebug(debug: Boolean)
+
+    external fun stopFFprobe()
     external fun stopTranscoding(stop: Boolean)
     fun error(error: String) {
         val fFmpegError = FFmpegError(error)

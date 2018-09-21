@@ -36,7 +36,7 @@ object FFmpegExecutor {
             }
             val result = videoKit.runprobe(cmds)
             if (result == 0) it.onComplete()
-            else it.onError(Throwable("FFmpeg command failed $result"))
+            //else it.onError(FFmpegError("FFmpeg command failed $result"))
         }.observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.newThread())
     }
@@ -84,6 +84,10 @@ object FFmpegExecutor {
     fun stop(stop: Boolean) {
         videoKit.stopTranscoding(stop)
         videoKit.error("Video Stopped")
+    }
+
+    fun stopProbe(){
+        videoKit.stopFFprobe()
     }
 
     private fun createObserable(func: (Unit) -> (String)): Observable<String> {
