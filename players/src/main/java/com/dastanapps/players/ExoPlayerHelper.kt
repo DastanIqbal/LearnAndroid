@@ -16,7 +16,7 @@ import com.google.android.exoplayer2.util.Util
 
 /**
  * Created by dastaniqbal on 18/05/2018.
- * dastanIqbal@marvelmedia.com
+
  * 18/05/2018 5:55
  */
 class ExoPlayerHelper(val context: Context) {

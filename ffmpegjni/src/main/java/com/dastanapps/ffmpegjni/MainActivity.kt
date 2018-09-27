@@ -8,6 +8,7 @@ import android.widget.Toast
 import com.dastanapps.processing.CmdlineBuilder
 import com.dastanapps.processing.FFmpegExecutor
 import io.reactivex.disposables.CompositeDisposable
+import java.util.*
 
 
 //Reference Link:
@@ -70,8 +71,32 @@ class MainActivity : AppCompatActivity() {
                 }))
     }
 
+//    fun play(view: View) {
+//        val cmd1 = CmdlineBuilder()
+//                .addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
+//                .customCommand("-c:v libx264 -preset ultrafast -strict -2")
+//                .outputPath("/sdcard/KrusoTestVideo/Video1.ts")
+//                .build()
+//        val video1 = FFmpegExecutor.execute(cmd1)
+//
+//        val cmd2 = CmdlineBuilder()
+//                .addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
+//                .customCommand("-c:v libx264 -preset ultrafast -strict -2")
+//                .outputPath("/sdcard/KrusoTestVideo/Video2.ts")
+//                .build()
+//        val video2 = FFmpegExecutor.execute(cmd2)
+//
+//        val cmd3 = CmdlineBuilder()
+//                .addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
+//                .customCommand("-c:v libx264 -preset ultrafast -strict -2")
+//                .outputPath("/sdcard/KrusoTestVideo/Video2.ts")
+//                .build()
+//        val video3 = FFmpegExecutor.execute(cmd3)
+//        Observable.concat(video1,video2,video3)
+//    }
 
     fun play(view: View) {
+        textView.text = ""
         //MP3
         //val comand="ffmpeg -y -i /sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4 -codec:a libmp3lame -qscale:a 2 /sdcard/KrusoTestVideo/Mp3Test.mp3"
         //SRT
@@ -93,10 +118,12 @@ class MainActivity : AppCompatActivity() {
                 //.addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
                 //.concatInput("/sdcard/KrusoTestVideo/merge.txt")
-                .addInputPath("/sdcard/KrusoTestVideo/merge/mergeVideo.mp4")
-                .addInputPath("/sdcard/KrusoTestVideo/merge/concat_audio_kruso_20180918091350.mp3")
-                .addFilterComplex("[0:a]volume=1.0[0a];[1:a]volume=1.0[0b];[0a][0b]amix=inputs=2:duration=shortest")
-                .customCommand("-map 0:v:0 -map 1:a:0 -shortest -c:v copy -strict -2")
+                .addInputPath("/storage/emulated/0/Kruso/Video_kruso_20180925184252.mp4")
+                .addFilterComplex("[0]scale=1080x1080,setdar=16/9[a0];[a0][0:a]concat=n=1:v=1:a=1[v][a]")
+                .customCommand("-map [v] -map [a]")
+                //.addInputPath("/sdcard/KrusoTestVideo/merge/concat_audio_kruso_20180918091350.mp3")
+                //.addFilterComplex("[0:a]volume=1.0[0a];[1:a]volume=1.0[0b];[0a][0b]amix=inputs=2:duration=shortest")
+                //.customCommand("-map 0:v:0 -map 1:a:0 -shortest -c:v copy -strict -2")
                 //.loopInput("/sdcard/KrusoTestVideo/inUsepatterns.png")
                 //.addInputPath("/sdcard/KrusoTestVideo/beyond_the_sea.mp3")
                 //.customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
@@ -115,76 +142,22 @@ class MainActivity : AppCompatActivity() {
         cmd2.add("-show_streams")
         cmd2.add("-i")
         cmd2.add("/sdcard/KrusoTestVideo/merge/MixVideo.mp4")
-        //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
-        compositeDisposable.add(FFmpegExecutor.executeProbe(cmd2.toTypedArray())
-                .subscribe({
-                    textView.append(it)
-                    if (it.contains("[bench]")) {
-                        textView.append(it)
-                    }
-                }, {
-                    textView.append("Got Error ${it.message}")
-                    Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
-                }, {
-                    textView.append(" DONE")
-                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-                }))
-        // startService(Intent(this, TranscodingService::class.java))
 
-//        val videoKit = VideoKit()
-//        val command = videoKit.createCommand()
-//                .overwriteOutput()
-//                .inputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
-//                .inputPath("/sdcard/KrusoTestVideo/repeat.png")
-//                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
-//                .customCommand("-filter_complex [0:v][1:v]overlay=(W-w)/2:(H-h)/2:enable='between(t,3,6)")
-//                //.copyVideoCodec()
-//                .experimentalFlag()
-//                .build()
-//
-//        AsyncCommandExecutor(command, object : ProcessingListener {
-//            override fun onSuccess(path: String?) {
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(returnCode: Int) {
-//                runOnUiThread {
-//                    Toast.makeText(this@MainActivity, "Got Error", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//        }).execute()
-
-//        val ffmpeg = FFmpeg.getInstance(this);
-//        if (ffmpeg.isSupported) {
-//            ffmpeg.execute(cmds, object : ExecuteBinaryResponseHandler() {
-//
-//                override fun onStart() {
-//                    Log.d("DEBUG","onStart")
-//                }
-//
-//                override fun onProgress(message: String?) {
-//                    Log.d("DEBUG",message)
-//                }
-//
-//                override fun onFailure(message: String?) {
-//                    Log.d("DEBUG",message)
-//                }
-//
-//                override fun onSuccess(message: String?) {
-//                    Log.d("DEBUG",message)
-//                }
-//
-//                override fun onFinish() {
-//                    Log.d("DEBUG","onFinish")
-//                }
-//
-//            })
-//        } else {
-//            // ffmpeg is not supported
-//        }
+        compositeDisposable.add(
+                FFmpegExecutor.execute(cmds)
+                        //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
+                        .subscribe({
+                            textView.append(it)
+                            if (it.contains("[bench]")) {
+                                textView.append(it)
+                            }
+                        }, {
+                            textView.append("Got Error ${it.message}")
+                            Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
+                        }, {
+                            textView.append(" DONE")
+                            Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+                        }))
     }
 
     fun stop(view: View) {

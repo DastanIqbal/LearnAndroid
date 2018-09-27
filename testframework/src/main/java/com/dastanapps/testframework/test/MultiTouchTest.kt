@@ -8,7 +8,7 @@ import android.widget.TextView
 
 /**
  * Created by dastaniqbal on 27/06/2017.
- * dastanIqbal@marvelmedia.com
+
  * 27/06/2017 12:48
  */
 class MultiTouchTest : AppCompatActivity(), View.OnTouchListener {

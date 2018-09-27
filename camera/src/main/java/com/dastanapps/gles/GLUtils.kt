@@ -17,7 +17,7 @@ import javax.microedition.khronos.egl.EGL10
 
 /**
  * Created by dastaniqbal on 23/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 23/01/2018 3:43
  */
 class GLUtils {

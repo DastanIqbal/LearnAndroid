@@ -15,7 +15,7 @@ import com.dastanapps.camera2.view.AwbSeekBar;
 
 /**
  * Created by dastaniqbal on 18/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 18/01/2018 3:07
  */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

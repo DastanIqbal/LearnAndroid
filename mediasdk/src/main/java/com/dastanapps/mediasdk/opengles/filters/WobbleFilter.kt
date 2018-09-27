@@ -5,7 +5,7 @@ import com.dastanapps.mediasdk.opengles.utils.GLDrawer2D
 
 /**
  * Created by dastaniqbal on 08/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 08/02/2018 7:25
  */
 class WobbleFilter : GLDrawer2D() {

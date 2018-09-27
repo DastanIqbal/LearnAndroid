@@ -5,7 +5,7 @@ import com.dastanapps.gameframework.Sound
 
 /**
  * Created by dastaniqbal on 09/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 09/10/2017 12:06
  */
 class AndroidSound(val soundPool: SoundPool, val soundId: Int) : Sound {

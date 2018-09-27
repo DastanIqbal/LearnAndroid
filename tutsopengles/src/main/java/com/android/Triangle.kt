@@ -8,7 +8,7 @@ import java.nio.FloatBuffer
 
 /**
  * Created by dastaniqbal on 12/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 12/02/2018 9:58
  */
 class Triangle {

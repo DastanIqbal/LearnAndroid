@@ -9,7 +9,7 @@ import com.dastanapps.gameframework.Sound
 
 /**
  * Created by dastaniqbal on 08/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 08/10/2017 11:59
  */
 class AndroidAudio(val activity: Activity) : Audio {

@@ -8,7 +8,7 @@ import java.io.IOException
 
 /**
  * Created by dastaniqbal on 19/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 19/02/2018 4:20
  */
 class CameraActivity : Activity() {

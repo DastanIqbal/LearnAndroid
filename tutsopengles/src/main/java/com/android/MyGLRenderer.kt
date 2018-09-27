@@ -8,7 +8,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * Created by dastaniqbal on 12/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 12/02/2018 9:50
  */
 class MyGLRenderer(var angle: Float) : GLSurfaceView.Renderer {

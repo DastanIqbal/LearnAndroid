@@ -9,7 +9,7 @@ import io.reactivex.schedulers.Schedulers
 
 /**
  * Created by dastaniqbal on 18/07/2018.
- * dastanIqbal@marvelmedia.com
+
  * 18/07/2018 7:03
  */
 object FFmpegExecutor {

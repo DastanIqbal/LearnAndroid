@@ -10,7 +10,7 @@ import java.io.IOException
 
 /**
  * Created by dastaniqbal on 05/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 05/07/2017 11:33
  */
 class MediaPlayerTest : AppCompatActivity() {

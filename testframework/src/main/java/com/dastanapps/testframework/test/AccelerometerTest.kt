@@ -12,7 +12,7 @@ import android.widget.TextView
 
 /**
  * Created by dastaniqbal on 03/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 03/07/2017 9:47
  */
 class AccelerometerTest : AppCompatActivity(), SensorEventListener {

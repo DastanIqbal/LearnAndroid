@@ -5,7 +5,7 @@ import android.os.Bundle
 
 /**
  * Created by dastaniqbal on 12/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 12/02/2018 9:50
  */
 class OpenGLES20Activity : Activity() {

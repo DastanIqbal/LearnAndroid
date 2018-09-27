@@ -2,7 +2,7 @@ package com.dastanapps.gameframework
 
 /**
  * Created by dastaniqbal on 09/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 09/10/2017 11:33
  */
 class Pool<T>(private val factory: PoolObjectFactory<T>, private val maxSize: Int) {

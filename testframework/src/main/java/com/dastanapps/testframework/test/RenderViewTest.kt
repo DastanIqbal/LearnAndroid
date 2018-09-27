@@ -10,7 +10,7 @@ import java.util.*
 
 /**
  * Created by dastaniqbal on 05/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 05/07/2017 11:52
  */
 class RenderViewTest : AppCompatActivity() {

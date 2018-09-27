@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Created by dastaniqbal on 18/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 18/01/2018 6:32
  */
 @SuppressWarnings("deprecation")

@@ -8,7 +8,7 @@ import com.dastanapps.gameframework.Screen
 
 /**
  * Created by dastaniqbal on 15/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 15/10/2017 1:59
  */
 class LoadingScreen(gam: Game) : Screen(gam) {

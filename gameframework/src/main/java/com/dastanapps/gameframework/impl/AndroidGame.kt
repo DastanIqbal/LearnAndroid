@@ -11,7 +11,7 @@ import com.dastanapps.gameframework.*
 
 /**
  * Created by dastaniqbal on 14/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 14/10/2017 1:37
  */
 open class AndroidGame : Activity(), Game {

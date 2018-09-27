@@ -15,7 +15,7 @@ import android.widget.SeekBar
 
 /**
  * Created by dastaniqbal on 10/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 10/01/2018 6:21
  */
 class MediaPlayerActivity : AppCompatActivity(), MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener,

@@ -15,7 +15,7 @@ import java.util.*
 
 /**
  * Created by dastaniqbal on 25/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 25/02/2018 6:49
  */
 class CalendarDayAdapter(context: Context, resId: Int, private val dayItemList: ArrayList<DayItemB>, pageMonth: Int, private val eventsList: ArrayList<Calendar>) : ArrayAdapter<DayItemB>(context, resId, dayItemList) {

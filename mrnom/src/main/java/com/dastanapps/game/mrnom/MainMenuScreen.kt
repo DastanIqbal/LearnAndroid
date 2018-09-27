@@ -6,7 +6,7 @@ import com.dastanapps.gameframework.Screen
 
 /**
  * Created by dastaniqbal on 15/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 15/10/2017 2:02
  */
 class MainMenuScreen(gam: Game) : Screen(gam) {

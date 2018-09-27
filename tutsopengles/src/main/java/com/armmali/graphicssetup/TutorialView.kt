@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * Created by dastaniqbal on 06/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 06/01/2018 4:52
  */
 class TutorialView(context: Context) : GLTextureView(context) {

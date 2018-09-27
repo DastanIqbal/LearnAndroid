@@ -6,7 +6,7 @@ import com.dastanapps.gameframework.Music
 
 /**
  * Created by dastaniqbal on 09/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 09/10/2017 12:07
  */
 class AndroidMusic(val assetDiscriptor: AssetFileDescriptor) : Music, MediaPlayer.OnCompletionListener {

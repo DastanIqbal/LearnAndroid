@@ -11,7 +11,7 @@ import java.io.InputStreamReader
 
 /**
  * Created by dastaniqbal on 04/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 04/07/2017 10:57
  */
 class AssetsTest : AppCompatActivity() {

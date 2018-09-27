@@ -2,7 +2,7 @@ package com.dastanapps.gameframework
 
 /**
  * Created by dastaniqbal on 20/06/2017.
- * dastanIqbal@marvelmedia.com
+
  * 20/06/2017 11:54
  */
 

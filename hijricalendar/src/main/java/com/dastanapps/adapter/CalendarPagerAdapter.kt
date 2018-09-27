@@ -15,7 +15,7 @@ import kotlin.collections.ArrayList
 
 /**
  * Created by dastaniqbal on 25/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 25/02/2018 6:21
  */
 class CalendarPagerAdapter(private val context: Context, private val calendarUtils: CalendarUtils) : PagerAdapter() {

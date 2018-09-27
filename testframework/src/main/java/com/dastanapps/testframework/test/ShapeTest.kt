@@ -12,7 +12,7 @@ import android.view.WindowManager
 
 /**
  * Created by dastaniqbal on 05/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 05/07/2017 11:52
  */
 class ShapeTest : AppCompatActivity() {

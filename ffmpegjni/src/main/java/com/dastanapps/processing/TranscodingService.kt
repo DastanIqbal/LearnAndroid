@@ -13,7 +13,7 @@ import com.dastanapps.ffmpegjni.VideoKit
 
 /**
  * Created by dastaniqbal on 25/07/2018.
- * dastanIqbal@marvelmedia.com
+
  * 25/07/2018 12:49
  */
 class TranscodingService : Service() {

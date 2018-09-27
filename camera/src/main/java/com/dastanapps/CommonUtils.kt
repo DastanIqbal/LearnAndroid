@@ -5,7 +5,7 @@ import android.os.Message
 
 /**
  * Created by dastaniqbal on 23/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 23/01/2018 11:15
  */
 object CommonUtils {

@@ -24,7 +24,7 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener
 
 /**
  * Created by dastaniqbal on 10/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 10/01/2018 6:11
  */
 class ExoPlayer : AppCompatActivity() {

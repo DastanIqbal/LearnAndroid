@@ -12,7 +12,7 @@ import android.util.AttributeSet;
 
 /**
  * Created by dastaniqbal on 30/04/2017.
- * dastanIqbal@marvelmedia.com
+
  * 30/04/2017 9:11
  */
 

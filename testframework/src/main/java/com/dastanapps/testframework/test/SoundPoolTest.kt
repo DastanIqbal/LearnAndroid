@@ -11,7 +11,7 @@ import java.io.IOException
 
 /**
  * Created by dastaniqbal on 05/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 05/07/2017 11:08
  */
 class SoundPoolTest : AppCompatActivity(), View.OnTouchListener {

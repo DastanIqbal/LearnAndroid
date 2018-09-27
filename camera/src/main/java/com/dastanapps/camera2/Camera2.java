@@ -59,7 +59,7 @@ import static android.hardware.camera2.CameraMetadata.INFO_SUPPORTED_HARDWARE_LE
 
 /**
  * Created by dastaniqbal on 17/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 17/01/2018 11:53
  */
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

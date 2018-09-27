@@ -13,7 +13,7 @@ import android.view.MotionEvent;
 
 /**
  * Created by dastaniqbal on 30/04/2017.
- * dastanIqbal@marvelmedia.com
+
  * 30/04/2017 7:59
  */
 

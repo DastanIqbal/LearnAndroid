@@ -12,7 +12,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * Created by dastaniqbal on 11/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 11/02/2018 1:32
  */
 class Tutorial2Activity : BaseActivity(), GLSurfaceView.Renderer {

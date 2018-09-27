@@ -8,7 +8,7 @@ import java.io.RandomAccessFile
 
 /**
  * Created by dastaniqbal on 04/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 04/01/2018 11:36
  */
 class GraphicsSetup : Activity() {

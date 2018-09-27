@@ -5,7 +5,7 @@ import com.dastanapps.mediasdk.opengles.encoder.MediaVideoEncoder
 
 /**
  * Created by dastaniqbal on 04/09/2018.
- * dastanIqbal@marvelmedia.com
+
  * 04/09/2018 8:35
  */
 class MyCameraSurfaceRenderer: CameraSurfaceRenderer() {

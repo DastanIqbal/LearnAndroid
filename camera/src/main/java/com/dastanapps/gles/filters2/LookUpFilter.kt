@@ -4,7 +4,7 @@ import com.dastanapps.gles.GLDrawer2D
 
 /**
  * Created by dastaniqbal on 08/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 08/02/2018 7:25
  */
 class LookUpFilter:GLDrawer2D(){

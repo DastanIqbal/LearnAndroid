@@ -15,7 +15,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * Created by dastaniqbal on 14/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 14/02/2018 11:03
  */
 class Lesson1Activity : Activity() {

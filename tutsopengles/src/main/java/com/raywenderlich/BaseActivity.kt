@@ -9,7 +9,7 @@ import android.view.Window
 
 /**
  * Created by dastaniqbal on 11/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 11/02/2018 1:15
  */
 abstract class BaseActivity : Activity(), GLSurfaceView.Renderer {

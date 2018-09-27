@@ -7,7 +7,7 @@ import com.dastanapps.gameframework.Pixmap
 
 /**
  * Created by dastaniqbal on 12/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 12/10/2017 11:22
  */
 class AndroidGraphics(val assets: AssetManager, val frameBuffer: Bitmap) : Graphics {

@@ -14,7 +14,7 @@ import javax.microedition.khronos.opengles.GL10
 
 /**
  * Created by dastaniqbal on 06/09/2018.
- * dastanIqbal@marvelmedia.com
+
  * 06/09/2018 11:20
  */
 open class FBORender : GLSurfaceView.Renderer {

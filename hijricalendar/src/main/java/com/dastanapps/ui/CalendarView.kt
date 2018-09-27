@@ -15,7 +15,7 @@ import java.util.*
 
 /**
  * Created by dastaniqbal on 26/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 26/02/2018 3:32
  */
 class CalendarView : LinearLayout {

@@ -7,7 +7,7 @@ import com.dastanapps.camera2.Camera2Helper
 
 /**
  * Created by dastaniqbal on 19/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 19/01/2018 1:06
  */
 

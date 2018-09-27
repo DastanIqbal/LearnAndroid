@@ -7,7 +7,7 @@ import android.view.WindowManager
 
 /**
  * Created by dastaniqbal on 15/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 15/02/2018 10:52
  */
 open class NoOrientationAnimationActivity : AppCompatActivity() {

@@ -6,7 +6,7 @@ import android.os.Bundle
 
 /**
  * Created by dastaniqbal on 25/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 25/02/2018 12:14
  */
 class Lesson2Activity : Activity() {

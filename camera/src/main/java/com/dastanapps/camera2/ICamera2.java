@@ -4,7 +4,7 @@ import com.dastanapps.ICamera;
 
 /**
  * Created by dastaniqbal on 17/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 17/01/2018 12:14
  */
 

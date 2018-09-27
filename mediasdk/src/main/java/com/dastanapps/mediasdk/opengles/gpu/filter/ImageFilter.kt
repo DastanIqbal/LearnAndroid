@@ -7,7 +7,7 @@ import java.util.*
 
 /**
  * Created by dastaniqbal on 06/09/2018.
- * dastanIqbal@marvelmedia.com
+
  * 06/09/2018 11:38
  */
 open class ImageFilter(var vs: String, var fs: String) {

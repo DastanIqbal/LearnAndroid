@@ -5,7 +5,7 @@ import com.dastanapps.gles.GLUtils
 
 /**
  * Created by dastaniqbal on 23/01/2018.
- * dastanIqbal@marvelmedia.com
+
  * 23/01/2018 6:01
  */
 abstract class CameraFilter {

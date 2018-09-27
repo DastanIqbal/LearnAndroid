@@ -7,7 +7,7 @@ import com.dastanapps.gameframework.Pool
 
 /**
  * Created by dastaniqbal on 11/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 11/10/2017 12:00
  */
 class SingleTouchHandler(view: View, private val scaleX: Float, private val scaleY: Float) : TouchHandler {

@@ -4,7 +4,7 @@ import android.app.Application
 
 /**
  * Created by dastaniqbal on 01/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 01/02/2018 4:20
  */
 class MyApp : Application() {

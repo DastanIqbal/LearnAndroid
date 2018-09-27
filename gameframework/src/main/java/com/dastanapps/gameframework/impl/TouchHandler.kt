@@ -5,7 +5,7 @@ import com.dastanapps.gameframework.Input
 
 /**
  * Created by dastaniqbal on 10/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 10/10/2017 11:57
  */
 interface TouchHandler : View.OnTouchListener {

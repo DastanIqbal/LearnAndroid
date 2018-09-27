@@ -14,7 +14,7 @@ import android.view.WindowManager
 
 /**
  * Created by dastaniqbal on 25/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 25/07/2017 6:50
  */
 class BitmapTest : AppCompatActivity() {

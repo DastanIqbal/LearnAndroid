@@ -6,7 +6,7 @@ import android.view.SurfaceView
 
 /**
  * Created by dastaniqbal on 14/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 14/10/2017 1:38
  */
 class AndroidFastRenderView(val game: AndroidGame, val frameBuffer: Bitmap) : SurfaceView(game), Runnable {

@@ -9,7 +9,7 @@ import android.view.WindowManager
 
 /**
  * Created by dastaniqbal on 26/07/2017.
- * dastanIqbal@marvelmedia.com
+
  * 26/07/2017 6:48
  */
 

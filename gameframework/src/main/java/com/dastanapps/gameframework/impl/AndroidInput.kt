@@ -6,7 +6,7 @@ import com.dastanapps.gameframework.Input
 
 /**
  * Created by dastaniqbal on 11/10/2017.
- * dastanIqbal@marvelmedia.com
+
  * 11/10/2017 11:52
  */
 class AndroidInput(context: Context, val view: View, scaleX: Float, scaleY: Float) : Input {

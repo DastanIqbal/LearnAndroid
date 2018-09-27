@@ -4,7 +4,7 @@ import com.dastanapps.gles.GLDrawer2D
 
 /**
  * Created by dastaniqbal on 20/02/2018.
- * dastanIqbal@marvelmedia.com
+
  * 20/02/2018 3:42
  */
 object FilterFactory {

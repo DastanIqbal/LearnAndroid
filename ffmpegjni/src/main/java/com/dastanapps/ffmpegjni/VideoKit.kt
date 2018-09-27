@@ -4,7 +4,7 @@ import android.util.Log
 
 /**
  * Created by dastaniqbal on 19/07/2018.
- * dastanIqbal@marvelmedia.com
+
  * 19/07/2018 11:02
  */
 class VideoKit {
