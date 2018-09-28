@@ -1,6 +1,6 @@
 //include ':shadersNfilters'
 //include ':mediaeffectswithopengles',
-include ':mediasdk'
+include ':mediasdk', ':canvas'
 //include ':opeglesgame'
 include  ':tutsopengles'
 //include ':launchmode'

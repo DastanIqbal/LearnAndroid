@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Drop Shadow -->
+    <!--<item>
+        <shape android:shape="oval">
+            <padding
+                android:bottom="10dp"
+                android:left="10dp"
+                android:right="10dp"
+                android:top="10dp" />
+
+            <solid android:color="#00AA0000" />
+
+            <corners android:radius="5dp" />
+        </shape>
+    </item>-->
+    <item>
+        <shape android:shape="oval">
+            <padding
+                android:bottom="10dp"
+                android:left="10dp"
+                android:right="10dp"
+                android:top="10dp" />
+
+            <solid android:color="#10AA0000" />
+
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <padding
+                android:bottom="10dp"
+                android:left="10dp"
+                android:right="10dp"
+                android:top="10dp" />
+
+            <solid android:color="#20AA0000" />
+
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <padding
+                android:bottom="10dp"
+                android:left="10dp"
+                android:right="10dp"
+                android:top="10dp" />
+
+            <solid android:color="#30AA0000" />
+
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <padding
+                android:bottom="10dp"
+                android:left="10dp"
+                android:right="10dp"
+                android:top="10dp" />
+
+            <solid android:color="#50AA0000" />
+
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+
+    <!-- Background Color (white) -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:centerX="50%"
+                android:centerY="50%"
+                android:endColor="#800"
+                android:gradientRadius="100%"
+                android:startColor="#f00"
+                android:type="radial" />
+
+            <corners android:radius="3dp" />
+        </shape>
+    </item>
+</layer-list>

@@ -1,0 +1,8 @@
+<resources>
+    <declare-styleable name="GLowCircle">
+        <attr name="blurColor" format="color" />
+        <!--<attr name="blurRadius" format="dimension" />-->
+        <attr name="radius" format="dimension" />
+        <attr name="colors" format="reference" />
+    </declare-styleable>
+</resources>

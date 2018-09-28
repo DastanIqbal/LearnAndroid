@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="colors" >
+        <item>#ff0000</item>
+        <item>#a80000</item>
+    </string-array>
+</resources>
