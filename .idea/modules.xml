@@ -3,10 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/canvas/canvas.iml" filepath="$PROJECT_DIR$/canvas/canvas.iml" />
-      <module fileurl="file://$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" filepath="$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mediasdk/mediasdk.iml" filepath="$PROJECT_DIR$/mediasdk/mediasdk.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tutsopengles/tutsopengles.iml" filepath="$PROJECT_DIR$/tutsopengles/tutsopengles.iml" />
+      <module fileurl="file://$PROJECT_DIR$/androidp/androidp.iml" filepath="$PROJECT_DIR$/androidp/androidp.iml" />
     </modules>
   </component>
 </project>
