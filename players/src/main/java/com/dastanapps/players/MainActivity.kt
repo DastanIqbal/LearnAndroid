@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
                 0 -> startActivity(Intent(this, ExoPlayer::class.java))
                 1 -> startActivity(Intent(this, ExoPlayer242::class.java))
                 2 -> startActivity(Intent(this, MediaPlayerActivity::class.java))
+                3 -> startActivity(Intent(this, TextureViewActivity::class.java))
             }
         }
     }
@@ -31,7 +32,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         exoPlayerHelper.onResume()
-        exoPlayerHelper.prepareUrl("http://www.panacherock.com/downloads/mp3/01_Sayso.mp3")
+        exoPlayerHelper.playUrl("http://www.panacherock.com/downloads/mp3/01_Sayso.mp3",object : ExoPlayerHelper.Listener() {
+
+        })
     }
 
     override fun onPause() {

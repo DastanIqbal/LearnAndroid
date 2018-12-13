@@ -9,14 +9,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Canvas
-import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AppCompatActivity
 import com.dastanapps.dastanlib.utils.ViewUtils
+import com.dastanapps.mediasdk.opengles.utils.BitmapUtils
 import kotlinx.android.synthetic.main.activity_merge_bitmap.*
 import java.io.File
 
@@ -44,7 +43,10 @@ class MergeBitmapActivity : AppCompatActivity() {
         }
 
         button.setOnClickListener {
-            overlay()
+            val bmp = BitmapUtils.overlay(bitmap1, bitmap2)
+            bmp?.run {
+                imageView3.setImageBitmap(this)
+            }
         }
         button2.setOnClickListener {
             pickImage(this)
@@ -55,17 +57,6 @@ class MergeBitmapActivity : AppCompatActivity() {
         }
     }
 
-    fun overlay() {
-        val bmOverlay = Bitmap.createBitmap(bitmap1?.width!!, bitmap1?.height!!, bitmap1?.config!!)
-        val canvas = Canvas(bmOverlay)
-        canvas.drawBitmap(bitmap1, Matrix(), null)
-
-        val centreX = (canvas.width - bitmap2?.width!!) / 2f
-        val centreY = (canvas.height - bitmap2?.height!!) / 2f
-
-        canvas.drawBitmap(bitmap2, centreX, centreY, null)
-        imageView3.setImageBitmap(bmOverlay)
-    }
 
     private fun pickImage(ctxt: Context) {
         val packageManager = ctxt.packageManager

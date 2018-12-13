@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$/canvas" />
             <option value="$PROJECT_DIR$/ffmpegjni" />
             <option value="$PROJECT_DIR$/mediasdk" />
+            <option value="$PROJECT_DIR$/players" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.dastanapps.canvas"
-        minSdkVersion 16
+        minSdkVersion 18
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -38,4 +38,5 @@ dependencies {
 
     api 'com.dastanapps.dastanlib:common:0.1-alpha'
     api 'com.dastanapps.dastanlib:ui:0.1.1-alpha'
+    api project(":mediasdk")
 }
