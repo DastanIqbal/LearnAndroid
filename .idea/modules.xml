@@ -4,9 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/canvas/canvas.iml" filepath="$PROJECT_DIR$/canvas/canvas.iml" />
-      <module fileurl="file://$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" filepath="$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" />
       <module fileurl="file://$PROJECT_DIR$/mediasdk/mediasdk.iml" filepath="$PROJECT_DIR$/mediasdk/mediasdk.iml" />
       <module fileurl="file://$PROJECT_DIR$/players/players.iml" filepath="$PROJECT_DIR$/players/players.iml" />
+      <module fileurl="file://$PROJECT_DIR$/testcode/testcode.iml" filepath="$PROJECT_DIR$/testcode/testcode.iml" />
     </modules>
   </component>
 </project>
