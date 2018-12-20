@@ -16,7 +16,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-               <!-- <category android:name="android.intent.category.LAUNCHER" />-->
+                <!-- <category android:name="android.intent.category.LAUNCHER" />-->
             </intent-filter>
         </activity>
 
@@ -27,6 +27,21 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".GestureActivity"
+            android:label="GestureActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".AndroidMultitouchActivity"
+            android:label="AndroidMultitouchActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
 
         <service
             android:name=".DrawOverlayService"
