@@ -7,8 +7,6 @@ import android.os.Bundle
 import android.provider.Settings
 import android.support.annotation.RequiresApi
 import android.support.v7.app.AppCompatActivity
-import android.widget.TextView
-import com.dastanapps.dastanlib.utils.ViewUtils
 
 
 class MainActivity : AppCompatActivity() {
@@ -16,9 +14,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        findViewById<TextView>(R.id.tv).setOnClickListener {
-            ViewUtils.showToast(this, "Hellya You touched")
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission()
         }

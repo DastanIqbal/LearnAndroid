@@ -1,14 +1,14 @@
 package com.dastanapps.customview
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Matrix
+import android.graphics.Point
 import android.graphics.PointF
+import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.SparseArray
 import android.view.MotionEvent
-import android.view.MotionEvent.ACTION_CANCEL
-import android.view.ScaleGestureDetector
-import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener
+import android.view.MotionEvent.*
+import android.view.View
 import android.widget.FrameLayout
 import com.dastanapps.dastanlib.log.Logger
 
@@ -17,152 +17,185 @@ import com.dastanapps.dastanlib.log.Logger
  * Created by dastaniqbal on 19/12/2018.
  * 19/12/2018 3:38
  */
+@SuppressLint("ClickableViewAccessibility")
 class MultiTouchView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     private val TAG = this::class.java.simpleName
-    private var scaling = false
-    private var oldDist = 1f
-    private val NONE = 0
-    private val DRAG = 1
-    private val ZOOM = 2
-    private val currentDragPosition = PointF()
-    var mode = NONE
+    private var lastPosX = -1f
+    private var lastPosY = -1f
+    private val translationPoint = PointF()
+    var minWidth = 0
+    var minHeight = 0
 
-    // Remember some things for zooming
-    var start = PointF()
-    var mid = PointF()
+    private val mTouchListener = object : OnTouchListener {
+        var isTwoFinger: Boolean = false
+        var hasResetAfterTwoFinger: Boolean = false
+        var oldDistance: Float = 0.toFloat()
+        var currentViewSize = Point()
 
-    private var onScaleMove = false
-    private var scale: Float = 1.0f
+        fun save(event: MotionEvent) {
+            oldDistance = calculateDistance(event)
+            currentViewSize.set(width, height)
+        }
 
-    // These matrices will be used to move and zoom image
-    var savedMatrix = Matrix()
-    private val mActivePointers = SparseArray<PointF>()
-
-    var scaleGestureDetector: ScaleGestureDetector = ScaleGestureDetector(context, MyOnScaleGestureListener())
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-//        val processed = scaleGestureDetector.onTouchEvent(event)
-//        Logger.d(TAG, "gesture processed $processed")
-        var pointerIndex = event.actionIndex
-        var pointerId = event.getPointerId(pointerIndex)
-
-        when (event.action and MotionEvent.ACTION_MASK) {
-            MotionEvent.ACTION_DOWN -> {
-                scaling = false
-                savedMatrix.set(matrix)
-                start.set(event.x, event.y)
-                currentDragPosition.set(x - event.rawX, y - event.rawY)
-                mode = DRAG
-                Logger.d(TAG, "ACTION_DOWN $mode")
-            }
-            MotionEvent.ACTION_POINTER_DOWN -> {
-                onScaleMove = true
-                if (event.pointerCount >= 2) {
-                    oldDist = spacing(event)
-                    Logger.d(TAG, "oldDist=$oldDist")
-                    if (oldDist > 10f) {
-                        savedMatrix.set(matrix)
-                        midPoint(mid, event)
-                        mode = ZOOM
-                        mActivePointers.put(pointerId, getPoint(pointerIndex, event))
-                        Logger.d(TAG, "mode=ZOOM")
+        override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+            when (event?.actionMasked) {
+                ACTION_DOWN -> {
+                    save(event)
+                    if (!isTwoFinger) {
+                        lastPosX = event.rawX
+                        lastPosY = event.rawY
+                        hasResetAfterTwoFinger = true
                     }
                 }
-            }
-            MotionEvent.ACTION_UP, ACTION_CANCEL, MotionEvent.ACTION_POINTER_UP -> {
-                mode = NONE
-                onScaleMove = false
-                mActivePointers.remove(pointerId)
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (mode == DRAG) {
-                    animate()
-                            .x(event.rawX + currentDragPosition.x)
-                            .y(event.rawY + currentDragPosition.y)
-                            .setDuration(0)
-                            .start()
-//                    matrix.set(savedMatrix)
-//                    matrix.postTranslate(event.x - start.x, event.y - start.y)
-//                    invalidate()
-                    Logger.d(TAG, "ACTION_MOVE DRAG X:${currentDragPosition.x}, Y:${currentDragPosition.y}")
-                } else if (onScaleMove && mode == ZOOM && event.pointerCount >= 2) {
-                    val newDist = spacing(event)
-                    Logger.e(TAG, "newDist=$newDist, oldDist=$oldDist")
-//
-                    if (newDist > 10f && newDist.toInt() != oldDist.toInt()) {
-                        scale = newDist / oldDist
-                        scaleX = scale
-                        scaleY = scale
-//                            matrix.set(savedMatrix)
-//                            matrix.postScale(scale, scale, mid.x, mid.y)
-                        invalidate()
-//                            requestLayout()
-                        Logger.d(TAG, "scaled=$scale")//, MotionEvent=$event")
+                ACTION_POINTER_DOWN -> {
+                    isTwoFinger = true
+                    hasResetAfterTwoFinger = false
+
+                    save(event)
+                }
+                ACTION_MOVE -> {
+                    if (isTwoFinger) {
+                        val scale = (calculateDistance(event) / oldDistance)
+
+                        val finalWidth = currentViewSize.x * scale
+                        val finalHeight = currentViewSize.y * scale
+                        if (finalHeight > minHeight && finalWidth > minWidth) {
+                            layoutParams.width = finalWidth.toInt()
+                            layoutParams.height = finalHeight.toInt()
+                        }
+
+                        postInvalidate()
+                        requestLayout()
+                    } else if (hasResetAfterTwoFinger) {
+                        setTranslation(event)
                     }
                 }
+                ACTION_POINTER_UP -> {
+                    Logger.d(TAG, "sticker view action pointer up")
+                    isTwoFinger = false
+                }
+                ACTION_UP -> {
+                    val bounds = Rect()
+                    getGlobalVisibleRect(bounds)
+                }
             }
-        }
-        return true
-    }
-
-    inner class MyOnScaleGestureListener : SimpleOnScaleGestureListener() {
-
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            val scaleFactor = detector.scaleFactor
-            if (scaleFactor > 1) {
-                Logger.d(TAG, "Zooming Out $scaleFactor")
-            } else {
-                Logger.d(TAG, "Zooming In $scaleFactor")
-            }
-            // if (!detector.isInProgress) {
-            scaleX = scaleFactor
-            scaleY = scaleFactor
-            //    Logger.d(TAG, "Scaled $scaleFactor")
-            //    return false
-            // }
             return true
         }
+    }
 
-        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-            Logger.d(TAG, "onScaleBegin")
-            return true
-        }
-
-        override fun onScaleEnd(detector: ScaleGestureDetector) {
-            Logger.d(TAG, "onScaleEnd")
+    init {
+        this.setOnTouchListener(mTouchListener)
+        this.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            updateTranslation()
         }
     }
 
-    /**
-     * space between the first two fingers
-     */
-    private fun spacing(event: MotionEvent): Float {
-        val x = event.getX(1) - event.getX(0)
-        val y = event.getY(1) - event.getY(0)
-        return Math.sqrt((x * x + y * y).toDouble()).toFloat()
+    private fun updateTranslation() {
+        translationPoint.set(x, y)
     }
 
-    private fun spacingPoint(event: MotionEvent): PointF {
-        val f = PointF()
-        f.x = event.getX(0) - event.getX(1)
-        f.y = event.getY(0) - event.getY(1)
-        return f
+    private fun convertDpToPixel(dp: Float, context: Context): Int {
+        val resources = context.resources
+        val metrics = resources.displayMetrics
+        val px = dp * (metrics.densityDpi / 160f)
+        return px.toInt()
     }
 
-    private fun getPoint(pointerIndex: Int, event: MotionEvent): PointF {
-        val f = PointF()
-        f.x = event.getX(pointerIndex)
-        f.y = event.getY(pointerIndex)
-        return f
+    private fun calculateDistance(event: MotionEvent?): Float {
+        if (event == null || event.pointerCount < 2) {
+            return 0f
+        }
+        val firstPointer = getRawPoint(event, 0)
+        val secondPointer = getRawPoint(event, 1)
+        return calculateDistance(firstPointer.x, firstPointer.y, secondPointer.x, secondPointer.y)
     }
 
-    /**
-     * the mid point of the first two fingers
-     */
-    private fun midPoint(point: PointF, event: MotionEvent) {
-        val x = event.getX(0) + event.getX(1)
-        val y = event.getY(0) + event.getY(1)
-        point.set(x / 2, y / 2)
+    private fun calculateDistance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
+        val x = (x1 - x2).toDouble()
+        val y = (y1 - y2).toDouble()
+
+        return Math.sqrt(x * x + y * y).toFloat()
+    }
+
+    private fun getCenterX(targetX: Float): Float {
+        return targetX + width / 2f
+    }
+
+    private fun getCenterY(targetY: Float): Float {
+        return targetY + height / 2f
+    }
+
+    private fun setTranslation(event: MotionEvent) {
+        val offsetX = event.rawX - lastPosX
+        val offsetY = event.rawY - lastPosY
+        translationPoint.x += offsetX
+        translationPoint.y += offsetY
+        var targetX = translationPoint.x
+        var targetY = translationPoint.y
+        val targetCenterX = getCenterX(targetX)
+        val targetCenterY = getCenterY(targetY)
+
+        val range = convertDpToPixel(10f, context).toFloat()
+        val parentCenterPoint = getParentCenterPoint()
+        val minX = parentCenterPoint.x - range
+        val maxX = parentCenterPoint.x + range
+        val minY = parentCenterPoint.y - range
+        val maxY = parentCenterPoint.y + range
+
+        val shouldSnapX = targetCenterX in minX..maxX
+        val shouldSnapY = targetCenterY in minY..maxY
+        val shouldSnapAll = shouldSnapX && shouldSnapY
+        when {
+            shouldSnapAll -> {
+                targetX = getX(parentCenterPoint.x)
+                targetY = getY(parentCenterPoint.y)
+            }
+            shouldSnapX -> targetX = getX(parentCenterPoint.x)
+            shouldSnapY -> targetY = getY(parentCenterPoint.y)
+            else -> {
+            }
+        }
+        x = targetX
+        y = targetY
+
+        lastPosX = event.rawX
+        lastPosY = event.rawY
+    }
+
+    private fun getX(centerX: Float): Float {
+        return centerX - width / 2f
+    }
+
+    private fun getY(centerY: Float): Float {
+        return centerY - height / 2f
+    }
+
+    private fun getParentCenterPoint(): PointF {
+        val parent = parent as View
+        val parentCenterX = parent.width / 2f
+        val parentCenterY = parent.height / 2f
+        return PointF(parentCenterX, parentCenterY)
+    }
+
+    private fun getRawPoint(ev: MotionEvent, index: Int): PointF {
+        val point = PointF()
+        val location = intArrayOf(0, 0)
+        getLocationOnScreen(location)
+
+        var x = ev.getX(index)
+        var y = ev.getY(index)
+
+        var angle = Math.toDegrees(Math.atan2(y.toDouble(), x.toDouble()))
+        angle += rotation.toDouble()
+
+        val length = PointF.length(x, y)
+
+        x = (length * Math.cos(Math.toRadians(angle))).toFloat() + location[0]
+        y = (length * Math.sin(Math.toRadians(angle))).toFloat() + location[1]
+
+        point.set(x, y)
+        return point
     }
 }
