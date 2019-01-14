@@ -12,26 +12,33 @@
         android:text="Hello World!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintRight_toRightOf="parent" />
 
-    <com.dastanapps.customview.MultiTouchView
+    <FrameLayout
         android:id="@+id/fl"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:background="@mipmap/ic_image"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:background="#000"
         app:layout_constraintBottom_toTopOf="@+id/tv"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <android.support.v7.widget.AppCompatImageView
-            android:id="@+id/imageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <com.dastanapps.customview.MultiTouchView
+            android:id="@+id/mtv"
+            android:layout_width="200dp"
+            android:layout_height="100dp"
             android:layout_gravity="center"
-            app:srcCompat="@mipmap/ic_image" />
+            android:background="#f0f000">
 
-    </com.dastanapps.customview.MultiTouchView>
+            <android.support.v7.widget.AppCompatImageView
+                android:id="@+id/imageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                app:srcCompat="@mipmap/ic_image" />
+
+        </com.dastanapps.customview.MultiTouchView>
+    </FrameLayout>
 
 </android.support.constraint.ConstraintLayout>

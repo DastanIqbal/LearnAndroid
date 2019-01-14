@@ -11,6 +11,7 @@ import android.view.MotionEvent.*
 import android.view.View
 import android.widget.FrameLayout
 import com.dastanapps.dastanlib.log.Logger
+import kotlin.math.roundToInt
 
 
 /**
@@ -27,6 +28,7 @@ class MultiTouchView @JvmOverloads constructor(
     private val translationPoint = PointF()
     var minWidth = 0
     var minHeight = 0
+    var positionChangeListener: IPositionChangeListener? = null;
 
     private val mTouchListener = object : OnTouchListener {
         var isTwoFinger: Boolean = false
@@ -75,10 +77,12 @@ class MultiTouchView @JvmOverloads constructor(
                 ACTION_POINTER_UP -> {
                     Logger.d(TAG, "sticker view action pointer up")
                     isTwoFinger = false
+                    positionChangeListener?.positionChange(x.roundToInt(), y.roundToInt(), width, height)
                 }
                 ACTION_UP -> {
                     val bounds = Rect()
                     getGlobalVisibleRect(bounds)
+                    positionChangeListener?.positionChange(x.roundToInt(), y.roundToInt(), width, height)
                 }
             }
             return true
@@ -197,5 +201,9 @@ class MultiTouchView @JvmOverloads constructor(
 
         point.set(x, y)
         return point
+    }
+
+    interface IPositionChangeListener {
+        fun positionChange(x: Int, y: Int, width: Int, height: Int)
     }
 }
