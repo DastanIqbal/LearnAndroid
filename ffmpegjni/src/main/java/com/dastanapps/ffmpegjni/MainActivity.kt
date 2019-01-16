@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                 //.addInputPath("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4")
                 //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
                 //.concatInput("/sdcard/KrusoTestVideo/merge.txt")
-                .addInputPath("/sdcard/KrusoTestVideo/Cannot_edit_x265.mp4")
+                .addInputPath("/sdcard/snaptube/download/SnapTube Video/Heart meme _2 _full Android _soft meme)(480P).mp4")
                 //.addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=576:1024:force_original_aspect_ratio=decrease,pad=576:1024:(ow-iw)/2:(oh-ih)/2:color=#000000")
                 //.customCommand("-vcodec libx264 -pix_fmt yuv420p -crf 18 -preset superfast -tune zerolatency -strict experimental")
                 //.addInputPath("/sdcard/KrusoTestVideo/merge/concat_audio_kruso_20180918091350.mp3")
