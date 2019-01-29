@@ -36,7 +36,7 @@ class TextureViewActivity : AppCompatActivity(), TextureView.SurfaceTextureListe
         val texture = findViewById<TextureView>(R.id.texture)
         //exoPlayer.player?.setVideoTextureView(texture)
         exoPlayer?.player?.setVideoSurface(Surface(surface))
-        exoPlayer.playLocal("/sdcard/KrusoTestVideo/big_buck_bunny_720p_stereo.mp4", object : ExoPlayerHelper.Listener() {
+        exoPlayer.playLocal("/sdcard/TestVideo/big_buck_bunny_720p_stereo.mp4", object : ExoPlayerHelper.Listener() {
             override fun onPlayerError(error: ExoPlaybackException?) {
                 super.onPlayerError(error)
                 Logger.onlyDebug("Error: ${error?.message}")

@@ -11,10 +11,10 @@ class MainActivity : AppCompatActivity() {
 //        Controller.getInstance().run(arrayOf(
 //                "-y",
 //                "-i",
-//                "/sdcard/KrusoTestVideo/big_buck_bunny.mp4",
+//                "/sdcard/TestVideo/big_buck_bunny.mp4",
 //                "-filter_complex",
 //                "drawtext=text='Testing':fontcolor=white",
-//                "/sdcard/KrusoTestVideo/output1.mp4"
+//                "/sdcard/TestVideo/output1.mp4"
 //        ))
     }
 }

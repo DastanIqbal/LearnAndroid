@@ -17,10 +17,10 @@ object FFmpegExecutor {
 
     private var videoKit = VideoKit()
 
-    fun execute(cmds: Array<String>, videoKitListener: VideoKit.IVideoKit): Int {
+    fun execute(cmds: Array<String>, videoKitListener: VideoKit.IVideoKit) {
         videoKit.videoKitListener = videoKitListener
         videoKit.setDebug(true)
-        return videoKit.run(cmds)
+        videoKit.run(cmds)
     }
 
     fun executeProbe(cmds: Array<String>): Observable<String> {
@@ -44,6 +44,14 @@ object FFmpegExecutor {
     fun execute(cmds: Array<String>): Observable<String> {
         return Observable.create<String> {
             videoKit.videoKitListener = object : VideoKit.IVideoKit {
+                override fun result(result: Int) {
+                    if (result == 0) {
+                        it.onComplete()
+                    } else {
+                        it.onError(Throwable("FFmpeg command failed $result"))
+                    }
+                }
+
                 override fun error(error: String) {
                     it.onError(FFmpegError(error))
                 }
@@ -57,10 +65,8 @@ object FFmpegExecutor {
                     Log.d("JNI:FFmpegExecutor Next", progress)
                 }
             }
-            videoKit.setDebug(false)
-            val result = videoKit.run(cmds)
-            if (result == 0) it.onComplete()
-            else it.onError(Throwable("FFmpeg command failed $result"))
+            videoKit.setDebug(true)
+            videoKit.run(cmds)
         }.observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.newThread())
     }
@@ -86,7 +92,7 @@ object FFmpegExecutor {
         videoKit.error("Video Stopped")
     }
 
-    fun stopProbe(){
+    fun stopProbe() {
         videoKit.stopFFprobe()
     }
 

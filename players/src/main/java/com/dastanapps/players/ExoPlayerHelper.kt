@@ -114,7 +114,7 @@ class ExoPlayerHelper(val context: Context) {
     }
 
     private fun buildMediaSource(uri: Uri): MediaSource {
-        val defaultHttpDataSourceFactory = DefaultHttpDataSourceFactory("exoplayer-kruso")
+        val defaultHttpDataSourceFactory = DefaultHttpDataSourceFactory("exoplayer-")
         defaultHttpDataSourceFactory.setDefaultRequestProperty("Image", "getme")
         return ExtractorMediaSource.Factory(defaultHttpDataSourceFactory).createMediaSource(uri)
     }

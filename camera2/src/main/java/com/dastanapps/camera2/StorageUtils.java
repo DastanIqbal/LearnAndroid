@@ -269,7 +269,7 @@ public class StorageUtils {
     // only valid if !isUsingSAF()
     public  String getSaveLocation() {
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-		return sharedPreferences.getString(PreferenceKeys.getSaveLocationPreferenceKey(), "Kruso");
+		return sharedPreferences.getString(PreferenceKeys.getSaveLocationPreferenceKey(), "MyVideos");
     }
     
     // only valid if isUsingSAF()

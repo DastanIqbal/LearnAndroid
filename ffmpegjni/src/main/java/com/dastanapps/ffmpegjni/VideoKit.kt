@@ -28,7 +28,7 @@ class VideoKit {
 
     external fun configurationinfo(): String
 
-    external fun run(args: Array<String>): Int
+    external fun run(args: Array<String>)
 
     external fun runprobe(args: Array<String>): Int
 
@@ -41,6 +41,12 @@ class VideoKit {
         Log.d("DEBUG", "Error: $error ${fFmpegError.message}")
         videoKitListener?.run {
             benchmark(error)
+        }
+    }
+
+    fun sendResult(result: Int) {
+        videoKitListener?.run {
+            result(result)
         }
     }
 
@@ -68,8 +74,8 @@ class VideoKit {
         }
     }
 
-    fun process(args: Array<String>): Int {
-        return run(args)
+    fun process(args: Array<String>){
+        run(args)
     }
 
 
@@ -77,6 +83,7 @@ class VideoKit {
         fun progress(progress: String)
         fun benchmark(bench: String)
         fun error(error: String)
+        fun result(result: Int)
     }
 
     interface IVideoKitProbe {

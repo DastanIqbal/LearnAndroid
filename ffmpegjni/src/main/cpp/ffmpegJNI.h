@@ -16,6 +16,8 @@ typedef struct callback {
     void (*progress_callback)(char *);
 
     void (*benchmark_callback)(char *);
+
+    void (*result_callback)(int result);
 } Callback;
 
 JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegjni_MainActivity_avformatinfo

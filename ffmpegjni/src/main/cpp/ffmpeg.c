@@ -4811,7 +4811,7 @@ void setProgressCallback(void (*callback)(char *)) {
     progress_callback = callback;
 }
 
-int run(int argc, char **argv, Callback callback) {
+void run(int argc, char **argv, Callback callback) {
     resetValues();
     setProgressCallback(callback.progress_callback);
     int i, ret;
@@ -4819,7 +4819,7 @@ int run(int argc, char **argv, Callback callback) {
 
     init_dynload();
 
-    register_exit(ffmpeg_cleanup);
+        register_exit(ffmpeg_cleanup);
 
     setvbuf(stderr, NULL, _IONBF, 0); /* win32 runtime needs this */
 
@@ -4883,8 +4883,8 @@ int run(int argc, char **argv, Callback callback) {
     if ((decode_error_stat[0] + decode_error_stat[1]) * max_error_rate < decode_error_stat[1])
         exit_program(69);
 
-    //  exit_program(received_nb_signals ? 255 : main_return_code);
-    return main_return_code;
+    callback.result_callback(main_return_code);
+    exit_program(received_nb_signals ? 255 : main_return_code);
 }
 
 

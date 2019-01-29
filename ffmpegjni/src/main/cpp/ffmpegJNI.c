@@ -18,6 +18,7 @@
 #include <libavutil/avutil.h>
 #include <libavfilter/avfilter.h>
 #include <prebuilt/include/libavcodec/jni.h>
+#include <malloc.h>
 
 //#endif
 //https://blog.csdn.net/matrix_laboratory/article/details/56677084
@@ -45,6 +46,19 @@ void ffmpegError(char *c) {
     jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "error",
                                              "(Ljava/lang/String;)V");
     sendJavaMsg(env, g_ctxt.jniHelperObj, methodId, c);
+
+    (*g_ctxt.javaVM)->DetachCurrentThread;
+}
+void sendResult(int result) {
+    LOGD("JNI::Result %d", result);
+    JNIEnv *env;
+    jint res = (*g_ctxt.javaVM)->AttachCurrentThread(g_ctxt.javaVM, &env, NULL);
+    if (res != JNI_OK) {
+        LOGE("Failed to AttachCurrentThread, ErrorCode = %d", res);
+        return;
+    }
+    jmethodID methodId = (*env)->GetMethodID(env, g_ctxt.jniHelperClz, "sendResult", "(I)V");
+    (*env)->CallVoidMethod(env, g_ctxt.jniHelperObj, methodId, result);
 
     (*g_ctxt.javaVM)->DetachCurrentThread;
 }
@@ -218,18 +232,18 @@ Java_com_dastanapps_ffmpegjni_VideoKit_configurationinfo(JNIEnv *env, jobject ob
 
 jmp_buf jmp_exit;
 
-int run_cmd(int argc, char **argv, Callback callback) {
+void run_cmd(int argc, char **argv, Callback callback) {
     int res = 0;
     res = setjmp(jmp_exit);
     if (res) {
-        return res;
+        return;
     }
 
-    res = run(argc, argv, callback);
-    return res;
+    run(argc, argv, callback);
+    return;
 }
 
-JNIEXPORT jint
+JNIEXPORT void
 JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
         (JNIEnv *env, jobject obj, jobjectArray commands) {
     LOGI("Inside JNI Run");
@@ -250,16 +264,15 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
     jint retcode = 0;
     jni_callback.progress_callback = showProgress;
     jni_callback.benchmark_callback = showBenchmark;
+    jni_callback.result_callback=sendResult;
 
-    retcode = run_cmd(argc, argv, jni_callback);
+    run_cmd(argc, argv, jni_callback);
 
     for (i = 0; i < argc; ++i) {
         (*env)->ReleaseStringUTFChars(env, strr[i], argv[i]);
     }
     free(argv);
     free(strr);
-
-    return retcode;
 }
 
 jboolean FFMPEG_ANDROID_DEBUG = 0;

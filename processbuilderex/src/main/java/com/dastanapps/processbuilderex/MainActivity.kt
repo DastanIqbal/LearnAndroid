@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         //Log.d("DEBUG", )
         NativeWrapper.a().a(this)
         NativeWrapper.a().c()
-        NativeWrapper.a().runFFmpeg(arrayOf("ffmpeg","-y","-i","/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4","/sdcard/KrusoTestVideo/output.mp4"))
+        NativeWrapper.a().runFFmpeg(arrayOf("ffmpeg","-y","-i","/sdcard/TestVideo/ezgif-3-704253d805.mp4","/sdcard/TestVideo/output.mp4"))
         //      startService(Intent(this, MyService::class.java))
 //        NativeWrapper.a().a(this)
 //        NativeWrapper.a().c()

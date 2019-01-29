@@ -38,13 +38,17 @@ class TranscodingService : Service() {
 
 
         val cmds = CmdlineBuilder()
-                .addInputPath("/sdcard/KrusoTestVideo/ezgif-3-704253d805.mp4")
-             //   .customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
-                .outputPath("/sdcard/KrusoTestVideo/FFmpegDrawText.mp4")
+                .addInputPath("/sdcard/TestVideo/ezgif-3-704253d805.mp4")
+                //   .customCommand("-filter_complex drawtext=fontfile=/system/fonts/Roboto-Bold.ttf:text='iqbal':fontcolor=white:fontsize=96")
+                .outputPath("/sdcard/TestVideo/FFmpegDrawText.mp4")
                 .build()
 
 
         val resultCode = FFmpegExecutor.execute(cmds, object : VideoKit.IVideoKit {
+            override fun result(result: Int) {
+                Log.d("JNI::DEBUG", result.toString())
+            }
+
             override fun error(error: String) {
                 Log.d("JNI::DEBUG", error)
             }
