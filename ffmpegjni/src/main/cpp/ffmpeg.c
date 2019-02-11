@@ -119,6 +119,7 @@ int stop_ffmpeg_transcoding = 0;
 
 
 void (*progress_callback)(char *);
+void (*result_callback)(int result);
 
 void resetValues();
 
@@ -644,6 +645,13 @@ static void ffmpeg_cleanup(int ret) {
     }
     term_exit();
     ffmpeg_exited = 1;
+    int result=0;
+    if(main_return_code==1)
+        result=1;
+    else if(getexitcode()==1){
+        result=1;
+    }
+    result_callback(result);
 }
 
 void remove_avoptions(AVDictionary **a, AVDictionary *b) {
@@ -4811,15 +4819,20 @@ void setProgressCallback(void (*callback)(char *)) {
     progress_callback = callback;
 }
 
+void setResultCallback(void (*callback)(int result)) {
+    result_callback = callback;
+}
+
 void run(int argc, char **argv, Callback callback) {
     resetValues();
     setProgressCallback(callback.progress_callback);
+    setResultCallback(callback.result_callback);
     int i, ret;
     int64_t ti;
 
     init_dynload();
 
-        register_exit(ffmpeg_cleanup);
+    register_exit(ffmpeg_cleanup);
 
     setvbuf(stderr, NULL, _IONBF, 0); /* win32 runtime needs this */
 
@@ -4883,7 +4896,6 @@ void run(int argc, char **argv, Callback callback) {
     if ((decode_error_stat[0] + decode_error_stat[1]) * max_error_rate < decode_error_stat[1])
         exit_program(69);
 
-    callback.result_callback(main_return_code);
     exit_program(received_nb_signals ? 255 : main_return_code);
 }
 
@@ -4904,8 +4916,10 @@ void resetValues() {
     nb_output_streams = 0;
     nb_output_files = 0;
     nb_filtergraphs = 0;
+    stop_ffmpeg_transcoding=0;
 }
 
 void stop_ffmpeg(int stop) {
     stop_ffmpeg_transcoding = stop;
+    main_return_code = 1;
 }

@@ -139,7 +139,13 @@ void register_exit(void (*cb)(int ret)) {
     program_exit = cb;
 }
 
+int exit_code = 0;
+int getexitcode(){
+    return exit_code;
+};
+
 int exit_program(int ret) {
+    exit_code = ret;
     if (program_exit)
         program_exit(ret);
 

@@ -47,8 +47,8 @@ object FFmpegExecutor {
                 override fun result(result: Int) {
                     if (result == 0) {
                         it.onComplete()
-                    } else {
-                        it.onError(Throwable("FFmpeg command failed $result"))
+                    } else /*if(!it.isDisposed)*/{
+                        it.onError(FFmpegError("FFmpeg command failed $result"))
                     }
                 }
 

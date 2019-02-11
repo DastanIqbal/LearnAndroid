@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity() {
 //        Observable.concat(video1,video2,video3)
 //    }
 
+    val video="/sdcard/TestVideo/VID20171207184038.mp4"//"/storage/emulated/0/DCIM/Camera/Comedy Football  Funniest Moments 2018 ● HD 3.mp4"
     fun play(view: View) {
         textView.text = ""
         //MP3
@@ -115,12 +116,13 @@ class MainActivity : AppCompatActivity() {
         // val comand = "ffmpeg -i /sdcard/TestVideo/ezgif-3-704253d805.mp4 -vcodec libx264 -acodec aac -strict -2 /sdcard/ffmpegso.mp4"
 
         val cmds = CmdlineBuilder()
-                //.addInputPath("/sdcard/TestVideo/big_buck_bunny_720p_stereo.mp4")
+                .concatInput("/sdcard/TestVideo/merge.txt")
+                .addInputPath("/sdcard/TestVideo/watermark.png")
                 //.addInputPath("/storage/emulated/0/DCIM/Camera/VID_20180815_153644.mp4")
                 //.concatInput("/sdcard/TestVideo/merge.txt")
-                .addInputPath("/storage/emulated/0/DCIM/Camera/VID_20190128_152411492_HDR.mp4")
-                .addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=1080.0:1920.0:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000")
-                //.customCommand("-vcodec libx264 -pix_fmt yuv420p -crf 18 -preset superfast -tune zerolatency -strict experimental")
+                //.addInputPath(video)
+                .addFilterComplex("[0:v]select=concatdec_select,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000[0v];[1:v]scale=290.76926:108.87489:[1v];[0v][1v]overlay=W-w:H-h[video];[0:a]volume=1.0,aselect=concatdec_select,aresample=async=1[a];[a]amix=inputs=1:duration=shortest[audio]")
+                .customCommand("-map [video] -map [audio] -vcodec libx264 -pix_fmt yuv420p -crf 18 -preset superfast -tune zerolatency -strict experimental")
                 //.addInputPath("/sdcard/TestVideo/merge/concat_audio__20180918091350.mp3")
                 //.addFilterComplex("[0:a]volume=1.0[0a];[1:a]volume=1.0[0b];[0a][0b]amix=inputs=2:duration=shortest")
                 //.customCommand("-map 0:v:0 -map 1:a:0 -shortest -c:v copy -strict -2")
@@ -130,6 +132,7 @@ class MainActivity : AppCompatActivity() {
                 //.customCommand("-filter_complex [0:v]scale=996:996:force_original_aspect_ratio=decrease,transpose=1,pad=996:996:0:(oh-ih)/2:color=#000000[0v];[1:v]scale=200.0:60.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10;[2:0]volume=0.5[a];[2:0]volume=0.1[b];[a][b]amix=inputs=2:duration=shortest -strict -2")
                 //.addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=640:640:force_original_aspect_ratio=decrease,pad=640:640:(ow-iw)/2:(oh-ih)/2:color=#00000000[0v];[1:v]scale=96.0:36.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10[bg];[2:v][bg]overlay=(W-w)/2:(H-h)/2:shortest=1 -vcodec libx264 -crf 22 -tune zerolatency -strict -2")
                 //.customCommand("[0:v]setpts=PTS-STARTPTS,scale=1088:1088:force_original_aspect_ratio=decrease,pad=1088:1088:(ow-iw)/2:(oh-ih)/2:color=#000000[0v];[1:v]scale=163.0:61.0:force_original_aspect_ratio=increase[1v];[0v][1v]overlay=W-w-10:H-h-10 -ac 2 -ar 44100 -vcodec libx264 -bf 2 -g 75 -b:v 10M -bufsize 1M -profile:v baseline -level 3.0 -preset -ultrafast -strict 2")
+
                 .outputPath("/sdcard/TestVideo/MixAudioVideo.mp4")
                 .build()
         val cmd2 = ArrayList<String>()
@@ -146,8 +149,12 @@ class MainActivity : AppCompatActivity() {
         compositeDisposable.add(
                 FFmpegExecutor.execute(cmds)
                         //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
+                        .doOnError {
+                            textView.append("Got Exception ${it.message}")
+                            Toast.makeText(this@MainActivity, "Got Exception ${it.message}", Toast.LENGTH_SHORT).show()
+                        }
                         .subscribe({
-                            textView.append(it)
+                            textView.append(it+"\n")
                             if (it.contains("[bench]")) {
                                 textView.append(it)
                             }
@@ -158,46 +165,46 @@ class MainActivity : AppCompatActivity() {
                             textView.append(" DONE")
                             Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
 
-                            val cmds = CmdlineBuilder()
-                                    .addInputPath("/storage/emulated/0/DCIM/Camera/VID_20190128_152411492_HDR.mp4")
-                                    .addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=1080.0:1920.0:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000")
-                                      .outputPath("/sdcard/TestVideo/MixAudioVideo1.mp4")
-                                    .build()
-                            FFmpegExecutor.execute(cmds)
-                                    //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
-                                    .subscribe({
-                                        textView.append(it)
-                                        if (it.contains("[bench]")) {
-                                            textView.append(it)
-                                        }
-                                    }, {
-                                        textView.append("Got Error ${it.message}")
-                                        Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
-                                    }, {
-                                        textView.append(" DONE")
-                                        Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-
-                                        val cmds = CmdlineBuilder()
-                                                .addInputPath("/storage/emulated/0/DCIM/Camera/VID_20190128_152411492_HDR.mp4")
-                                                .addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=1080.0:1920.0:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000")
-                                                .outputPath("/sdcard/TestVideo/MixAudioVideo2.mp4")
-                                                .build()
-                                        FFmpegExecutor.execute(cmds)
-                                                //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
-                                                .subscribe({
-                                                    textView.append(it)
-                                                    if (it.contains("[bench]")) {
-                                                        textView.append(it)
-                                                    }
-                                                }, {
-                                                    textView.append("Got Error ${it.message}")
-                                                    Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
-                                                }, {
-                                                    textView.append(" DONE")
-                                                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
-                                                })
-
-                                    })
+//                            val cmds = CmdlineBuilder()
+//                                    .addInputPath(video)
+//                                    .addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=1080.0:1920.0:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000")
+//                                      .outputPath("/sdcard/TestVideo/MixAudioVideo1.mp4")
+//                                    .build()
+//                            FFmpegExecutor.execute(cmds)
+//                                    //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
+//                                    .subscribe({
+//                                        textView.append(it)
+//                                        if (it.contains("[bench]")) {
+//                                            textView.append(it)
+//                                        }
+//                                    }, {
+//                                        textView.append("Got Error ${it.message}")
+//                                        Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
+//                                    }, {
+//                                        textView.append(" DONE")
+//                                        Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+//
+//                                        val cmds = CmdlineBuilder()
+//                                                .addInputPath(video)
+//                                                .addFilterComplex("[0:v]setpts=PTS-STARTPTS,scale=1080.0:1920.0:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=#000000")
+//                                                .outputPath("/sdcard/TestVideo/MixAudioVideo2.mp4")
+//                                                .build()
+//                                        FFmpegExecutor.execute(cmds)
+//                                                //FFmpegExecutor.executeProbe(cmd2.toTypedArray())
+//                                                .subscribe({
+//                                                    textView.append(it)
+//                                                    if (it.contains("[bench]")) {
+//                                                        textView.append(it)
+//                                                    }
+//                                                }, {
+//                                                    textView.append("Got Error ${it.message}")
+//                                                    Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
+//                                                }, {
+//                                                    textView.append(" DONE")
+//                                                    Toast.makeText(this@MainActivity, "Done", Toast.LENGTH_SHORT).show()
+//                                                })
+//
+//                                    })
                         }))
     }
 

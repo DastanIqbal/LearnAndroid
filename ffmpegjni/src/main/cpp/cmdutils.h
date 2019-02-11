@@ -52,6 +52,11 @@ extern AVDictionary *format_opts, *codec_opts, *resample_opts;
 extern int hide_banner;
 
 /**
+ * Get exit code when program call exit_program()
+ * @return
+ */
+int getexitcode();
+/**
  * Register a program-specific cleanup routine.
  */
 void register_exit(void (*cb)(int ret));
