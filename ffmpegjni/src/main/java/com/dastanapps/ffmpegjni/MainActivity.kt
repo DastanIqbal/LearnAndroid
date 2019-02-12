@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                                 textView.append(it)
                             }
                         }, {
-                            textView.append("Got Error ${it.message}")
+                            textView.append("\nGot Error ${it.message}")
                             Toast.makeText(this@MainActivity, "Got Error ${it.message}", Toast.LENGTH_SHORT).show()
                         }, {
                             textView.append(" DONE")

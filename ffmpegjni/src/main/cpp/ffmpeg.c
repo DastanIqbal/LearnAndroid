@@ -646,10 +646,12 @@ static void ffmpeg_cleanup(int ret) {
     term_exit();
     ffmpeg_exited = 1;
     int result=0;
-    if(main_return_code==1)
+    if(main_return_code==1){
         result=1;
-    else if(getexitcode()==1){
+    }else if(getexitcode()==1){
         result=1;
+    }else if(getexitcode()==6043){ //canceled
+        result=6043;
     }
     result_callback(result);
 }
@@ -4921,5 +4923,5 @@ void resetValues() {
 
 void stop_ffmpeg(int stop) {
     stop_ffmpeg_transcoding = stop;
-    main_return_code = 1;
+    main_return_code = 6043;
 }
