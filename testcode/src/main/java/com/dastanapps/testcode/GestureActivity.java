@@ -1,12 +1,13 @@
 package com.dastanapps.testcode;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 
 public class GestureActivity extends AppCompatActivity implements View.OnTouchListener {

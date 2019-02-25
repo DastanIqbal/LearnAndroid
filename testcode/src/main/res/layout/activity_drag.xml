@@ -17,28 +17,24 @@
     <FrameLayout
         android:id="@+id/fl"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="match_parent"
         android:background="#000"
         app:layout_constraintBottom_toTopOf="@+id/tv"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.dastanapps.customview.MultiTouchView
-            android:id="@+id/mtv"
-            android:layout_width="200dp"
-            android:layout_height="100dp"
-            android:layout_gravity="center|top"
-            android:background="#f0f000">
+        <com.dastanapps.customview.DraggableView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="#fff">
 
             <android.support.v7.widget.AppCompatImageView
-                android:id="@+id/imageView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 app:srcCompat="@mipmap/ic_image" />
-
-        </com.dastanapps.customview.MultiTouchView>
+        </com.dastanapps.customview.DraggableView>
     </FrameLayout>
 
 </android.support.constraint.ConstraintLayout>

@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.dastanapps.testcode"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -28,6 +28,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-annotations.pro'
+        exclude 'META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version'
+        exclude 'META-INF/androidx.customview_customview.version'
+        exclude 'META-INF/androidx.legacy_legacy-support-core-ui.version'
+        exclude 'META-INF/androidx.drawerlayout_drawerlayout.version'
+        exclude 'META-INF/androidx.interpolator_interpolator.version'
+        exclude 'META-INF/androidx.legacy_legacy-support-core-utils.version'
+    }
 
 }
 
@@ -36,10 +45,13 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.appcompat:appcompat:1.0.0-beta01'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     api 'com.dastanapps.dastanlib:common:0.1-alpha'
     api 'com.dastanapps.dastanlib:ui:0.1.1-alpha'
+    api 'com.pierfrancescosoffritti.androidyoutubeplayer:core:10.0.1'
 }

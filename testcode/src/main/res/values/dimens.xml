@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="inline_video_player_youtube_logo">150dip</dimen>
+    <dimen name="inline_video_player_padding">9.299988dip</dimen>
+</resources>

@@ -5,15 +5,15 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.support.annotation.RequiresApi
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_drag)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkPermission()
         }

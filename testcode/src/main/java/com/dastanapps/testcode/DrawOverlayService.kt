@@ -5,13 +5,13 @@ import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
-import android.support.v4.content.ContextCompat
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams.*
 import android.widget.FrameLayout
+import androidx.core.content.ContextCompat
 import com.dastanapps.dastanlib.NotificationB
 import com.dastanapps.dastanlib.utils.CommonUtils
 
