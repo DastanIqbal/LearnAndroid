@@ -274,7 +274,7 @@ class YoutubeIFrameActivity : AppCompatActivity() {
             webView.loadUrl(stringBuilder.toString())
         }
 
-        override fun onCancel(dialog: DialogInterface?) {
+        override fun onCancel(dialog: DialogInterface) {
             super.onCancel(dialog)
             myRl?.run {
                 if (childCount > 0) {

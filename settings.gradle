@@ -1,7 +1,7 @@
 //include ':androidp'
 //include ':shadersNfilters'
 //include ':mediaeffectswithopengles',
-//include ':mediasdk', ':testcode', ':preferencesample'
+include ':mediasdk', ':testcode'//, ':preferencesample'
 //include ':canvas'
 //include ':opeglesgame'
 //include  ':tutsopengles'

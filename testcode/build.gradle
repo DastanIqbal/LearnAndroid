@@ -51,7 +51,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
-    api 'com.dastanapps.dastanlib:common:0.1-alpha'
-    api 'com.dastanapps.dastanlib:ui:0.1.3.1-alpha'
-    api 'com.pierfrancescosoffritti.androidyoutubeplayer:core:10.0.1'
+    implementation 'com.dastanapps.dastanlib:common:0.1-alpha'
+    implementation 'com.dastanapps.dastanlib:ui:0.1.3.1-alpha'
+    implementation 'com.pierfrancescosoffritti.androidyoutubeplayer:core:10.0.1'
 }

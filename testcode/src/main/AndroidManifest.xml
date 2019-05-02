@@ -14,7 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:replace="android:appComponentFactory">
+        tools:replace="android:appComponentFactory,android:name">
         <activity android:name="com.dastanapps.youtubeiframe.YoutubeIFrameActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -26,12 +26,12 @@ class DrawOverlayService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val notificationB = NotificationB()
-        notificationB.smallIcon = R.drawable.ic_stat_nightfilter
-        notificationB.title = "NightFilter"
-        notificationB.pendingIntent = Intent(this, MainActivity::class.java)
-        notificationB.channelId = "id_night_filter"
-        notificationB.channelName = "Night Filter"
-        notificationB.cancelable = false
+                .smallIcon(R.drawable.ic_stat_nightfilter)
+                .title("NightFilter").pendingIntent(
+                        Intent(this, MainActivity::class.java))
+                .channelId("id_night_filter")
+                .channelName("Night Filter")
+                .cancelable(false)
         CommonUtils.openNotification2(this, notificationB)
     }
 
