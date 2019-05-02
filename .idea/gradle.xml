@@ -8,9 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/mediasdk" />
-            <option value="$PROJECT_DIR$/preferencesample" />
-            <option value="$PROJECT_DIR$/testcode" />
+            <option value="$PROJECT_DIR$/players" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

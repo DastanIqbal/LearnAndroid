@@ -3,13 +3,12 @@ package com.dastanapps.players
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
@@ -100,7 +99,7 @@ class ExoPlayer242 : AppCompatActivity() {
         if (player == null) {
             val adaptiveTrackSelectionFactory = AdaptiveTrackSelection.Factory(BANDWIDTH_METER)
             val eventLogger = EventLogger(DefaultTrackSelector(adaptiveTrackSelectionFactory))
-            player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
+            player = ExoPlayerFactory.newSimpleInstance(this,DefaultRenderersFactory(this),
                     DefaultTrackSelector(adaptiveTrackSelectionFactory), DefaultLoadControl())
             player?.addListener(object : ExoPlayer.EventListener {
                 override fun onSeekProcessed() {
@@ -146,7 +145,7 @@ class ExoPlayer242 : AppCompatActivity() {
                     Log.d("DEBUG", "onPositionDiscontinuity")
                 }
 
-                override fun onTimelineChanged(timeline: Timeline?, manifest: Any?) {
+                override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
                     Log.d("DEBUG", manifest.toString())
                 }
 

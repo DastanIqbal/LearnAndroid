@@ -2,9 +2,9 @@ package com.dastanapps.players
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.AdapterView
 import android.widget.ListView
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         val listView = findViewById<ListView>(R.id.listview)
         listView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id ->
             when (position) {
-                0 -> startActivity(Intent(this, ExoPlayer::class.java))
+                0 -> startActivity(Intent(this, ExoPlayerActivity::class.java))
                 1 -> startActivity(Intent(this, ExoPlayer242::class.java))
                 2 -> startActivity(Intent(this, MediaPlayerActivity::class.java))
                 3 -> startActivity(Intent(this, TextureViewActivity::class.java))
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        exoPlayerHelper.onResume()
+        exoPlayerHelper.onStart()
         exoPlayerHelper.playUrl("http://www.panacherock.com/downloads/mp3/01_Sayso.mp3",object : ExoPlayerHelper.Listener() {
 
         })
@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        exoPlayerHelper.onPause()
+        exoPlayerHelper.onStop()
     }
 
     override fun onStop() {

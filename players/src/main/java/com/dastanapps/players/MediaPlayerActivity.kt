@@ -5,12 +5,12 @@ import android.graphics.SurfaceTexture
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.TextureView
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
 
 
 /**

@@ -1,4 +1,4 @@
-package com.dastanapps.players
+package com.dastanapps
 
 import android.content.Context
 import android.net.Uri
@@ -14,22 +14,33 @@ import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.FileDataSource
 import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.video.VideoListener
 import java.io.File
 
 
 /**
  * Created by dastaniqbal on 18/05/2018.
+ * dastanIqbal@marvelmedia.com
  * 18/05/2018 5:55
  */
-class ExoPlayerHelper(val context: Context) {
+class ExoPlayerHelper2(val context: Context) {
     private val TAG = this::class.java.simpleName
+
     var player: SimpleExoPlayer? = null
-    var playbackPosition = 0L
     var currentWindow = 0
     var playWhenReady = false
-    private var currentPosition = 0L
+    var playbackPosition = 0L
+        get() {
+            return player?.run {
+                currentPosition
+            } ?: field
+        }
     private var currentUrl: String? = null
+    private var listener: Listener? = null
+    var seekMode: SeekParameters = SeekParameters.DEFAULT
+        set(value) {
+            field = value
+            player?.seekParameters = field
+        }
 
     fun onStart() {
         if (Util.SDK_INT > 23 && player == null) {
@@ -37,53 +48,54 @@ class ExoPlayerHelper(val context: Context) {
         }
     }
 
+
     fun onStop() {
         if (Util.SDK_INT > 23) {
             releasePlayer()
         }
     }
 
-    fun initializePlayer() {
+    private fun initializePlayer() {
+        player = null
         player = ExoPlayerFactory.newSimpleInstance(context,
                 DefaultRenderersFactory(context),
                 DefaultTrackSelector(), DefaultLoadControl())
+        player?.seekParameters = seekMode
         player?.seekTo(currentWindow, playbackPosition)
     }
 
     fun playUrl(url: String, listener: Listener? = null) {
         currentUrl = url
-//        releasePlayer()
-//        initializePlayer()
+        releasePlayer()
+        initializePlayer()
+        this@ExoPlayerHelper2.listener = listener
         player?.let {
             val uri = Uri.parse(url)
             val mediaSource = buildMediaSource(uri)
             playWhenReady(true)
 
-            it.seekTo(currentPosition)
-            it.addListener(listener)
-            it.addVideoListener(listener)
-//            it.addVideoDebugListener(listener
-//            it.addAudioDebugListener(listener)
+            it.seekTo(playbackPosition)
+            it.addListener(this@ExoPlayerHelper2.listener)
+            it.addVideoListener(this@ExoPlayerHelper2.listener)
             it.prepare(mediaSource, false, false)
         }
     }
 
-    fun playLocal(filepath: String, listener: Listener? = null) {
+    fun playLocal(filepath: String, play: Boolean = true, listener: Listener? = null) {
         currentUrl = filepath
         if (player == null) {
             releasePlayer()
             initializePlayer()
         }
+        this@ExoPlayerHelper2.listener = listener
         player?.let {
             val uri = Uri.fromFile(File(filepath))
             val mediaSource = buildLocalMediaSource(uri)
 
-            it.seekTo(currentPosition)
-            it.addListener(listener)
-            it.addVideoListener(listener)
-
-
-            playWhenReady(true)
+            it.seekTo(playbackPosition)
+            it.addListener(this@ExoPlayerHelper2.listener)
+            it.addVideoListener(this@ExoPlayerHelper2.listener)
+            playWhenReady(play)
             it.prepare(mediaSource, false, false)
         }
     }
@@ -91,7 +103,8 @@ class ExoPlayerHelper(val context: Context) {
     fun pause() {
         player?.let {
             playWhenReady(false)
-            currentPosition = it.currentPosition
+            Log.d(TAG, "Current Position: " + it.currentPosition)
+            playbackPosition = it.currentPosition
         }
     }
 
@@ -104,13 +117,17 @@ class ExoPlayerHelper(val context: Context) {
     }
 
 
+    fun isPlaying() = playWhenReady
+
+
     fun playWhenReady(playWhenReady: Boolean) {
+        Log.d(TAG, "Playing Position ${player?.currentPosition?.toString()}")
         this.playWhenReady = playWhenReady
         player?.playWhenReady = playWhenReady
     }
 
     private fun buildMediaSource(uri: Uri): MediaSource {
-        val defaultHttpDataSourceFactory = DefaultHttpDataSourceFactory("exoplayer-")
+        val defaultHttpDataSourceFactory = DefaultHttpDataSourceFactory("exoplayer-kruso")
         defaultHttpDataSourceFactory.setDefaultRequestProperty("Image", "getme")
         return ExtractorMediaSource.Factory(defaultHttpDataSourceFactory).createMediaSource(uri)
     }
@@ -132,122 +149,110 @@ class ExoPlayerHelper(val context: Context) {
     fun releasePlayer() {
         player?.run {
             playWhenReady(false)
-            playbackPosition = player?.run {
+
+            this@ExoPlayerHelper2.playbackPosition = player?.run {
                 currentPosition
-            } ?: playbackPosition
+            } ?: this@ExoPlayerHelper2.playbackPosition
+
             currentWindow = player?.run {
                 currentWindowIndex
             } ?: currentWindow
-            player?.stop()
-            player?.release()
+
+            unregisterListener()
+
+            release()
+            clearVideoSurface()
             player = null
         }
     }
 
+    fun unregisterListener() {
+        player?.removeListener(listener)
+        player?.removeVideoListener(listener)
+    }
+
+    fun resetPlayer() {
+        releasePlayer()
+        playbackPosition = 0
+        currentWindow = 0
+    }
+
     fun seekTo(position: Long) {
         player?.run {
+            Log.d(TAG, "SeekTo $position")
             seekTo(position)
+            this@ExoPlayerHelper2.playbackPosition = currentPosition
         }
     }
 
-    open class Listener : Player.EventListener, VideoListener/*,VideoRendererEventListener, AudioRendererEventListener*/ {
-        private val TAG = this::class.java.simpleName
-       /* override fun onAudioSinkUnderrun(bufferSize: Int, bufferSizeMs: Long, elapsedSinceLastFeedMs: Long) {
-            Log.d(TAG,"onAudioSinkUnderrun $bufferSize $bufferSizeMs $elapsedSinceLastFeedMs")
-        }
-
-        override fun onAudioEnabled(counters: DecoderCounters?) {
-            Log.d(TAG,"onAudioEnabled")
-        }
-
-        override fun onAudioInputFormatChanged(format: Format?) {
-            Log.d(TAG,"onAudioInputFormatChanged")
-        }
-
-        override fun onAudioSessionId(audioSessionId: Int) {
-            Log.d(TAG,"onAudioSessionId")
-        }
-
-        override fun onAudioDecoderInitialized(decoderName: String?, initializedTimestampMs: Long, initializationDurationMs: Long) {
-            Log.d(TAG,"onAudioDecoderInitialized")
-        }
-
-        override fun onAudioDisabled(counters: DecoderCounters?) {
-            Log.d(TAG,"onAudioDisabled")
-        }
-
-        override fun onDroppedFrames(count: Int, elapsedMs: Long) {
-            Log.d(TAG,"onDroppedFrames")
-        }
-
-        override fun onVideoEnabled(counters: DecoderCounters?) {
-            Log.d(TAG,"onVideoEnabled")
-        }
-
-        override fun onVideoSizeChanged(width: Int, height: Int, unappliedRotationDegrees: Int, pixelWidthHeightRatio: Float) {
-            Log.d(TAG,"onVideoSizeChanged")
-        }
-
-        override fun onVideoDisabled(counters: DecoderCounters?) {
-            Log.d(TAG,"onVideoDisabled")
-        }
-
-        override fun onVideoDecoderInitialized(decoderName: String?, initializedTimestampMs: Long, initializationDurationMs: Long) {
-            Log.d(TAG,"onVideoDecoderInitialized")
-        }
-
-        override fun onVideoInputFormatChanged(format: Format?) {
-            Log.d(TAG,"onVideoInputFormatChanged")
-        }
-
-        override fun onRenderedFirstFrame(surface: Surface?) {
-            Log.d(TAG,"onRenderedFirstFrame")
-        }*/
-
-        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
-            Log.d(TAG,"onTimelineChanged")
-        }
+    open class Listener : Player.EventListener, SimpleExoPlayer.VideoListener {
+        private val TAG = "ExoPlayerHelper2" + this::class.java.simpleName
 
         override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
-            Log.d(TAG,"onPlaybackParametersChanged")
+            Log.d(TAG, "onPlaybackParametersChanged")
         }
 
         override fun onSeekProcessed() {
-            Log.d(TAG,"onSeekProcessed")
+            Log.d(TAG, "onSeekProcessed")
         }
 
         override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-            Log.d(TAG,"onTracksChanged")
+            Log.d(TAG, "onTracksChanged")
         }
 
         override fun onPlayerError(error: ExoPlaybackException?) {
-            Log.d(TAG,"onPlayerError")
+            Log.d(TAG, "onPlayerError:${error?.message}")
+            error?.printStackTrace()
         }
 
         override fun onLoadingChanged(isLoading: Boolean) {
-            Log.d(TAG,"onLoadingChanged")
+            Log.d(TAG, "onLoadingChanged:$isLoading")
         }
 
         override fun onPositionDiscontinuity(reason: Int) {
-            Log.d(TAG,"onPositionDiscontinuity")
+            Log.d(TAG, "onPositionDiscontinuity:$reason")
         }
 
         override fun onRepeatModeChanged(repeatMode: Int) {
-            Log.d(TAG,"onRepeatModeChanged")
+            Log.d(TAG, "onRepeatModeChanged:$repeatMode")
         }
 
         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-            Log.d(TAG,"onShuffleModeEnabledChanged")
+            Log.d(TAG, "onShuffleModeEnabledChanged:$shuffleModeEnabled")
         }
 
+        override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+            Log.d(TAG, "onTimelineChanged:$reason")
+        }
+
+
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-            Log.d(TAG,"onPlayerStateChanged")
+            Log.d(TAG, "onPlayerStateChanged: $playWhenReady,$playbackState")
         }
 
         override fun onVideoSizeChanged(width: Int, height: Int, unappliedRotationDegrees: Int, pixelWidthHeightRatio: Float) {
-            super.onVideoSizeChanged(width, height, unappliedRotationDegrees, pixelWidthHeightRatio)
-            Log.d(TAG,"onVideoSizeChanged")
+            //  super.onVideoSizeChanged(width, height, unappliedRotationDegrees, pixelWidthHeightRatio)
+            Log.d(TAG, "onVideoSizeChanged: $width,$height;$unappliedRotationDegrees;$pixelWidthHeightRatio")
+        }
+
+        override fun onRenderedFirstFrame() {
+            //super.onRenderedFirstFrame()
+            Log.d(TAG, "onRenderedFirstFrame")
+        }
+
+        override fun onSurfaceSizeChanged(width: Int, height: Int) {
+            //super.onSurfaceSizeChanged(width, height)
+            Log.d(TAG, "onSurfaceSizeChanged: $width,$height")
         }
 
     }
+
+    interface OnCompletionListener {
+        fun onCompletion(mp: ExoPlayerHelper2)
+    }
+
+    interface OnErrorListener {
+        fun onError(error: String, type: Int, renderIndex: Int): Boolean
+    }
+
 }

@@ -3,11 +3,11 @@ package com.dastanapps.players
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Surface
 import android.view.View
 import android.widget.SeekBar
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioRendererEventListener
 import com.google.android.exoplayer2.decoder.DecoderCounters
@@ -27,7 +27,7 @@ import com.google.android.exoplayer2.video.VideoRendererEventListener
 
  * 10/01/2018 6:11
  */
-class ExoPlayer : AppCompatActivity() {
+class ExoPlayerActivity : AppCompatActivity() {
     // bandwidth meter to measure and estimate bandwidth
     private val BANDWIDTH_METER = DefaultBandwidthMeter()
     private val TAG = "PlayerActivity"
@@ -40,17 +40,16 @@ class ExoPlayer : AppCompatActivity() {
     private var playbackPosition: Long = 0
     private var currentWindow: Int = 0
     private var playWhenReady = true
+    private var mExoPlayer: ExoPlayerHelper? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-
-        componentListener = ComponentListener()
         playerView = findViewById(R.id.video_view)
         seekBar = findViewById(R.id.seekbar)
         seekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, i: Int, b: Boolean) {
-                player!!.seekTo(i.toLong())
+                mExoPlayer?.player?.seekTo(i.toLong())
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {
@@ -61,35 +60,30 @@ class ExoPlayer : AppCompatActivity() {
 
             }
         })
+        mExoPlayer = ExoPlayerHelper(this)
+        componentListener = ComponentListener()
+       // mExoPlayer?.playLocal("/storage/emulated/0/Kruso/Video_kruso_20190415173019271.mp4", componentListener)
     }
 
     public override fun onStart() {
         super.onStart()
-        if (Util.SDK_INT > 23) {
-            initializePlayer()
-        }
+        mExoPlayer?.onStart()
     }
 
     public override fun onResume() {
         super.onResume()
-        hideSystemUi()
-        if (Util.SDK_INT <= 23 || player == null) {
-            initializePlayer()
-        }
+        //hideSystemUi()
+        mExoPlayer?.onStart()
     }
 
     public override fun onPause() {
         super.onPause()
-        if (Util.SDK_INT <= 23) {
-            releasePlayer()
-        }
+        mExoPlayer?.onStop()
     }
 
     public override fun onStop() {
         super.onStop()
-        if (Util.SDK_INT > 23) {
-            releasePlayer()
-        }
+        mExoPlayer?.onStop()
     }
 
     private fun initializePlayer() {
@@ -97,11 +91,11 @@ class ExoPlayer : AppCompatActivity() {
             // a factory to create an AdaptiveVideoTrackSelection
             val adaptiveTrackSelectionFactory = AdaptiveTrackSelection.Factory(BANDWIDTH_METER)
             // using a DefaultTrackSelector with an adaptive video selection factory
-            player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this),
+            player = ExoPlayerFactory.newSimpleInstance(this,DefaultRenderersFactory(this),
                     DefaultTrackSelector(adaptiveTrackSelectionFactory), DefaultLoadControl())
             player!!.addListener(componentListener)
-            player!!.addVideoDebugListener(componentListener)
-            player!!.addAudioDebugListener(componentListener)
+          //  player!!.addVideoDebugListener(componentListener)
+          //  player!!.addAudioDebugListener(componentListener)
             playerView!!.player = player
             player!!.playWhenReady = playWhenReady
             player!!.seekTo(currentWindow, playbackPosition)
@@ -116,8 +110,8 @@ class ExoPlayer : AppCompatActivity() {
             currentWindow = player!!.currentWindowIndex
             playWhenReady = player!!.playWhenReady
             player!!.removeListener(componentListener)
-            player!!.removeVideoDebugListener(componentListener)
-            player!!.removeAudioDebugListener(componentListener)
+      //      player!!.removeVideoDebugListener(componentListener)
+      //      player!!.removeAudioDebugListener(componentListener)
             player!!.release()
             player = null
         }
@@ -145,13 +139,19 @@ class ExoPlayer : AppCompatActivity() {
 
     private inner class ComponentListener : Player.DefaultEventListener(), VideoRendererEventListener, AudioRendererEventListener {
 
+        override fun onPlayerError(error: ExoPlaybackException?) {
+            super.onPlayerError(error)
+        }
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             val stateString: String
             when (playbackState) {
-                Player.STATE_IDLE -> stateString = "ExoPlayer.STATE_IDLE      -"
+                Player.STATE_IDLE -> {
+                    stateString = "ExoPlayer.STATE_IDLE      -"
+                    playerView!!.player = mExoPlayer?.player
+                }
                 Player.STATE_BUFFERING -> stateString = "ExoPlayer.STATE_BUFFERING -"
                 Player.STATE_READY -> {
-                    seekBar!!.max = player!!.duration.toInt()
+                    seekBar!!.max =  mExoPlayer?.player!!.duration.toInt()
                     stateString = "ExoPlayer.STATE_READY     -"
                 }
                 Player.STATE_ENDED -> stateString = "ExoPlayer.STATE_ENDED     -"
@@ -182,7 +182,7 @@ class ExoPlayer : AppCompatActivity() {
             // Do nothing.
         }
 
-        override fun onRenderedFirstFrame(surface: Surface) {
+        override fun onRenderedFirstFrame(surface: Surface?) {
             // Do nothing.
         }
 

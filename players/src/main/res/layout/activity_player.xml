@@ -21,6 +21,7 @@ limitations under the License. -->
         android:id="@+id/video_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:surface_type="surface_view"
         app:use_controller="true" />
 
     <SeekBar
