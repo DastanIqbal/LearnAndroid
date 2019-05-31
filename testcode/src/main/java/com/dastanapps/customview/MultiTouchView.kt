@@ -29,12 +29,12 @@ class MultiTouchView @JvmOverloads constructor(
     var minWidth = 0
     var minHeight = 0
     var positionChangeListener: IPositionChangeListener? = null;
+    var oldDistance: Float = 0.toFloat()
+    var isTwoFinger: Boolean = false
+    var hasResetAfterTwoFinger: Boolean = false
+    var currentViewSize = Point()
 
     private val mTouchListener = object : OnTouchListener {
-        var isTwoFinger: Boolean = false
-        var hasResetAfterTwoFinger: Boolean = false
-        var oldDistance: Float = 0.toFloat()
-        var currentViewSize = Point()
 
         fun save(event: MotionEvent) {
             oldDistance = calculateDistance(event)
@@ -205,5 +205,17 @@ class MultiTouchView @JvmOverloads constructor(
 
     interface IPositionChangeListener {
         fun positionChange(x: Int, y: Int, width: Int, height: Int)
+    }
+
+    fun resetTranslation(x: Float, y: Float) {
+        this.x = x
+        this.y = y
+        translationPoint.set(x, y)
+        currentViewSize.set(0, 0)
+        isTwoFinger = false
+        hasResetAfterTwoFinger = false
+        oldDistance = 0f
+        lastPosX = -1f
+        lastPosY = -1f
     }
 }

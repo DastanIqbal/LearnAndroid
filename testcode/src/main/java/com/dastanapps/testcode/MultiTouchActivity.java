@@ -26,6 +26,19 @@ public class MultiTouchActivity extends Activity {
         fl = findViewById(R.id.fl);
         view = findViewById(R.id.mtv);
         tv = findViewById(R.id.tv);
+        findViewById(R.id.button).setOnClickListener(v -> {
+            float parentCenterX = fl.getX() + fl.getWidth() / 2;
+            float parentCenterY = fl.getY() + fl.getHeight() / 2;
+
+            Log.d("MultiTouch Parent:", " X=" + fl.getX() + " Y=" + fl.getY() + " W=" + fl.getWidth() + " H=" + fl.getHeight());
+
+            float x = parentCenterX - view.getWidth() / 2 - fl.getX();
+            float y = parentCenterY - view.getHeight() / 2 - fl.getY();
+
+            Log.d("MultiTouch View:", " X=" + view.getX() + " Y=" + view.getY() + " W=" + view.getWidth() + " H=" + view.getHeight());
+            view.resetTranslation(x,y);
+
+        });
 
         view.setPositionChangeListener((x, y, width, height) -> {
             String stringBuilder = "\nCanvas " + fl.getMeasuredWidth() + ", " + fl.getMeasuredHeight() + "\n";
