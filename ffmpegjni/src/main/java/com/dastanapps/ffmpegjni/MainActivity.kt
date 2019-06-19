@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun format(view: View) {
-        compositeDisposable.add(FFmpegExecutor.showStreams("/sdcard/KrusoTestVideo/VP9.mp4")
+        compositeDisposable.add(FFmpegExecutor.avformatinfo()
                 .subscribe({
                     textView.text = it
                 }, {
