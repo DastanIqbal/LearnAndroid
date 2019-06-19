@@ -1,10 +1,10 @@
 package com.dastanapps.ffmpegjni
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.dastanapps.processing.CmdlineBuilder
 import com.dastanapps.processing.FFmpegExecutor
 import io.reactivex.disposables.CompositeDisposable
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun format(view: View) {
-        compositeDisposable.add(FFmpegExecutor.avformatinfo()
+        compositeDisposable.add(FFmpegExecutor.showStreams("/sdcard/KrusoTestVideo/VP9.mp4")
                 .subscribe({
                     textView.text = it
                 }, {

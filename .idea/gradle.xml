@@ -8,10 +8,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/camerax" />
+            <option value="$PROJECT_DIR$/ffmpegjni" />
             <option value="$PROJECT_DIR$/mediasdk" />
-            <option value="$PROJECT_DIR$/players" />
-            <option value="$PROJECT_DIR$/testcode" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

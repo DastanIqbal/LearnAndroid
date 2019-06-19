@@ -71,6 +71,10 @@ object FFmpegExecutor {
                 .subscribeOn(Schedulers.newThread())
     }
 
+    fun showStreams(file:String): Observable<String> {
+        return createObserable { videoKit.showStreams(file) }
+    }
+
     fun avformatinfo(): Observable<String> {
         return createObserable { videoKit.avformatinfo() }
     }

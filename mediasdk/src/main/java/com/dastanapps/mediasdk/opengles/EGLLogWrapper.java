@@ -1,6 +1,6 @@
 package com.dastanapps.mediasdk.opengles;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import static javax.microedition.khronos.egl.EGL10.EGL_BAD_ACCESS;
 import static javax.microedition.khronos.egl.EGL10.EGL_BAD_ALLOC;

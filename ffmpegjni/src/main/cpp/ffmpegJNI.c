@@ -49,6 +49,7 @@ void ffmpegError(char *c) {
 
     (*g_ctxt.javaVM)->DetachCurrentThread;
 }
+
 void sendResult(int result) {
     LOGD("JNI::Result %d", result);
     JNIEnv *env;
@@ -264,7 +265,7 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_run
     jint retcode = 0;
     jni_callback.progress_callback = showProgress;
     jni_callback.benchmark_callback = showBenchmark;
-    jni_callback.result_callback=sendResult;
+    jni_callback.result_callback = sendResult;
 
     run_cmd(argc, argv, jni_callback);
 
@@ -319,7 +320,177 @@ JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_stopTranscoding
     }
 }
 
-JNIEXPORT void JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_showStreams
-        (JNIEnv *env, jobject obj, jstring filename){
+/* JSON */
+jstring showErrorInJson(JNIEnv *env, char *msg) {
+    char *concatenated;
+    char *jsonBegin = "{\"error\":\"";
+    char *jsonEnd = "\"}";
+    concatenated = malloc(strlen(jsonBegin) + strlen(msg) + strlen(jsonEnd) + 1);
+    strcpy(concatenated, jsonBegin);
+    strcat(concatenated, msg);
+    strcat(concatenated, jsonEnd);
 
+    jstring retval = (*env)->NewStringUTF(env, concatenated);
+
+    free(jsonBegin);
+    free(jsonEnd);
+    free(concatenated);
+    return retval;
+}
+
+char *append(char *output, const char *fmt, ...) {
+    char *result = NULL;
+    char **allocateMemory = NULL;
+    allocateMemory = (char **) malloc(sizeof(allocateMemory));
+    *allocateMemory = "\0";
+
+    va_list args;
+    va_start(args, fmt);
+    vasprintf(allocateMemory, fmt, args);
+    va_end(args);
+
+    result = *allocateMemory;
+
+    free(allocateMemory);
+
+    realloc(output, strlen(output) + strlen(result) + 1);
+    strcat(output, result);
+
+    return output;
+}
+
+JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_videoCodec
+        (JNIEnv *env, jobject obj, jstring filename) {
+    AVFormatContext *pFormatContext = avformat_alloc_context();
+    if (!pFormatContext) {
+        LOGD("ERROR could not allocate memory for Format Context");
+        return showErrorInJson(env, "ERROR: could not allocate memory for Format Context");
+    }
+
+    const char *file = (char *) (*env)->GetStringUTFChars(env, filename, 0);
+    LOGD("opening the input file (%s) and loading format (container) header", file);
+    if (avformat_open_input(&pFormatContext, file, NULL, NULL) != 0) {
+        LOGD("ERROR could not open the file");
+        return showErrorInJson(env, "ERROR could not open the file");
+    }
+
+    LOGD("format %s, duration %lld us, bit_rate %lld", pFormatContext->iformat->name,
+         pFormatContext->duration, pFormatContext->bit_rate);
+
+    if (avformat_find_stream_info(pFormatContext, NULL) < 0) {
+        LOGD("ERROR could not get the stream info");
+        return showErrorInJson(env, "ERROR could not get the stream info");
+    }
+
+    char *result = "{\"streams\":[";
+    char *output = malloc(strlen(result) + 1);
+    strcpy(output, result);
+
+    AVCodec *pCodec = NULL;
+    AVCodecParameters *pCodecParameters = NULL;
+    int video_stream_index = -1;
+
+    for (int i = 0; i < pFormatContext->nb_streams; i++) {
+        AVCodecParameters *pLocalCodecParameters = NULL;
+        pLocalCodecParameters = pFormatContext->streams[i]->codecpar;
+        AVCodec *pLocalCodec = NULL;
+
+        pLocalCodec = avcodec_find_decoder(pLocalCodecParameters->codec_id);
+        if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
+            if (video_stream_index == -1) {
+                video_stream_index = i;
+                pCodec = pLocalCodec;
+                pCodecParameters = pLocalCodecParameters;
+            }
+
+            output = append(output, "\"resolution\": \"%d x %d\"", pLocalCodecParameters->width,
+                            pLocalCodecParameters->height);
+
+            LOGD("Video Codec: resolution %d x %d", pLocalCodecParameters->width,
+                 pLocalCodecParameters->height);
+        } else if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
+            LOGD("Audio Codec: %d channels, sample rate %d", pLocalCodecParameters->channels,
+                 pLocalCodecParameters->sample_rate);
+
+            output = append(output, "\"channels\": %d", pLocalCodecParameters->channels);
+            output = append(output, "\"sample_rate\": %d", pLocalCodecParameters->sample_rate);
+        }
+
+        // print its name, id and bitrate
+        LOGD("\tCodec %s ID %d bit_rate %lld", pLocalCodec->name, pLocalCodec->id,
+             pCodecParameters->bit_rate);
+        LOGD("\tCodec %d Format ", pCodecParameters->format);
+    }
+
+    output = append(output, "]}");
+
+    return (*env)->NewStringUTF(env, output);
+}
+
+JNIEXPORT jstring JNICALL Java_com_dastanapps_ffmpegjni_VideoKit_showStreams
+        (JNIEnv *env, jobject obj, jstring filename) {
+    AVFormatContext *pFormatContext = avformat_alloc_context();
+    if (!pFormatContext) {
+        LOGD("ERROR could not allocate memory for Format Context");
+        return showErrorInJson(env, "ERROR: could not allocate memory for Format Context");
+    }
+
+    const char *file = (char *) (*env)->GetStringUTFChars(env, filename, 0);
+    LOGD("opening the input file (%s) and loading format (container) header", file);
+    if (avformat_open_input(&pFormatContext, file, NULL, NULL) != 0) {
+        LOGD("ERROR could not open the file");
+        return showErrorInJson(env, "ERROR could not open the file");
+    }
+
+    LOGD("format %s, duration %lld us, bit_rate %lld", pFormatContext->iformat->name,
+         pFormatContext->duration, pFormatContext->bit_rate);
+
+    if (avformat_find_stream_info(pFormatContext, NULL) < 0) {
+        LOGD("ERROR could not get the stream info");
+        return showErrorInJson(env, "ERROR could not get the stream info");
+    }
+
+    char *result = "{\"streams\":[";
+    char *output = malloc(strlen(result) + 1);
+    strcpy(output, result);
+
+    AVCodec *pCodec = NULL;
+    AVCodecParameters *pCodecParameters = NULL;
+    int video_stream_index = -1;
+
+    for (int i = 0; i < pFormatContext->nb_streams; i++) {
+        AVCodecParameters *pLocalCodecParameters = NULL;
+        pLocalCodecParameters = pFormatContext->streams[i]->codecpar;
+        AVCodec *pLocalCodec = NULL;
+
+        pLocalCodec = avcodec_find_decoder(pLocalCodecParameters->codec_id);
+        if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
+            if (video_stream_index == -1) {
+                video_stream_index = i;
+                pCodec = pLocalCodec;
+                pCodecParameters = pLocalCodecParameters;
+            }
+
+            output = append(output, "\"resolution\": \"%d x %d\"", pLocalCodecParameters->width,
+                            pLocalCodecParameters->height);
+
+            LOGD("Video Codec: resolution %d x %d", pLocalCodecParameters->width,
+                 pLocalCodecParameters->height);
+        } else if (pLocalCodecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
+            LOGD("Audio Codec: %d channels, sample rate %d", pLocalCodecParameters->channels,
+                 pLocalCodecParameters->sample_rate);
+
+            output = append(output, "\"channels\": %d", pLocalCodecParameters->channels);
+            output = append(output, "\"sample_rate\": %d", pLocalCodecParameters->sample_rate);
+        }
+
+        // print its name, id and bitrate
+        LOGD("\tCodec %s ID %d bit_rate %lld", pLocalCodec->name, pLocalCodec->id,
+             pCodecParameters->bit_rate);
+        LOGD("\tCodec %d Format ", pCodecParameters->format);
+    }
+
+    output = append(output, "]}");
+
+    return (*env)->NewStringUTF(env, output);
 }

@@ -11,7 +11,7 @@ class VideoKit {
     init {
         try {
             System.loadLibrary("ffmpeg")
-            System.loadLibrary("ffprobe")
+            //System.loadLibrary("ffprobe")
         } catch (e: UnsatisfiedLinkError) {
             e.printStackTrace()
         }
@@ -36,6 +36,9 @@ class VideoKit {
 
     external fun stopFFprobe()
     external fun stopTranscoding(stop: Boolean)
+
+    external fun showStreams(file:String):String
+
     fun error(error: String) {
         val fFmpegError = FFmpegError(error)
         Log.d("DEBUG", "Error: $error ${fFmpegError.message}")
