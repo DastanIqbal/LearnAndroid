@@ -3,8 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
-      <module fileurl="file://$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" filepath="$PROJECT_DIR$/ffmpegjni/ffmpegjni.iml" />
-      <module fileurl="file://$PROJECT_DIR$/mediasdk/mediasdk.iml" filepath="$PROJECT_DIR$/mediasdk/mediasdk.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aireminder/aireminder.iml" filepath="$PROJECT_DIR$/aireminder/aireminder.iml" />
     </modules>
   </component>
 </project>
