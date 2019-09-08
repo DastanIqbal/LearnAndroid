@@ -4,8 +4,48 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimaryDark">@android:color/transparent</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="colorControlNormal">@color/colorAccent</item>
+        <item name="actionBarStyle">@style/ActionBarStyle</item>
+        <item name="toolbarStyle">@style/custom_toolbar</item>
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+        <item name="actionBarWidgetTheme">@style/WidgetStyle</item>
+        <item name="android:textColor">@color/colorAccent</item>
+        <item name="cardViewStyle">@style/CardView</item>
+        <!--<item name="preferenceTheme">@style/MyPreferencesTheme</item>-->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="coordinatorLayoutStyle">@style/Widget.Support.CoordinatorLayout</item>
+    </style>
+
+    <style name="ActionBarStyle" parent="@style/Widget.AppCompat.Light.ActionBar">
+        <item name="background">@color/colorPrimary</item>
+        <item name="titleTextStyle">@style/ActionBarTitleText</item>
+        <item name="subtitleTextStyle">@style/ActionBarSubTitleText</item>
+        <item name="elevation">0dp</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+
+    <style name="custom_toolbar" parent="@style/Widget.AppCompat.Toolbar">
+        <item name="titleTextColor">#def</item>
+    </style>
+
+    <style name="DrawerArrowStyle" parent="@style/Widget.AppCompat.DrawerArrowToggle">
+        <item name="color">@color/colorAccent</item>
+    </style>
+
+    <style name="WidgetStyle" parent="@style/ThemeOverlay.AppCompat.Light">
+        <item name="colorControlNormal">@color/colorAccent</item>
+    </style>
+
+    <style name="MyPreferencesTheme" parent="@style/PreferenceTheme">
+        <!--<item name="android:layout">@layout/settings</item>-->
+    </style>
+
+    <style name="PreferenceTheme" parent="AppTheme">
+        <item name="android:listDivider">@null</item>
     </style>
 
     <style name="FullscreenTheme" parent="AppTheme">
@@ -23,6 +63,37 @@
     <style name="AppTheme.FullScreen">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <style name="Theme_Dialog" parent="android:Theme.Holo.Dialog">
+        <item name="android:windowMinWidthMajor">100%</item>
+        <item name="android:windowMinWidthMinor">100%</item>
+    </style>
+
+    <style name="NotchTheme" parent="AppTheme.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@color/colorAccent</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="ActionBarTitleText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@android:color/white</item>
+        <!--<item name="android:textSize">12sp</item>-->
+    </style>
+
+    <style name="ActionBarSubTitleText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Subtitle">
+        <item name="android:textColor">#fea</item>
+        <!--<item name="android:textSize">12sp</item>-->
+    </style>
+
+    <style name="AppTheme.WhiteHighlight" parent="AppTheme">
+        <item name="colorControlHighlight">#50FFFFFF</item>
     </style>
 
 </resources>

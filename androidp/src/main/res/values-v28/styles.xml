@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="android:statusBarColor">#00ff00</item>
+        <item name="android:navigationBarColor">#00ff00</item>
+        <item name="windowNoTitle">true</item>
+       <!-- <item name="android:windowLayoutInDisplayCutoutMode">
+            default
+        </item>-->
+    </style>
+</resources>

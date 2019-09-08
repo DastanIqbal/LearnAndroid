@@ -9,4 +9,9 @@
         <attr name="metaButtonBarButtonStyle" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="ExtendedAppBar">
+        <attr name="backgroundColors" format="reference" />
+        <attr name="enableAlphaScrolling" format="boolean" />
+    </declare-styleable>
+
 </resources>

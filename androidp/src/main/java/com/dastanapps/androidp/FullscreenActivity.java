@@ -1,12 +1,16 @@
 package com.dastanapps.androidp;
 
 import android.annotation.SuppressLint;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.dastanapps.androidp.subscription.SubscriptionActivity;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -78,6 +82,7 @@ public class FullscreenActivity extends AppCompatActivity {
         public boolean onTouch(View view, MotionEvent motionEvent) {
             if (AUTO_HIDE) {
                 delayedHide(AUTO_HIDE_DELAY_MILLIS);
+                startActivity(new Intent(FullscreenActivity.this, SubscriptionActivity.class));
             }
             return false;
         }
@@ -115,7 +120,7 @@ public class FullscreenActivity extends AppCompatActivity {
         // Trigger the initial hide() shortly after the activity has been
         // created, to briefly hint to the user that UI controls
         // are available.
-       // delayedHide(100);
+        // delayedHide(100);
     }
 
     private void toggle() {

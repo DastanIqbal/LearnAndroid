@@ -1,8 +1,8 @@
-//include ':androidp'
+include ':androidp'
 //include ':shadersNfilters'
 //include ':mediaeffectswithopengles',
 //include ':mediasdk'
-include ':aireminder'
+//include ':aireminder'
 //include ':testcode', ':camerax'//, ':preferencesample'
 //include ':canvas'
 //include ':opeglesgame'

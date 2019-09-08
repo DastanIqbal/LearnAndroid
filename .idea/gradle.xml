@@ -8,7 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/aireminder" />
+            <option value="$PROJECT_DIR$/androidp" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
