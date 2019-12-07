@@ -16,5 +16,14 @@ class AppContainer {
     private val remoteDataSource = RemoteDataSource(retrofit)
     val userRepo = UserRepo(localDataSource, remoteDataSource)
 
-    val loginViewModel = LoginViewModelFactory(userRepo).create()
+    var loginContainer: LoginContainer? = null
+}
+
+class LoginContainer(private val userRepo: UserRepo) {
+    val loginUserData = LoginUserData()
+    val loginViewModelFactory = LoginViewModelFactory(userRepo)
+}
+
+class LoginUserData {
+
 }
