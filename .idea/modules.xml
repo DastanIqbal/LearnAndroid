@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Iqbal-LearnAndroid.iml" filepath="$PROJECT_DIR$/Iqbal-LearnAndroid.iml" group="LearnAndroid" />
       <module fileurl="file://$PROJECT_DIR$/LearnAndroid.iml" filepath="$PROJECT_DIR$/LearnAndroid.iml" />
       <module fileurl="file://$PROJECT_DIR$/androidp/androidp.iml" filepath="$PROJECT_DIR$/androidp/androidp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dagger2/dagger2.iml" filepath="$PROJECT_DIR$/dagger2/dagger2.iml" group="LearnAndroid/dagger2" />
     </modules>
   </component>
 </project>
