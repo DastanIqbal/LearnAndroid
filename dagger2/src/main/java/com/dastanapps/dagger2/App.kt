@@ -1,6 +1,7 @@
 package com.dastanapps.dagger2
 
 import android.app.Application
+import com.dastanapps.dagger2.dagger.di.DaggerAppGraph
 import com.dastanapps.dagger2.manual.AppContainer
 
 /**
@@ -10,4 +11,5 @@ import com.dastanapps.dagger2.manual.AppContainer
 class App : Application() {
     private val TAG = this::class.java.simpleName
     val appContainer = AppContainer()
+    val appGraph = DaggerAppGraph.create()
 }

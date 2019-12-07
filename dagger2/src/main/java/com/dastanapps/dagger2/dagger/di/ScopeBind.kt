@@ -11,3 +11,8 @@ import javax.inject.Scope
 @MustBeDocumented
 @Retention(value = AnnotationRetention.RUNTIME)
 annotation class MyCustomScope
+
+// Definition of a custom scope called ActivityScope
+@Scope
+@Retention(value = AnnotationRetention.RUNTIME)
+annotation class ActivityScope

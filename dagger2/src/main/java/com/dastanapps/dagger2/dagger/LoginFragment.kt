@@ -6,8 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.dastanapps.dagger2.MainActivity
 import com.dastanapps.dagger2.R
-import com.dastanapps.dagger2.dagger.di.DaggerAppGraph
+import javax.inject.Inject
 
 class LoginFragment : Fragment() {
 
@@ -15,7 +16,13 @@ class LoginFragment : Fragment() {
         fun newInstance() = LoginFragment()
     }
 
-    private lateinit var viewModel: LoginViewModel
+    @Inject
+    lateinit var viewModel: LoginViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (requireActivity() as MainActivity).loginComponent.inject(this)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -26,10 +33,6 @@ class LoginFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         Log.d("LoginFragment", "Dagger Injection")
 
-        val appGraph = DaggerAppGraph.create()
-        val userRepo = appGraph.userRepo()
-
-        viewModel = LoginViewModel(userRepo)
         viewModel.login()
     }
 
