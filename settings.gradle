@@ -23,4 +23,5 @@
 //include ':removeorientationtest'
 //include ':ffmpegjni'
 //include ':androidservices'
-include ':dagger2'
+//include ':dagger2'
+include ':motionlayout'
