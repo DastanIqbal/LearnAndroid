@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~   Copyright (C) 2019 The Android Open Source Project
   ~   Licensed under the Apache License, Version 2.0 (the "License");
   ~   you may not use this file except in compliance with the License.
@@ -15,26 +14,37 @@
   -->
 
 <!-- Describe the animation for activity_step3.xml -->
-<MotionScene xmlns:motion="http://schemas.android.com/apk/res-auto"
-             xmlns:android="http://schemas.android.com/apk/res/android">
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
     <!-- A transition describes an animation via start and end state -->
     <Transition
-            
-            motion:constraintSetStart="@+id/start"
-            motion:constraintSetEnd="@+id/end"
-            motion:duration="3000">
+
+        motion:constraintSetEnd="@+id/end"
+        motion:constraintSetStart="@+id/start"
+        motion:duration="3000">
         <OnClick
-                motion:targetId="@id/moon"
-                motion:clickAction="toggle"
-        />
+            motion:clickAction="toggle"
+            motion:targetId="@id/moon" />
 
         <KeyFrameSet>
             <KeyPosition
-                    motion:framePosition="50"
-                    motion:motionTarget="@id/moon"
-                    motion:keyPositionType="parentRelative"
-                    motion:percentY="0.5"
-            />
+                motion:framePosition="50"
+                motion:keyPositionType="parentRelative"
+                motion:motionTarget="@id/moon"
+                motion:percentX="0.3"
+                motion:percentY="0.5" />
+            <KeyPosition
+                motion:framePosition="25"
+                motion:keyPositionType="parentRelative"
+                motion:motionTarget="@+id/moon"
+                motion:percentX="0.1"
+                motion:percentY="0.6" />
+            <KeyPosition
+                motion:framePosition="75"
+                motion:keyPositionType="parentRelative"
+                motion:motionTarget="@+id/moon"
+                motion:percentX="0.1"
+                motion:percentY="0.6" />
             <!-- TODO: Add two more KeyPositions to the KeyFrameSet here -->
 
         </KeyFrameSet>
@@ -44,22 +54,20 @@
     <ConstraintSet android:id="@+id/start">
         <Constraint
             android:id="@id/moon"
-            
+
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            motion:layout_constraintStart_toStartOf="parent"
             motion:layout_constraintBottom_toBottomOf="parent"
-        />
+            motion:layout_constraintStart_toStartOf="parent" />
         <Constraint
             android:id="@id/credits"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:alpha="0.0"
             android:layout_marginStart="16dp"
-            motion:layout_constraintStart_toStartOf="parent"
+            android:alpha="0.0"
             motion:layout_constraintBottom_toBottomOf="@id/moon"
-            motion:layout_constraintTop_toTopOf="@id/moon"
-            />
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="@id/moon" />
     </ConstraintSet>
 
     <!-- Constraints to apply at the end of the animation -->
@@ -68,18 +76,16 @@
             android:id="@id/moon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            motion:layout_constraintEnd_toEndOf="parent"
             motion:layout_constraintBottom_toBottomOf="parent"
-        />
+            motion:layout_constraintEnd_toEndOf="parent" />
         <Constraint
-                android:id="@id/credits"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="1.0"
-                android:layout_marginStart="16dp"
-                motion:layout_constraintStart_toStartOf="parent"
-                motion:layout_constraintBottom_toBottomOf="@id/moon"
-                motion:layout_constraintTop_toTopOf="@id/moon"
-        />
+            android:id="@id/credits"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:alpha="1.0"
+            motion:layout_constraintBottom_toBottomOf="@id/moon"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintTop_toTopOf="@id/moon" />
     </ConstraintSet>
 </MotionScene>
