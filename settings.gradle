@@ -24,4 +24,5 @@
 //include ':ffmpegjni'
 //include ':androidservices'
 //include ':dagger2'
-include ':motionlayout'
+//include ':motionlayout'
+include ':flexbox'
