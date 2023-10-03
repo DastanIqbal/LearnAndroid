@@ -25,4 +25,5 @@
 //include ':androidservices'
 //include ':dagger2'
 //include ':motionlayout'
-include ':flexbox'
+//include ':flexbox'
+include ':buildflavours'
