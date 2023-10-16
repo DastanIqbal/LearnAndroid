@@ -75,7 +75,15 @@ android {
 }
 
 dependencies {
-    println(getCurrentFlavor())
+//    println(getCurrentFlavor())
+    def flavourDimension = getCurrentDimension()
+    println(flavourDimension.get(0))
+    println(flavourDimension.get(1))
+    println(flavourDimension.get(2))
+
+    writeInConfiguration("FLAVOUR","\""+flavourDimension.get(0)+"\"")
+    writeInConfiguration("DIMENSION","\""+flavourDimension.get(1)+"\"")
+    writeInConfiguration("CURRENT_FLAVOUR","\""+flavourDimension.get(2)+"\"")
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
@@ -88,7 +96,7 @@ def getCurrentFlavor() {
     Gradle gradle = getGradle()
     String tskReqStr = gradle.getStartParameter().getTaskRequests().toString()
 
-    println(tskReqStr)
+//    println(tskReqStr)
     Pattern pattern
 
     if (tskReqStr.contains("assemble"))
@@ -99,10 +107,37 @@ def getCurrentFlavor() {
     Matcher matcher = pattern.matcher(tskReqStr)
 
     if (matcher.find()) {
-        println matcher.group(1).toLowerCase()
         return matcher.group(1).toLowerCase()
     } else {
         println "NO MATCH FOUND"
         return ""
     }
+}
+
+def getCurrentDimension() {
+    def currFlavor = getCurrentFlavor()
+    def fname = ""
+    def fdimension = ""
+
+    android.productFlavors.configureEach { flavor ->
+        if(currFlavor.startsWith(flavor.name.toLowerCase())){
+//            println("999999999999999999999")
+//            println(flavor.name.toLowerCase())
+//            println(flavor.dimension.toLowerCase())
+//            println("999999999999999999999")
+            println(flavor)
+            fname = flavor.name.toLowerCase()
+            fdimension = flavor.dimension.toLowerCase()
+        }
+    }
+
+    return Tuple2.of(fname,fdimension,currFlavor)
+}
+
+static def writeInConfiguration(String name, String value){
+    Properties properties = new Properties()
+    properties.load(new FileInputStream("config.properties"))
+//    String propertyValue = properties.getProperty(name)
+    properties.setProperty(name, value)
+    properties.store(new FileOutputStream("config.properties"), "Updated Configuration")
 }
