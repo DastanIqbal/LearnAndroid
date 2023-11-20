@@ -37,6 +37,12 @@
       <entry key="motionlayout">
         <State />
       </entry>
+      <entry key="navigation">
+        <State />
+      </entry>
+      <entry key="oldnavigation">
+        <State />
+      </entry>
     </value>
   </component>
 </project>

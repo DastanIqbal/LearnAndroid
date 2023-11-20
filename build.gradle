@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    ext.kotlin_version = '1.6.21'
+    ext.kotlin_version = '1.9.10'
     repositories {
         maven { url 'https://maven.google.com' }
         jcenter()
@@ -27,6 +27,8 @@ allprojects {
             url 'https://maven.google.com/'
             name 'Google'
         }
+
+        maven { url 'https://android-sdk.payfort.com' }
 
 //        maven { url 'https://maven.infullmobile.com/public' }
     }

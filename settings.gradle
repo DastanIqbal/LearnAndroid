@@ -27,3 +27,4 @@
 //include ':motionlayout'
 //include ':flexbox'
 include ':buildflavours'
+include ':oldnavigation'
