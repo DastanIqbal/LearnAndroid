@@ -26,5 +26,6 @@
 //include ':dagger2'
 //include ':motionlayout'
 //include ':flexbox'
-include ':buildflavours'
-include ':oldnavigation'
+//include ':buildflavours'
+//include ':oldnavigation'
+include ':moshi'

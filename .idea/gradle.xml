@@ -10,8 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/buildflavours" />
-            <option value="$PROJECT_DIR$/oldnavigation" />
+            <option value="$PROJECT_DIR$/moshi" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
