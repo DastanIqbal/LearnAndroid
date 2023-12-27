@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.dastanapps.pdf'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.dastanapps.pdf"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+    packagingOptions{
+//        jniLibs {
+//            pickFirsts += ["**/libc++_shared.so", "lib/**/libtammstores.so"]
+//        }
+//        resources {
+//            pickFirsts += ['META-INF/DEPENDENCIES']
+//        }
+////        To reduce the apk size remove so files only for testing, don't remove in release
+////        exclude 'lib/**/libruntimecore.so'
+
+        merge "META-INF/DEPENDENCIES"
+        merge "META-INF/LICENSE.md"
+        merge "META-INF/LICENSE-notice.md"
+    }
+}
+
+dependencies {
+    implementation 'org.apache.pdfbox:pdfbox:2.0.30'
+    implementation 'org.apache.pdfbox:fontbox:2.0.30'
+    implementation 'org.apache.pdfbox:pdfbox-tools:2.0.30'
+
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'androidx.activity:activity:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}

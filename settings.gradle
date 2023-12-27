@@ -28,4 +28,5 @@
 //include ':flexbox'
 //include ':buildflavours'
 //include ':oldnavigation'
-include ':moshi'
+//include ':moshi'
+include ':pdf'

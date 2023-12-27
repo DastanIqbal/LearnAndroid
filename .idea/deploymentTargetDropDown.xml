@@ -46,6 +46,9 @@
       <entry key="oldnavigation">
         <State />
       </entry>
+      <entry key="pdf">
+        <State />
+      </entry>
     </value>
   </component>
 </project>
