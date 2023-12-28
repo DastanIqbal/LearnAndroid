@@ -30,3 +30,4 @@
 //include ':oldnavigation'
 //include ':moshi'
 include ':pdf'
+include ':animation'
