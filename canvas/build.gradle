@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
 android {
-    compileSdkVersion 28
-
-
+    namespace 'com.dastanapps.canvas'
+    compileSdkVersion  34
 
     defaultConfig {
         applicationId "com.dastanapps.canvas"
-        minSdkVersion 18
-        targetSdkVersion 28
+        minSdkVersion 23
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
 
@@ -25,6 +25,19 @@ android {
         }
     }
 
+    buildFeatures{
+        viewBinding true
+        dataBinding true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
 }
 
 dependencies {
@@ -38,5 +51,5 @@ dependencies {
 
     api 'com.dastanapps.dastanlib:common:0.1-alpha'
     api 'com.dastanapps.dastanlib:ui:0.1.1-alpha'
-    api project(":mediasdk")
+    implementation project(":mediasdk")
 }

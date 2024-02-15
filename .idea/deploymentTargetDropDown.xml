@@ -21,6 +21,22 @@
           <timeTargetWasSelectedWithDropDown value="2023-10-03T09:42:06.581735Z" />
         </State>
       </entry>
+      <entry key="canvas">
+        <State>
+          <targetSelectedWithDropDown>
+            <Target>
+              <type value="QUICK_BOOT_TARGET" />
+              <deviceKey>
+                <Key>
+                  <type value="VIRTUAL_DEVICE_PATH" />
+                  <value value="$USER_HOME$/.android/avd/Small_Device_3.2_QVGA_ADP2_API_31.avd" />
+                </Key>
+              </deviceKey>
+            </Target>
+          </targetSelectedWithDropDown>
+          <timeTargetWasSelectedWithDropDown value="2023-12-28T10:35:34.037343Z" />
+        </State>
+      </entry>
       <entry key="flexbox">
         <State>
           <targetSelectedWithDropDown>

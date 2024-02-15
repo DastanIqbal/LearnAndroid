@@ -12,11 +12,11 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
-import android.support.v4.app.ActivityCompat
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.dastanapps.canvas.databinding.ActivityMergeBitmapBinding
 import com.dastanapps.dastanlib.utils.ViewUtils
 import com.dastanapps.mediasdk.opengles.utils.BitmapUtils
-import kotlinx.android.synthetic.main.activity_merge_bitmap.*
 import java.io.File
 
 class MergeBitmapActivity : AppCompatActivity() {
@@ -28,9 +28,11 @@ class MergeBitmapActivity : AppCompatActivity() {
     var bitmap1: Bitmap? = null
     var bitmap2: Bitmap? = null
 
+    lateinit var binding : ActivityMergeBitmapBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_merge_bitmap)
+        binding = ActivityMergeBitmapBinding.inflate(layoutInflater)
 
         if (ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
@@ -42,16 +44,16 @@ class MergeBitmapActivity : AppCompatActivity() {
             pickImage(this)
         }
 
-        button.setOnClickListener {
+        binding.button.setOnClickListener {
             val bmp = BitmapUtils.overlay(bitmap1, bitmap2)
             bmp?.run {
-                imageView3.setImageBitmap(this)
+                binding.imageView3.setImageBitmap(this)
             }
         }
-        button2.setOnClickListener {
+        binding.button2.setOnClickListener {
             pickImage(this)
         }
-        button3.setOnClickListener {
+        binding.button3.setOnClickListener {
             bitmap1 = null
             bitmap2 = null
         }
@@ -95,10 +97,10 @@ class MergeBitmapActivity : AppCompatActivity() {
 
     private fun setImageBitmap(bitmap: Bitmap?) {
         if (bitmap1 == null) {
-            imageView.setImageBitmap(bitmap)
+            binding.imageView.setImageBitmap(bitmap)
             bitmap1 = bitmap
         } else if (bitmap2 == null) {
-            imageView2.setImageBitmap(bitmap)
+            binding.imageView2.setImageBitmap(bitmap)
             bitmap2 = bitmap
         }
     }
