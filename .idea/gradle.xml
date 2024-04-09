@@ -10,7 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/device" />
+            <option value="$PROJECT_DIR$/appwidget" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

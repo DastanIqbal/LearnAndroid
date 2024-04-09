@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.LearnAndroid">
+
+        <activity android:name=".countdown.CountdownActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+                <receiver android:name=".countdown.CountdownTimerAppWidgetProvider"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                    </intent-filter>
+                    <meta-data android:name="android.appwidget.provider" android:resource="@xml/countdown_timer"/>
+                </receiver>
+        <!--        <activity android:theme="@android:style/Theme.Dialog" android:name="NewTimerActivity" android:launchMode="singleInstance" android:screenOrientation="nosensor"/>-->
+        <!--        <activity android:name="SettingsActivity"-->
+        <!--            android:exported="true"-->
+        <!--            android:finishOnTaskLaunch="true" android:launchMode="singleTop">-->
+        <!--            <intent-filter>-->
+        <!--                <action android:name="android.intent.action.MAIN"/>-->
+        <!--                <category android:name="android.intent.category.INFO"/>-->
+        <!--            </intent-filter>-->
+        <!--        </activity>-->
+                <service android:name=".countdown.CountdownTimerService"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name=" com.dastanapps.appwidget.intent.ACTION_NEW_TIMER"/>
+                        <action android:name=" com.dastanapps.appwidget.intent.ACTION_CANCEL_TIMER"/>
+                        <action android:name=" com.dastanapps.appwidget.intent.ACTION_ALARM_ALERT"/>
+                        <action android:name=" com.dastanapps.appwidget.intent.ACTION_ADD_WIDGET"/>
+                        <action android:name=" com.dastanapps.appwidget.intent.ACTION_REMOVE_WIDGET"/>
+                    </intent-filter>
+                </service>
+    </application>
+
+</manifest>

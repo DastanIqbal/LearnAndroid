@@ -30,4 +30,5 @@
 //include ':moshi'
 //include ':pdf'
 //include ':animation'
-include ':device'
+//include ':device'
+include ':appwidget'

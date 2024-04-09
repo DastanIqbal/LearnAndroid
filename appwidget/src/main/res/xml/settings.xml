@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <Preference
+        android:key="HELP_NOTICE"
+        android:title="@string/help_title" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="CTW_VIBRATE"
+        android:title="@string/vibrate" />
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="CTW_INSISTENT"
+        android:summary="@string/insistent_desc"
+        android:title="@string/insistent" />
+    <RingtonePreference
+        android:key="CTW_RINGTONE"
+        android:ringtoneType="alarm|notification"
+        android:showDefault="true"
+        android:showSilent="false"
+        android:title="@string/alarm_sound" />
+    <ListPreference
+        android:entries="@array/volume_sources"
+        android:key="CTW_VOLUME_SOURCE"
+        android:summary="@string/volume_desc"
+        android:title="@string/volume" />
+    <ListPreference
+        android:defaultValue="1"
+        android:entries="@array/countdown_intervals"
+        android:entryValues="@array/integer_countdown_intervals"
+        android:key="CTW_REFRESH_INTERVAL"
+        android:title="@string/refresh_interval" />
+    <Preference
+        android:key="REFRESH_NOTICE"
+        android:title="@string/refresh_notice_title" />
+    <Preference
+        android:key="ABOUT_NOTICE"
+        android:title="@string/about_title" />
+</PreferenceScreen>
