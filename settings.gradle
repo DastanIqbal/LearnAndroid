@@ -32,3 +32,4 @@
 //include ':animation'
 //include ':device'
 include ':appwidget'
+include ':bluetooth'
