@@ -31,5 +31,6 @@
 //include ':pdf'
 //include ':animation'
 //include ':device'
-include ':appwidget'
-include ':bluetooth'
+//include ':appwidget'
+//include ':bluetooth'
+include ':mediax'
