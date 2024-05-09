@@ -10,8 +10,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/appwidget" />
-            <option value="$PROJECT_DIR$/bluetooth" />
+            <option value="$PROJECT_DIR$/mediax" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

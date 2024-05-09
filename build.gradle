@@ -18,24 +18,24 @@ buildscript {
     ext.supportLibraryVersion = '26.1.0'
 }
 
-allprojects {
-    repositories {
-        maven { url 'https://maven.google.com' }
-//        maven { url "http://dl.bintray.com/kotlin/kotlin-dev" }
-        jcenter()
-        maven {
-            url 'https://maven.google.com/'
-            name 'Google'
-        }
-
-        maven { url 'https://android-sdk.payfort.com' }
-
-//        maven { url 'https://maven.infullmobile.com/public' }
-    }
-    configurations.all {
-        resolutionStrategy.force 'org.objenesis:objenesis:2.6'
-    }
-}
+//allprojects {
+//    repositories {
+//        maven { url 'https://maven.google.com' }
+////        maven { url "http://dl.bintray.com/kotlin/kotlin-dev" }
+//        jcenter()
+//        maven {
+//            url 'https://maven.google.com/'
+//            name 'Google'
+//        }
+//
+//        maven { url 'https://android-sdk.payfort.com' }
+//
+////        maven { url 'https://maven.infullmobile.com/public' }
+//    }
+//    configurations.all {
+//        resolutionStrategy.force 'org.objenesis:objenesis:2.6'
+//    }
+//}
 
 task clean(type: Delete) {
     delete rootProject.buildDir
