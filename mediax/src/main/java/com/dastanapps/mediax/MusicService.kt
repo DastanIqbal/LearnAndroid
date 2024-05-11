@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
+import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionToken
@@ -17,14 +18,12 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 @UnstableApi
-class MusicService() : MediaSessionService() {
+class MusicService() : MediaLibraryService() {
 
     private val coroutineContext: CoroutineContext = Dispatchers.Main
     private val scope = CoroutineScope(coroutineContext + SupervisorJob())
 
-    private lateinit var packageValidator: PackageValidator
-
-    private val playerExt by lazy {
+    internal val playerExt by lazy {
         PlayerExt(this)
     }
 
@@ -32,16 +31,8 @@ class MusicService() : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-        packageValidator = PackageValidator(this, R.xml.allowed_media_browser_callers)
         player.playWhenReady = true
     }
-
-//    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
-//        return if ("android.media.session.MediaController" == controllerInfo.packageName
-//            || packageValidator.isKnownCaller(controllerInfo.packageName, controllerInfo.uid)) {
-//            playerExt.playerSession()
-//        } else null
-//    }
 
     /** Called when swiping the activity away from recents. */
     override fun onTaskRemoved(rootIntent: Intent) {
@@ -53,8 +44,11 @@ class MusicService() : MediaSessionService() {
         stopSelf()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
-       return playerExt.playerSession()
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
+        return if ("android.media.session.MediaController" == controllerInfo.packageName
+            || playerExt.packageValidator.isKnownCaller(controllerInfo.packageName, controllerInfo.uid)) {
+            playerExt.playerSession()
+        } else null
     }
 
     override fun onDestroy() {

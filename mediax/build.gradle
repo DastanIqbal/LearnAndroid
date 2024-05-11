@@ -55,6 +55,10 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
 
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.4"
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1"
+
 
     //x5动态内核
     //implementation 'com.tencent.tbs.tbssdk:sdk:44286'

@@ -142,7 +142,7 @@ internal class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
                     callerPackageInfo.packageName,
                     callerPackageInfo.signature
                 )
-            Log.i(PLAYER_TAG, formattedLog)
+            Log.i(TAG_PLAYER, formattedLog)
         }
     }
 
@@ -232,9 +232,9 @@ internal class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
                 eventType = parser.next()
             }
         } catch (xmlException: XmlPullParserException) {
-            Log.e(PLAYER_TAG, "Could not read allowed callers from XML.", xmlException)
+            Log.e(TAG_PLAYER, "Could not read allowed callers from XML.", xmlException)
         } catch (ioException: IOException) {
-            Log.e(PLAYER_TAG, "Could not read allowed callers from XML.", ioException)
+            Log.e(TAG_PLAYER, "Could not read allowed callers from XML.", ioException)
         }
 
         return certificateAllowList
@@ -298,7 +298,7 @@ internal class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
         try {
             md = MessageDigest.getInstance("SHA256")
         } catch (noSuchAlgorithmException: NoSuchAlgorithmException) {
-            Log.e(PLAYER_TAG, "No such algorithm: $noSuchAlgorithmException")
+            Log.e(TAG_PLAYER, "No such algorithm: $noSuchAlgorithmException")
             throw RuntimeException("Could not find SHA256 hash algorithm", noSuchAlgorithmException)
         }
         md.update(certificate)
