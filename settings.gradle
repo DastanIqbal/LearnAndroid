@@ -84,3 +84,4 @@ dependencyResolutionManagement {
 //include ':appwidget'
 //include ':bluetooth'
 include ':mediax'
+include ':widgets'
