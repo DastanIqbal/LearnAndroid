@@ -1,0 +1,47 @@
+/**
+ * Usage in settings.gradle.kts
+ *
+ * import groovy.lang.Closure
+ *
+ * apply { from("miniapp.gradle")  }
+ * val setMiniApp = extra["setMiniApp"] as Closure<*>
+ *
+ * fun RepositoryHandler.setMiniApp() {
+ *     setMiniApp.call(this)
+ * }
+ *
+ * repositories {
+ *  setMiniApp(this)
+ * }
+ *
+ * Usage in build.gradle(project)
+ *
+ * apply { from("miniapp.gradle")  }
+ * ext.setMiniApp = setMiniApp
+ *
+ * repositories {
+ *  setMiniApp(repositories)
+ * }
+ *
+ */
+
+ext {
+    setMiniApp = { RepositoryHandler handler ->
+        handler.maven {
+            url 'https://tmf-work-maven.pkg.coding.net/repository/tmf/android/'
+        }
+
+        handler.maven {
+            url 'https://t.pinpad.qq.com/fHKFBbEjd/repository/maven-public/'
+            credentials {
+                username = 'tmf_read'
+                password = 'psnBSt@BVMva6#&^'
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+
+

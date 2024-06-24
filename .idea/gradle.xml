@@ -11,7 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/mediax" />
-            <option value="$PROJECT_DIR$/widgets" />
+            <option value="$PROJECT_DIR$/tencent-miniapp" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

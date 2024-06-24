@@ -24,7 +24,11 @@
             app:default_artwork="@drawable/ic_launcher_background"
             app:repeat_toggle_modes="one|all"
             app:show_shuffle_button="true"
-            app:shutter_background_color="#f00" />
+            app:show_rewind_button="true"
+            app:show_fastforward_button="true"
+            app:show_next_button="true"
+            app:animation_enabled="true"
+            app:show_previous_button="true" />
     </androidx.media3.ui.AspectRatioFrameLayout>
 
     <TextView
