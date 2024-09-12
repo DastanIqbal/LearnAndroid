@@ -1,0 +1,14 @@
+
+def loadProperties(file) {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file(file).newDataInputStream())
+    return properties
+}
+
+def localProperties() {
+    loadProperties('local.properties')
+}
+
+ext{
+    localProperties = this.&localProperties
+}

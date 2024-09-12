@@ -50,4 +50,5 @@ dependencyResolutionManagement {
 //include ':bluetooth'
 //include ':mediax'
 //include ':widgets'
-include ':tencent-miniapp'
+//include ':tencent-miniapp'
+include ':socketio'
