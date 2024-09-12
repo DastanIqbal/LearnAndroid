@@ -32,7 +32,7 @@ android {
     }
     packagingOptions{
 //        jniLibs {
-//            pickFirsts += ["**/libc++_shared.so", "lib/**/libtammstores.so"]
+//            pickFirsts += ["**/libc++_shared.so", "lib/**/libstores.so"]
 //        }
 //        resources {
 //            pickFirsts += ['META-INF/DEPENDENCIES']

@@ -17,6 +17,6 @@ class MainActivity : AppCompatActivity() {
 
         text.text = AdsConfig().callMe(this)
         webview.setBackgroundColor(Color.RED)
-        webview.loadUrl("https://tamm.abudhabi")
+        webview.loadUrl("https://google.com")
     }
 }
