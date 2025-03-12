@@ -51,4 +51,5 @@ dependencyResolutionManagement {
 //include ':mediax'
 //include ':widgets'
 //include ':tencent-miniapp'
-include ':socketio'
+//include ':socketio'
+include ':fontfamily'

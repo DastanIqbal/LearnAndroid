@@ -1,0 +1,66 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <!-- English Text -->
+    <TextView
+        android:id="@+id/textViewEnglish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:lineHeight="0dp"
+        android:includeFontPadding="false"
+        android:text="@string/english_text"
+        android:textSize="18sp" />
+
+    <!-- English Text -->
+    <TextView
+        android:id="@+id/textViewEnglish2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/english_text"
+        android:background="#ff0"
+        android:fontFamily="@font/circularstd_book"
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Arabic Text 1 -->
+    <TextView
+        android:id="@+id/textViewArabic1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/arabic_text_1"
+        android:textSize="18sp"
+        android:fontFamily="@font/notokufi"
+        android:textDirection="rtl"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Arabic Text 2 -->
+    <TextView
+        android:id="@+id/textViewArabic2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/arabic_text_2"
+        android:textSize="18sp"
+        android:fontFamily="@font/noto_mega_merge"
+        android:textDirection="rtl"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Button to Change Language -->
+    <Button
+        android:id="@+id/buttonChangeLanguage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/notofont"
+        android:text="@string/change_language"
+        android:textSize="16sp"/>
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composeView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</LinearLayout>

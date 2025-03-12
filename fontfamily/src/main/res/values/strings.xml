@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name" translatable="false">fontfamily</string>
+    <string name="english_text">Hello, this is English text.\n Hello, this is English text</string>
+    <string name="arabic_text_1" translatable="false">مرحبا، هذا نص عربي ١.</string>
+    <string name="arabic_text_2" translatable="false">مرحبا، هذا نص عربي ٢.</string>
+    <string name="change_language" translatable="false">Change Language</string>
+</resources>

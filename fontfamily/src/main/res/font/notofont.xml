@@ -1,0 +1,21 @@
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!--     Arabic-->
+<!--    <font-->
+<!--        app:fontStyle="normal"-->
+<!--        app:fontWeight="400"-->
+<!--        app:font="@font/notokufi"/>-->
+
+    <!-- Latin -->
+    <font
+        app:fontStyle="normal"
+        app:fontWeight="400"
+        app:font="@font/circularstd_regular"/>
+
+    <!-- CJK -->
+    <font
+        app:fontStyle="normal"
+        app:fontWeight="400"
+        app:font="@font/notosans_cjk"/>
+</font-family>
