@@ -52,4 +52,5 @@ dependencyResolutionManagement {
 //include ':widgets'
 //include ':tencent-miniapp'
 //include ':socketio'
-include ':fontfamily'
+//include ':fontfamily'
+include ':compose-animations'
