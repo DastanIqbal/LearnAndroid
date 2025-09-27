@@ -68,34 +68,22 @@ function transformEventData(inputData) {
             captions: [
                 {
                     text: `${lookup(localization, "label.date.from")} ${fromMillis(toMillis(data.result.eventinfo.eventFromDate), "[MNn] [D1o], [Y0001]")} ${lookup(localization, "label.date.to")} ${fromMillis(toMillis(data.result.eventinfo.eventToDate), "[MNn] [D1o], [Y0001]")}`,
-                    thumbnail: {
-                        dark: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/calendar-alt.png",
-                        light: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/calendar-alt.png"
-                    },
+
                     type: "default"
                 },
                 {
                     text: data.result.eventinfo.eventLocation,
-                    thumbnail: {
-                        dark: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/pin-marker.png",
-                        light: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/pin-marker.png"
-                    },
+
                     type: "default"
                 },
                 {
                     text: `${fromMillis(toMillis(data.result.eventinfo.eventFromDate), "[h]:[m01] [P]")} ${lookup(localization, "label.date.to")} ${fromMillis(toMillis(data.result.eventinfo.eventToDate), "[h]:[m01] [P]")}`,
-                    thumbnail: {
-                        dark: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/time-clock.png",
-                        light: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/time-clock.png"
-                    },
+
                     type: "default"
                 },
                 {
                     text: `${lookup(localization, "label.targetAudiance")} ${data.result.eventinfo.targetAudience}`,
-                    thumbnail: {
-                        dark: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/location-target.png",
-                        light: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/location-target.png"
-                    },
+
                     type: "default"
                 }
             ]

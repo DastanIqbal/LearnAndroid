@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "data": {
+    "id": 102,
+    "name": "Marvel Comics",
+    "description": "Avenger Assemble",
+    "eventFromDate": "2025-10-06T00:00:00Z",
+    "eventToDate": "2025-10-10T00:00:00Z",
+    "eventTimeFrom": "12:30",
+    "eventTimeTo": "16:30"
+  }
+}

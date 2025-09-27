@@ -31,7 +31,7 @@ import java.util.concurrent.Executors
  * - Memory management for JS objects
  * - Thread-safe operations using single-threaded executor
  */
-class JSEngineManager(private val context: Context) {
+class JSEngineManager(val context: Context) {
 
     private var quickJS: QuickJS? = null
     private var jsContext: JSContext? = null
@@ -274,7 +274,7 @@ class JSEngineManager(private val context: Context) {
     suspend fun loadLibraryFromAssets(filename: String): JSExecutionResult =
         withContext(jsDispatcher) {
             try {
-                val jsCode = context.assets.open(filename).bufferedReader().use { it.readText() }
+                val jsCode = loadAssets(filename)
                 executeScript(jsCode, filename)
             } catch (e: Exception) {
                 JSExecutionResult.error("Failed to load library $filename: ${e.message}")
@@ -336,7 +336,7 @@ class JSEngineManager(private val context: Context) {
     /**
      * Convert JavaScript result to string representation
      */
-    private fun convertResultToString(result: Any?): String {
+    fun convertResultToString(result: Any?): String {
         return when (result) {
             null -> "null"
             is String -> result
@@ -444,7 +444,7 @@ class JSEngineManager(private val context: Context) {
     /**
      * Clean up resources
      */
-    fun destroy() {
+    suspend fun destroy() = withContext(jsDispatcher) {
         jsObjects.values.forEach { /* QuickJS handles cleanup automatically */ }
         jsFunctions.values.forEach { /* QuickJS handles cleanup automatically */ }
         jsObjects.clear()
@@ -457,6 +457,10 @@ class JSEngineManager(private val context: Context) {
 
         jsExecutor.shutdown()
         jsDispatcher.close()
+    }
+
+    fun loadAssets(string: String): String {
+        return context.assets.open(string).bufferedReader().use { it.readText() }
     }
 }
 

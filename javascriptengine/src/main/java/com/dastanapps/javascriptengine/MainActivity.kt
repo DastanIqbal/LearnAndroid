@@ -42,9 +42,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import com.api.jsonata4java.Expression
 import com.dastanapps.javascriptengine.jsengine.JSEngineManager
 import com.dastanapps.javascriptengine.jsengine.JSExecutionResult
+import com.dastanapps.javascriptengine.jsonata.JSonataDemo
 import com.dastanapps.javascriptengine.ui.theme.LearnAndroidTheme
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -56,12 +62,19 @@ class MainActivity : ComponentActivity() {
 
         // Initialize JavaScript Engine
         jsEngine = JSEngineManager(this)
+        lifecycleScope.launch(Dispatchers.IO) {
+//            useRawJSONataTransformation(this@MainActivity)
+        }
 
         enableEdgeToEdge()
         setContent {
             LearnAndroidTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    JSEngineDemo(
+//                    JSEngineDemo(
+//                        jsEngine = jsEngine,
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
+                    JSonataDemo(
                         jsEngine = jsEngine,
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -73,7 +86,9 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // Clean up JavaScript Engine resources
-        jsEngine.destroy()
+        lifecycleScope.launch(Dispatchers.IO) {
+            jsEngine.destroy()
+        }
     }
 }
 
@@ -140,8 +155,6 @@ fun JSEngineDemo(
             """.trimIndent(),
             "Test All Bindings" to "testKotlinBindings()",
             "JSONata Transform" to """
-                // Load JSONata transformation library first!
-                // Sample data structure
                 const inputData = {
                     config: {
                         lang: "en",
@@ -154,14 +167,14 @@ fun JSEngineDemo(
                     data: {
                         result: {
                             eventinfo: {
-                                name: "Tech Conference 2024",
-                                category: "Technology",
-                                eventLogo: "https://example.com/logo.png",
-                                description: "Annual technology conference",
-                                eventFromDate: "2024-03-15T09:00:00Z",
-                                eventToDate: "2024-03-17T17:00:00Z",
-                                eventLocation: "Convention Center, Dubai",
-                                targetAudience: "Developers and Tech Enthusiasts"
+                                 name: "This is name",
+                                    category: "This is category",
+                                    eventLogo: "https://example.com/workshop-logo.png",
+                                    description: "This is description",
+                                    eventFromDate: "2024-09-25T14:00:00Z",
+                                    eventToDate: "2024-09-25T18:00:00Z", 
+                                    eventLocation: "This is location",
+                                    targetAudience: "This is audience",
                             }
                         },
                         filters: { category: "tech", year: 2024 }
@@ -169,12 +182,10 @@ fun JSEngineDemo(
                     localizationStrings: {}
                 };
                 
-                // Apply transformation
                 const transformed = transformEventData(inputData);
                 JSON.stringify(transformed, null, 2);
             """.trimIndent(),
             "Real API Data Transform" to """
-                // Transform real API response data
                 const apiResponse = {
                     "status": "success",
                     "data": {
@@ -185,16 +196,16 @@ fun JSEngineDemo(
                             "eventinfo": [
                                 {
                                     "id": 102,
-                                    "name": "Global Food Week",
-                                    "description": "Global Food Week (GFW) is where policy, innovation, and procurement converge to shape the future of food security.",
-                                    "eventFromDate": "2025-10-06T00:00:00Z",
-                                    "eventToDate": "2025-10-10T00:00:00Z",
-                                    "eventTimeFrom": "12:30",
-                                    "eventTimeTo": "16:30",
-                                    "eventLocation": "Halls 4-11",
-                                    "targetAudience": "Governments,Pensioner and Beneficiaries,Entrepreneurs and partner institutions",
-                                    "category": "Hospital Clinic",
-                                    "Classification": "Awareness workshops",
+                                     name: "This is name",
+                                    category: "This is category",
+                                    eventLogo: "https://example.com/workshop-logo.png",
+                                    description: "This is description",
+                                    eventFromDate: "2024-09-25T14:00:00Z",
+                                    eventToDate: "2024-09-25T18:00:00Z", 
+                                    eventLocation: "This is location",
+                                    targetAudience: "This is audience",
+                                    "category": "This is category",
+                                    "Classification": "This is Classification",
                                     "registrationEnable": "N",
                                     "email": "Food@Global.ae",
                                     "mobile": "0541111111",
@@ -206,7 +217,6 @@ fun JSEngineDemo(
                     }
                 };
                 
-                // Transform the first event from the array
                 const eventData = apiResponse.data.result.eventinfo[0];
                 const transformInput = {
                     config: {
@@ -251,33 +261,24 @@ fun JSEngineDemo(
                     localizationStrings: {}
                 };
                 
-                // Apply transformation
+               
                 const transformed = transformEventData(transformInput);
                 
-                // Add additional captions for the extra data
+               
                 transformed.data.list[0].props.captions.push(
                     {
                         "text": transformInput.config.localization["label.contact"] + " " + eventData.email + " | " + eventData.mobile,
-                        "thumbnail": {
-                            "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/contact.png",
-                            "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/contact.png"
-                        },
+                        
                         "type": "contact"
                     },
                     {
                         "text": transformInput.config.localization["label.classification"] + " " + eventData.Classification,
-                        "thumbnail": {
-                            "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/category.png",
-                            "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/category.png"
-                        },
+                        
                         "type": "classification"
                     },
                     {
                         "text": transformInput.config.localization["label.registration"] + " " + (eventData.registrationEnable === "Y" ? "Available" : "Not Available"),
-                        "thumbnail": {
-                            "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/registration.png",
-                            "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/registration.png"
-                        },
+                        
                         "type": eventData.registrationEnable === "Y" ? "success" : "warning"
                     }
                 );
@@ -583,7 +584,7 @@ fun ExecutionResultCard(log: ExecutionLog) {
 }
 
 // Helper functions
-private suspend fun initializeEngine(
+suspend fun initializeEngine(
     jsEngine: JSEngineManager,
     onResult: (Boolean) -> Unit
 ) {
@@ -645,7 +646,7 @@ private suspend fun loadLibrary(
             return
         }
 
-        val jsonataResult = jsEngine.loadLibraryFromAssets("jsonata-transform.js")
+        val jsonataResult = jsEngine.loadLibraryFromAssets("jsonata.min.js")
         if (!jsonataResult.success) {
             onResult(JSExecutionResult.error("Failed to load JSONata library: ${jsonataResult.error}"))
             return

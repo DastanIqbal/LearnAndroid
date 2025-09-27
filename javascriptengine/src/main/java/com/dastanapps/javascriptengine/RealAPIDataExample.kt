@@ -24,20 +24,18 @@ class RealAPIDataExample(private val context: Context) {
               "eventinfo": [
                 {
                   "id": 102,
-                  "name": "Global Food Week",
-                  "description": "Global Food Week (GFW) is where policy, innovation, and procurement converge to shape the future of food security.",
-                  "eventFromDate": "2025-10-06T00:00:00Z",
-                  "eventToDate": "2025-10-10T00:00:00Z",
-                  "eventTimeFrom": "12:30",
-                  "eventTimeTo": "16:30",
-                  "eventLocation": "Halls 4-11",
-                  "targetAudience": "Governments,Pensioner and Beneficiaries,Entrepreneurs and partner institutions",
-                  "category": "Hospital Clinic",
-                  "Classification": "Awareness workshops",
+                   name: "This is name",
+                   category: "This is category",
+                   eventLogo: "https://example.com/workshop-logo.png",
+                   description: "This is description",
+                   eventFromDate: "2024-09-25T14:00:00Z",
+                   eventToDate: "2024-09-25T18:00:00Z", 
+                   eventLocation: "This is location",
+                   targetAudience: "This is audience",
+                  "targetAudience": "This is target audience",
+                  "category": "This is category",
+                  "Classification": "This is Classification",
                   "registrationEnable": "N",
-                  "email": "Food @Global.ae",
-                  "mobile": "0541111111",
-                  "availableSeats": "Y",
                   "isRegistered": "N"
                 }
               ]
@@ -54,7 +52,7 @@ class RealAPIDataExample(private val context: Context) {
         if (!initResult) return false
 
         // Load the JSONata transformation library
-        val libraryResult = jsEngine.loadLibraryFromAssets("jsonata-transform.js")
+        val libraryResult = jsEngine.loadLibraryFromAssets("jsonata.min.js")
         return libraryResult.success
     }
 
@@ -88,7 +86,7 @@ class RealAPIDataExample(private val context: Context) {
                         eventinfo: {
                             name: eventData.name,
                             category: eventData.category,
-                            eventLogo: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/events/food-week-logo.png",
+                            eventLogo: "https://google.com//events/food-week-logo.png",
                             description: eventData.description,
                             eventFromDate: eventData.eventFromDate,
                             eventToDate: eventData.eventToDate,
@@ -114,36 +112,24 @@ class RealAPIDataExample(private val context: Context) {
                 {
                     "text": transformInput.config.localization["label.time"] + " " + 
                            eventData.eventTimeFrom + " - " + eventData.eventTimeTo,
-                    "thumbnail": {
-                        "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/time-clock.png",
-                        "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/time-clock.png"
-                    },
+                   
                     "type": "time"
                 },
                 {
                     "text": transformInput.config.localization["label.contact"] + " " + 
                            eventData.email + " | " + eventData.mobile,
-                    "thumbnail": {
-                        "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/contact.png",
-                        "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/contact.png"
-                    },
+                    
                     "type": "contact"
                 },
                 {
                     "text": transformInput.config.localization["label.classification"] + " " + eventData.Classification,
-                    "thumbnail": {
-                        "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/category.png",
-                        "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/category.png"
-                    },
+                    
                     "type": "classification"
                 },
                 {
                     "text": transformInput.config.localization["label.registration"] + " " + 
                            (eventData.registrationEnable === "Y" ? "Available" : "Not Available"),
-                    "thumbnail": {
-                        "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/registration.png",
-                        "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/registration.png"
-                    },
+                   
                     "type": eventData.registrationEnable === "Y" ? "success" : "info"
                 }
             ];
@@ -196,7 +182,7 @@ class RealAPIDataExample(private val context: Context) {
                             eventinfo: {
                                 name: eventData.name,
                                 category: eventData.category,
-                                eventLogo: `https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/events/event-${"$"}{eventData.id}-logo.png`,
+                                eventLogo: `https://google.com//events/event-${"$"}{eventData.id}-logo.png`,
                                 description: eventData.description,
                                 eventFromDate: eventData.eventFromDate,
                                 eventToDate: eventData.eventToDate,
@@ -402,7 +388,7 @@ class RealAPIDataExample(private val context: Context) {
     /**
      * Clean up resources
      */
-    fun destroy() {
+    suspend fun destroy() {
         jsEngine.destroy()
     }
 }

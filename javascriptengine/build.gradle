@@ -68,7 +68,8 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
 
     // Alternative JSONata implementation (if needed for comparison/fallback)
-    // implementation("com.ibm.jsonata4java:JSONata4Java:2.6.0")
+     implementation("com.ibm.jsonata4java:JSONata4Java:2.4.5")
+     implementation("com.fasterxml.jackson.core:jackson-core:2.13.0")
 
     // Alternative JS engines (commented out for reference)
     // implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")  // J2V8 - heavier but more compatible

@@ -20,7 +20,7 @@ class JSONataExample(private val context: Context) {
         if (!initResult) return false
 
         // Load the transformation library
-        val libraryResult = jsEngine.loadLibraryFromAssets("jsonata-transform.js")
+        val libraryResult = jsEngine.loadLibraryFromAssets("jsonata.min.js")
         return libraryResult.success
     }
 
@@ -41,28 +41,23 @@ class JSONataExample(private val context: Context) {
                 },
                 data: {
                     result: {
-                        eventinfo: {
-                            name: "Dubai Tech Summit 2024",
-                            category: "Technology Conference",
-                            eventLogo: "https://example.com/tech-summit-logo.png",
-                            description: "The largest technology conference in the Middle East featuring AI, blockchain, and cloud computing.",
-                            eventFromDate: "2024-12-15T09:00:00Z",
-                            eventToDate: "2024-12-17T18:00:00Z",
-                            eventLocation: "Dubai World Trade Centre, Hall 1-3",
-                            targetAudience: "Software Engineers, CTOs, Tech Entrepreneurs"
-                        }
+                       "id": 102,
+                        "name": "Marvel Comics",
+                        "description": "Avenger Assemble",
+                        "eventFromDate": "2025-10-06T00:00:00Z",
+                        "eventToDate": "2025-10-10T00:00:00Z",
+                        "eventTimeFrom": "12:30",
+                        "eventTimeTo": "16:30"
                     },
                     filters: {
                         category: "technology",
-                        year: 2024,
-                        location: "dubai"
+                        year: 2024
                     }
                 },
                 localizationStrings: {
                     "ar": {
                         "label.date.from": "من",
-                        "label.date.to": "إلى",
-                        "label.targetAudiance": "الجمهور المستهدف:"
+                        "label.date.to": "إلى"
                     }
                 }
             };
@@ -84,46 +79,15 @@ class JSONataExample(private val context: Context) {
                 {
                     config: { lang: "en", localization: null },
                     data: {
-                        result: {
-                            eventinfo: {
-                                name: "AI Conference 2024",
-                                category: "Artificial Intelligence",
-                                eventLogo: "https://example.com/ai-logo.png",
-                                description: "Latest trends in AI and Machine Learning",
-                                eventFromDate: "2024-11-20T10:00:00Z",
-                                eventToDate: "2024-11-22T16:00:00Z",
-                                eventLocation: "Silicon Valley Convention Center",
-                                targetAudience: "AI Researchers, Data Scientists"
-                            }
-                        },
-                        filters: { category: "ai" }
+                        "id": 102,
+                        "name": "Marvel Comics",
+                        "description": "Avenger Assemble",
+                        "eventFromDate": "2025-10-06T00:00:00Z",
+                        "eventToDate": "2025-10-10T00:00:00Z",
+                        "eventTimeFrom": "12:30",
+                        "eventTimeTo": "16:30"
                     },
                     localizationStrings: {}
-                },
-                {
-                    config: { lang: "ar", localization: null },
-                    data: {
-                        result: {
-                            eventinfo: {
-                                name: "مؤتمر التكنولوجيا المالية",
-                                category: "تقنية مالية",
-                                eventLogo: "https://example.com/fintech-logo.png", 
-                                description: "مستقبل التكنولوجيا المالية في الشرق الأوسط",
-                                eventFromDate: "2024-10-10T09:00:00Z",
-                                eventToDate: "2024-10-12T17:00:00Z",
-                                eventLocation: "مركز أبوظبي الوطني للمعارض",
-                                targetAudience: "خبراء التكنولوجيا المالية"
-                            }
-                        },
-                        filters: { category: "fintech", region: "mena" }
-                    },
-                    localizationStrings: {
-                        "ar": {
-                            "label.date.from": "من",
-                            "label.date.to": "إلى", 
-                            "label.targetAudiance": "الجمهور المستهدف:"
-                        }
-                    }
                 }
             ];
             
@@ -178,14 +142,14 @@ class JSONataExample(private val context: Context) {
                 data: {
                     result: {
                         eventinfo: {
-                            name: "Premium Business Workshop",
-                            category: "Business Development",
+                            name: "This is name",
+                            category: "This is category",
                             eventLogo: "https://example.com/workshop-logo.png",
-                            description: "Exclusive business development workshop for executives",
+                            description: "This is description",
                             eventFromDate: "2024-09-25T14:00:00Z",
                             eventToDate: "2024-09-25T18:00:00Z", 
-                            eventLocation: "Burj Al Arab, Royal Suite",
-                            targetAudience: "C-level Executives, Business Leaders",
+                            eventLocation: "This is location",
+                            targetAudience: "This is audience",
                             price: 2500.00,
                             currency: "AED"
                         }
@@ -210,12 +174,7 @@ class JSONataExample(private val context: Context) {
             // Add price caption
             baseTransformed.data.list[0].props.captions.push({
                 text: lookup(eventData.config.localization, "label.price") + " " + 
-                      formatCurrency(eventData.data.result.eventinfo.price, eventData.data.result.eventinfo.currency),
-                thumbnail: {
-                    dark: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/money.png",
-                    light: "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/money.png"
-                },
-                type: "premium"
+                      formatCurrency(eventData.data.result.eventinfo.price, eventData.data.result.eventinfo.currency)
             });
             
             JSON.stringify(baseTransformed, null, 2);
@@ -227,7 +186,7 @@ class JSONataExample(private val context: Context) {
     /**
      * Clean up resources
      */
-    fun destroy() {
+    suspend fun destroy() {
         jsEngine.destroy()
     }
 }

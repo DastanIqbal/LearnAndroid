@@ -32,32 +32,24 @@ class RawJSONataExample(private val context: Context) {
             ${"$"}fromMillis(${"$"}toMillis(result.eventinfo.eventFromDate), "[MNn] [D1o], [Y0001]") & 
             " " & ${"$"}lookup(${"$"}localization, "label.date.to") &" " & 
             ${"$"}fromMillis(${"$"}toMillis(result.eventinfo.eventToDate), "[MNn] [D1o], [Y0001]"),
-                  "thumbnail": {
-                     "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/calendar-alt.png",
-                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/calendar-alt.png"
-                    },
+                  
                   "type": "default"
                 },
                 {
                   "text": result.eventinfo.eventLocation,
-                  "thumbnail": {
-                     "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/pin-marker.png",
-                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/pin-marker.png"
-                    },
+                  
                   "type": "default"
                 },
                  {
                   "text": ${"$"}fromMillis(${"$"}toMillis(result.eventinfo.eventFromDate), "[h]:[m01] [P]") & " " & ${"$"}lookup(${"$"}localization, "label.date.to") &" " & ${"$"}fromMillis(${"$"}toMillis(result.eventinfo.eventToDate), "[h]:[m01] [P]"),
-                  "thumbnail": {
-                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/time-clock.png",
-                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/time-clock.png"},
+                  
                   "type": "default"
                 },
                  {
                   "text":  ${"$"}lookup(${"$"}localization, "label.targetAudiance") & " " & result.eventinfo.targetAudience,
                   "thumbnail": {
-                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/location-target.png",
-                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/location-target.png"
+                    "dark": "https://google.com//ADLocker/ADPF/Dark/location-target.png",
+                    "light": "https://google.com//ADLocker/ADPF/Light/location-target.png"
                   },
                   "type": "default"
                 }
@@ -77,7 +69,32 @@ class RawJSONataExample(private val context: Context) {
      * Initialize the engine
      */
     suspend fun initialize(): Boolean {
-        return jsEngine.initialize()
+        val initResult = jsEngine.initialize()
+        val jsonataResult = jsEngine.loadLibraryFromAssets("jsonata.min.js")
+        if (!jsonataResult.success) {
+            print("Failed to load JSONata library: ${jsonataResult.error}")
+        }
+
+        val libraryResult = jsEngine.loadLibraryFromAssets("sample-library.js")
+        if (!libraryResult.success) {
+            println("Failed to load library: ${libraryResult.error}")
+        }
+
+        // Use functions from the loaded library
+        val script = """
+             const datda1 = { name: "Alice", age: 30 };
+            (async () => {
+                const expression = jsonata('name');
+                const result = await expression.evaluate(data);  // returns 24
+                console.log(JSON.stringify(result));
+                JSON.stringify(result)
+            })()
+        """.trimIndent()
+
+        val result = jsEngine.executeScript(script)
+        val r = jsEngine.convertResultToString(result.result)
+        println("Library example result: ${result.result}")
+        return initResult
     }
 
     /**
@@ -87,51 +104,7 @@ class RawJSONataExample(private val context: Context) {
     suspend fun executeRawJSONataTransformation(): JSExecutionResult {
         // First, we need to create JavaScript functions that mimic JSONata behavior
         val jsonataSimulationScript = """
-            // Simulate JSONata ${'$'}lookup function
-            function ${'$'}lookup(obj, key) {
-                return obj && obj[key] ? obj[key] : key;
-            }
-            
-            // Simulate JSONata ${'$'}fromMillis function
-            function ${'$'}fromMillis(millis, format) {
-                if (!millis) return "";
-                const date = new Date(millis);
-                
-                if (format === "[MNn] [D1o], [Y0001]") {
-                    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    const day = date.getDate();
-                    const ordinal = day > 3 && day < 21 ? 'th' : 
-                                   day % 10 === 1 ? 'st' : 
-                                   day % 10 === 2 ? 'nd' : 
-                                   day % 10 === 3 ? 'rd' : 'th';
-                    return months[date.getMonth()] + " " + day + ordinal + ", " + date.getFullYear();
-                }
-                
-                if (format === "[h]:[m01] [P]") {
-                    return date.toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit', 
-                        hour12: true 
-                    });
-                }
-                
-                return date.toISOString();
-            }
-            
-            // Simulate JSONata ${'$'}toMillis function
-            function ${'$'}toMillis(dateString) {
-                if (!dateString) return null;
-                return new Date(dateString).getTime();
-            }
-            
-            // Simulate JSONata ${'$'}type function
-            function ${'$'}type(value) {
-                if (Array.isArray(value)) return "array";
-                return typeof value;
-            }
-            
-            // Now execute the transformation logic
+           // Now execute the transformation logic
             function executeJSONataTransformation(config, data, localizationStrings) {
                 const language = config.lang;
                 const localization = config.localization ? config.localization : ${'$'}lookup(localizationStrings, language);
@@ -150,16 +123,16 @@ class RawJSONataExample(private val context: Context) {
                                        " " + ${'$'}lookup(localization, "label.date.to") + " " + 
                                        ${'$'}fromMillis(${'$'}toMillis(data.result.eventinfo.eventToDate), "[MNn] [D1o], [Y0001]"),
                                 "thumbnail": {
-                                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/calendar-alt.png",
-                                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/calendar-alt.png"
+                                    "dark": "https://google.com//ADLocker/ADPF/Dark/calendar-alt.png",
+                                    "light": "https://google.com//ADLocker/ADPF/Light/calendar-alt.png"
                                 },
                                 "type": "default"
                             },
                             {
                                 "text": data.result.eventinfo.eventLocation,
                                 "thumbnail": {
-                                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/pin-marker.png",
-                                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/pin-marker.png"
+                                    "dark": "https://google.com//ADLocker/ADPF/Dark/pin-marker.png",
+                                    "light": "https://google.com//ADLocker/ADPF/Light/pin-marker.png"
                                 },
                                 "type": "default"
                             },
@@ -168,16 +141,16 @@ class RawJSONataExample(private val context: Context) {
                                        ${'$'}lookup(localization, "label.date.to") + " " + 
                                        ${'$'}fromMillis(${'$'}toMillis(data.result.eventinfo.eventToDate), "[h]:[m01] [P]"),
                                 "thumbnail": {
-                                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/time-clock.png",
-                                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/time-clock.png"
+                                    "dark": "https://google.com//ADLocker/ADPF/Dark/time-clock.png",
+                                    "light": "https://google.com//ADLocker/ADPF/Light/time-clock.png"
                                 },
                                 "type": "default"
                             },
                             {
                                 "text": ${'$'}lookup(localization, "label.targetAudiance") + " " + data.result.eventinfo.targetAudience,
                                 "thumbnail": {
-                                    "dark": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Dark/location-target.png",
-                                    "light": "https://static-stg.tamm.abudhabi/static-stage/Project/TAMM/ADLocker/ADPF/Light/location-target.png"
+                                    "dark": "https://google.com//ADLocker/ADPF/Dark/location-target.png",
+                                    "light": "https://google.com//ADLocker/ADPF/Light/location-target.png"
                                 },
                                 "type": "default"
                             }
@@ -220,14 +193,14 @@ class RawJSONataExample(private val context: Context) {
             const data = {
                 result: {
                     eventinfo: {
-                        name: "ADPF Cultural Festival 2024",
-                        category: "Cultural Event",
-                        eventLogo: "https://example.com/adpf-logo.png",
-                        description: "Annual cultural festival celebrating UAE heritage and traditions",
-                        eventFromDate: "2024-12-01T18:00:00Z",
-                        eventToDate: "2024-12-03T22:00:00Z",
-                        eventLocation: "Al Ain Cultural Center",
-                        targetAudience: "Families, Culture Enthusiasts, Tourists"
+                        name: "This is name",
+                        category: "This is category",
+                        eventLogo: "https://example.com/workshop-logo.png",
+                        description: "This is description",
+                        eventFromDate: "2024-09-25T14:00:00Z",
+                        eventToDate: "2024-09-25T18:00:00Z", 
+                        eventLocation: "This is location",
+                        targetAudience: "This is audience",
                     }
                 },
                 filters: {
@@ -264,7 +237,7 @@ class RawJSONataExample(private val context: Context) {
     /**
      * Clean up resources
      */
-    fun destroy() {
+    suspend fun destroy() {
         jsEngine.destroy()
     }
 }
@@ -284,17 +257,17 @@ suspend fun useRawJSONataTransformation(context: Context) {
         }
 
         // Execute the transformation
-        val result = rawExample.executeRawJSONataTransformation()
-        if (result.success) {
-            println("JSONata transformation result:")
-            println(result.result)
-        } else {
-            println("Transformation failed: ${result.error}")
-        }
-
-        // Get the raw JSONata string
-        println("Raw JSONata transformation string:")
-        println(rawExample.getRawJSONataString())
+//        val result = rawExample.executeRawJSONataTransformation()
+//        if (result.success) {
+//            println("JSONata transformation result:")
+//            println(result.result)
+//        } else {
+//            println("Transformation failed: ${result.error}")
+//        }
+//
+//        // Get the raw JSONata string
+//        println("Raw JSONata transformation string:")
+//        println(rawExample.getRawJSONataString())
 
     } finally {
         rawExample.destroy()
