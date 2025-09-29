@@ -43,13 +43,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.api.jsonata4java.Expression
 import com.dastanapps.javascriptengine.jsengine.JSEngineManager
 import com.dastanapps.javascriptengine.jsengine.JSExecutionResult
-import com.dastanapps.javascriptengine.jsonata.JSonataDemo
+import com.dastanapps.javascriptengine.jsonata.JSonata4JavaDemo
 import com.dastanapps.javascriptengine.ui.theme.LearnAndroidTheme
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -74,7 +71,11 @@ class MainActivity : ComponentActivity() {
 //                        jsEngine = jsEngine,
 //                        modifier = Modifier.padding(innerPadding)
 //                    )
-                    JSonataDemo(
+//                    JSonataDemo(
+//                        jsEngine = jsEngine,
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
+                    JSonata4JavaDemo(
                         jsEngine = jsEngine,
                         modifier = Modifier.padding(innerPadding)
                     )
