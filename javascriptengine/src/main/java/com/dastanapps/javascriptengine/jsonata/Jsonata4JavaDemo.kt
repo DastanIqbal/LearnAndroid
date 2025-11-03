@@ -59,7 +59,10 @@ data class JsonataState(
     val jsonataScript: String = "name",
     val output: String = "",
     val isExecuting: Boolean = false,
-    val errorMessage: String = ""
+    val errorMessage: String = "",
+    val jsonata4JavaError: String = "",
+    val duktapeError: String = "",
+    val currentEngine: String = "JSONata4Java" // Track which engine is being used
 )
 
 // MVI Intents
@@ -74,6 +77,11 @@ sealed class JsonataIntent {
 class JsonataViewModel : ViewModel() {
     private val _state = MutableStateFlow(JsonataState())
     val state: StateFlow<JsonataState> = _state.asStateFlow()
+    private lateinit var jsEngine: JSEngineManager
+
+    fun setJSEngine(jsEngine: JSEngineManager) {
+        this.jsEngine = jsEngine
+    }
 
     fun handleIntent(intent: JsonataIntent) {
         when (intent) {
@@ -88,7 +96,12 @@ class JsonataViewModel : ViewModel() {
                         )
                     )
                 } else {
-                    _state.value = _state.value.copy(output = "", errorMessage = "")
+                    _state.value = _state.value.copy(
+                        output = "",
+                        errorMessage = "",
+                        jsonata4JavaError = "",
+                        duktapeError = ""
+                    )
                 }
             }
 
@@ -103,12 +116,21 @@ class JsonataViewModel : ViewModel() {
                         )
                     )
                 } else {
-                    _state.value = _state.value.copy(output = "", errorMessage = "")
+                    _state.value = _state.value.copy(
+                        output = "",
+                        errorMessage = "",
+                        jsonata4JavaError = "",
+                        duktapeError = ""
+                    )
                 }
             }
 
             is JsonataIntent.ResetInputs -> {
-                _state.value = JsonataState() // Reset to default state
+                _state.value = JsonataState(
+                    errorMessage = "",
+                    jsonata4JavaError = "",
+                    duktapeError = ""
+                )
                 // Auto-execute with default values
                 handleIntent(
                     JsonataIntent.ExecuteJsonata(
@@ -137,60 +159,137 @@ class JsonataViewModel : ViewModel() {
                     _state.value = _state.value.copy(
                         errorMessage = "Invalid JSON format: ${e.message}",
                         output = "",
-                        isExecuting = false
+                        isExecuting = false,
+                        jsonata4JavaError = "",
+                        duktapeError = ""
                     )
                     return@launch
                 }
 
-                // Execute JSONata expression
-                val expression = try {
-                    Expression.jsonata(jsonataScript)
-                } catch (e: Exception) {
-                    _state.value = _state.value.copy(
-                        errorMessage = "Invalid JSONata expression: ${e.message}",
-                        output = "",
-                        isExecuting = false
-                    )
-                    return@launch
-                }
-
-                val result = try {
-                    expression.evaluate(jsonNode)
-                } catch (e: Exception) {
-                    _state.value = _state.value.copy(
-                        errorMessage = "Error executing JSONata expression: ${e.message}",
-                        output = "",
-                        isExecuting = false
-                    )
-                    return@launch
-                }
-
-                // Format the result
-                val formattedResult = when (result) {
-                    null -> "null"
-                    is JsonNode -> {
-                        if (result.isTextual) {
-                            result.asText()
-                        } else {
-                            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result)
+                // Execute JSONata expression using JSONata4Java
+                try {
+                    val expression = Expression.jsonata(jsonataScript)
+                    val result = expression.evaluate(jsonNode)
+                    val formattedResult = when (result) {
+                        null -> "null"
+                        is JsonNode -> {
+                            if (result.isTextual) {
+                                result.asText()
+                            } else {
+                                objectMapper.writerWithDefaultPrettyPrinter()
+                                    .writeValueAsString(result)
+                            }
                         }
+
+                        else -> result.toString()
                     }
-
-                    else -> result.toString()
+                    _state.value = _state.value.copy(
+                        output = formattedResult,
+                        errorMessage = "",
+                        isExecuting = false,
+                        jsonata4JavaError = "",
+                        duktapeError = "",
+                        currentEngine = "JSONata4Java"
+                    )
+                } catch (e: Exception) {
+                    // Fallback to Duktape (JavaScript engine)
+                    _state.value = _state.value.copy(
+                        jsonata4JavaError = "Error executing JSONata expression using JSONata4Java: ${e.message}",
+                        isExecuting = false
+                    )
+                    executeJsonataUsingDuktape(jsonInput, jsonataScript)
                 }
-
-                _state.value = _state.value.copy(
-                    output = formattedResult,
-                    errorMessage = "",
-                    isExecuting = false
-                )
-
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     errorMessage = "Unexpected error: ${e.message}",
                     output = "",
+                    isExecuting = false,
+                    jsonata4JavaError = "",
+                    duktapeError = ""
+                )
+            }
+        }
+    }
+
+    private fun executeJsonataUsingDuktape(jsonInput: String, jsonataScript: String) {
+        viewModelScope.launch {
+            try {
+                // Initialize Duktape engine if not already initialized
+                val initialized = jsEngine.initialize()
+                if (!initialized) {
+                    _state.value = _state.value.copy(
+                        duktapeError = "Failed to initialize JavaScript engine",
+                        output = "",
+                        isExecuting = false
+                    )
+                    return@launch
+                }
+
+                // Load JSONata library first
+                val libraryResult = jsEngine.loadLibraryFromAssets("jsonata.min.js")
+                if (!libraryResult.success) {
+                    _state.value = _state.value.copy(
+                        duktapeError = "Failed to load JSONata library: ${libraryResult.error}",
+                        output = "",
+                        isExecuting = false
+                    )
+                    return@launch
+                }
+
+                // Escape the JSON input and script for JavaScript
+                val escapedJsonInput = escapeJsString(jsonInput)
+                val escapedScript = escapeJsString(jsonataScript)
+
+                // Create JavaScript code to execute JSONata
+                val jsCode = """
+                    (function() {
+                        try {
+                            var json = JSON.parse('$escapedJsonInput');
+                            var expression = jsonata('$escapedScript');
+                            var result = expression.evaluate(json);
+                            return JSON.stringify(result, null, 2);
+                        } catch (e) {
+                            return JSON.stringify({ "error": e.message });
+                        }
+                    })();
+                """.trimIndent()
+
+                // Execute the JavaScript code using the JS engine
+                val result = jsEngine.executeScript(jsCode, "jsonata_fallback.js")
+
+                if (result.success) {
+                    _state.value = _state.value.copy(
+                        output = result.result ?: "null",
+                        errorMessage = "",
+                        isExecuting = false,
+                        duktapeError = "",
+                        currentEngine = "Duktape (JavaScript)"
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        duktapeError = "Error executing JSONata expression using Duktape: ${result.error}",
+                        output = "",
+                        isExecuting = false
+                    )
+                    // If both engines failed, set a final error message
+                    if (_state.value.jsonata4JavaError.isNotEmpty()) {
+                        _state.value = _state.value.copy(
+                            errorMessage = "Both JSONata4Java and Duktape engines failed to execute the expression"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    duktapeError = "Error executing JSONata expression using Duktape: ${e.message}",
+                    output = "",
                     isExecuting = false
                 )
+                // If both engines failed, set a final error message
+                if (_state.value.jsonata4JavaError.isNotEmpty()) {
+                    _state.value = _state.value.copy(
+                        errorMessage = "Both JSONata4Java and Duktape engines failed to execute the expression"
+                    )
+                }
             }
         }
     }
@@ -205,9 +304,18 @@ fun JSonata4JavaDemo(
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
 
+    val jsonataExp = jsEngine.loadAssets("jsonata-ex-script.js")
+    val jsonInput = jsEngine.loadAssets("jsonata-ex.json")
+
     // Auto-execute on first composition
     LaunchedEffect(Unit) {
-        viewModel.handleIntent(JsonataIntent.ExecuteJsonata(state.jsonInput, state.jsonataScript))
+        viewModel.handleIntent(JsonataIntent.UpdateJsonInput(jsonInput))
+        viewModel.handleIntent(JsonataIntent.UpdateJsonataScript(jsonataExp))
+    }
+
+    // Pass jsEngine to viewModel
+    LaunchedEffect(jsEngine) {
+        viewModel.setJSEngine(jsEngine)
     }
 
     Column(
@@ -368,6 +476,46 @@ fun JSonata4JavaDemo(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    } else {
+                        Text(
+                            text = "Engine: ${state.currentEngine}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                // Display error messages at the top of output section
+                if (state.jsonata4JavaError.isNotEmpty() || state.duktapeError.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            if (state.jsonata4JavaError.isNotEmpty()) {
+                                Text(
+                                    text = "❌ JSONata4Java failed: ${state.jsonata4JavaError}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            if (state.duktapeError.isNotEmpty()) {
+                                if (state.jsonata4JavaError.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+                                Text(
+                                    text = "❌ Duktape failed: ${state.duktapeError}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))

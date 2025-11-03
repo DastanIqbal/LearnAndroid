@@ -71,27 +71,7 @@ fun JSonataDemo(
         val jsonExpression = JSONObject.quote(jsonataExp.toString())
         val jsonInputData = JSONObject.quote(jsonInput.toString())
 
-        // Jasonta4Java IBM
-        val mapper: ObjectMapper = ObjectMapper()
-        val jsonData: JsonNode? =
-            mapper.readTree(jsonInput)
-
-        val expression: Expression = Expression.jsonata(jsonataExp)
-        val result: JsonNode? = expression.evaluate(jsonData)
-        executionResults += ExecutionLog(
-            "Jsonata4Java IBM",
-            result.toString(),
-            true
-        )
-
-//        val escapedJsonataExpr: String? = jsonExpression
-//        val script =
-//            """
-//            const data = $jsonInputData;
-//            const expr = jsonata('$escapedJsonataExpr');
-//            const result = expr.evaluate(data);
-//            JSON.stringify(result);
-//            """.trimIndent()
+        val escapedJsonataExpr: String? = jsonExpression
 
 
         val expr = """
