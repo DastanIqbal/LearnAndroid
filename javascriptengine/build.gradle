@@ -55,10 +55,16 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
-    // JavaScript Engine - QuickJS Android (best lightweight JS engine for Android)
+    // Official AndroidX JavaScript Engine (Primary engine for ES6 module)
+    implementation "androidx.javascriptengine:javascriptengine:1.0.0-beta01"
+
+    // Guava for Futures support (required by AndroidX JavaScriptEngine)
+    implementation 'com.google.guava:guava:31.1-android'
+
+    // JavaScript Engine - QuickJS Android (used by other modules)
     implementation "io.github.taoweiji.quickjs:quickjs-android:1.4.0"
 
-    // JavaScript Engine - J2V8 (more compatible alternative)
+    // JavaScript Engine - J2V8 (used by other modules, not ES6 module)
     implementation("com.eclipsesource.j2v8:j2v8:6.2.1@aar")
 
     // JSON serialization for data handling

@@ -31,6 +31,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- ES6 Promise Test Activity -->
+        <activity
+            android:name=".es6promises.ES6PromiseTestActivity"
+            android:exported="true"
+            android:label="ES6 &amp; Promise Tests"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
