@@ -58,8 +58,8 @@ dependencies {
     // JavaScript Engine - QuickJS Android (best lightweight JS engine for Android)
     implementation "io.github.taoweiji.quickjs:quickjs-android:1.4.0"
 
-    // JSONata Java implementation (dashjoin is faster and more compatible than IBM's version)
-    // implementation "com.dashjoin:jsonata:1.8.5"  // Not available in public repos
+    // JavaScript Engine - J2V8 (more compatible alternative)
+    implementation("com.eclipsesource.j2v8:j2v8:6.2.1@aar")
 
     // JSON serialization for data handling
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0"
@@ -67,12 +67,14 @@ dependencies {
     // Coroutines for async operations
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
 
-    // Alternative JSONata implementation (if needed for comparison/fallback)
-     implementation("com.ibm.jsonata4java:JSONata4Java:2.4.5")
-     implementation("com.fasterxml.jackson.core:jackson-core:2.13.0")
+    // JSONata implementations (keeping existing for separate use)
+    implementation("com.ibm.jsonata4java:JSONata4Java:2.4.5")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.13.0")
+
+    // ViewModel and Compose integration
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4'
 
     // Alternative JS engines (commented out for reference)
-    // implementation("com.eclipsesource.j2v8:j2v8:6.2.0@aar")  // J2V8 - heavier but more compatible
     // implementation("org.graalvm.js:js:21.0.0")               // GraalVM JS - desktop only
     // implementation("org.graalvm.js:js-scriptengine:21.0.0")  // GraalVM JS ScriptEngine
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DeveloperToolsToolWindowSettingsV1" lastSelectedContentNodeId="escape-sequence-escaper-unescaper" pluginVersion="7.1.0">
+    <developerToolsConfigurations>
+      <developerToolConfiguration developerToolId="escape-sequence-escaper-unescaper" id="5a3eb061-5848-4bc8-ac77-b5949c473bf4" name="Workbench">
+        <properties>
+          <property key="sourceText" type="INPUT" value="kotlin.String|$sum(products.price)" />
+          <property key="targetText" type="INPUT" value="kotlin.String|$sum(products.price)" />
+        </properties>
+      </developerToolConfiguration>
+    </developerToolsConfigurations>
+  </component>
+</project>

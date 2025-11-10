@@ -19,6 +19,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- JS-JSONata Integration Demo Activity -->
+        <activity
+            android:name=".integration.IntegrationDemoActivity"
+            android:exported="true"
+            android:label="JS-JSONata Integration Demo"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
