@@ -30,6 +30,7 @@ data class ES6PromiseTestUiState(
     val testResults: List<TestResult> = emptyList(),
     val testCategories: List<String> = listOf(
         "Comprehensive",
+        "JSONata",
         "Arrow Functions",
         "Template Literals",
         "Destructuring",

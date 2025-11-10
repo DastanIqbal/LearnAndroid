@@ -84,6 +84,120 @@ class ES6TestExecutor(private val application: Application) {
                 category = "Comprehensive"
             ),
 
+            // JSONata Library Diagnostic Test
+            JSTestCase(
+                name = "JSONata Library Diagnostic",
+                description = "Diagnose JSONata library loading and global scope",
+                jsCode = """
+                    // Create global context for JSONata library
+                    var global = this;
+                    var window = this;
+                    var self = this;
+                    
+                    try {
+                        // Check initial state
+                        var initialState = "Initial: jsonata=" + (typeof jsonata) + ", this.jsonata=" + (typeof this.jsonata);
+                        
+                        // Load JSONata library (first 1000 chars to see what it starts with)
+                        var jsonataCode = `${loadAssetFile("js/jsonata-es5.js")}`;
+                        var codeStart = jsonataCode.substring(0, 500) + "...";
+                        
+                        // Try to eval the JSONata library
+                        eval(jsonataCode);
+                        
+                        // Check what's available after loading
+                        var afterState = "After: jsonata=" + (typeof jsonata) + ", this.jsonata=" + (typeof this.jsonata);
+                        var globalKeys = Object.keys(this).filter(key => key.toLowerCase().includes('json')).join(', ');
+                        
+                        initialState + " | " + afterState + " | Global JSON keys: " + globalKeys + " | Code starts: " + codeStart;
+                        
+                    } catch (e) {
+                        "JSONata diagnostic error: " + e.message + " at line " + (e.lineNumber || "unknown");
+                    }
+                """.trimIndent(),
+                category = "JSONata"
+            ),
+
+            // JSONata ES5 Library Test
+            JSTestCase(
+                name = "JSONata ES5 Library Test",
+                description = "Load and test JSONata ES5 library from assets",
+                jsCode = """
+                    // Create global context for JSONata library
+                    var global = this;
+                    var window = this;
+                    var self = this;
+                    
+                    // Load JSONata library
+                    ${loadAssetFile("js/jsonata-es5.js")}
+                    
+                    // Test JSONata functionality
+                    try {
+                        if (typeof jsonata !== 'undefined') {
+                            // Test basic JSONata expression
+                            var expression = jsonata('$');
+                            var result = expression.evaluate("Hello JSONata!");
+                            "JSONata library loaded successfully: " + result;
+                        } else if (typeof this.jsonata !== 'undefined') {
+                            // Try accessing from this context
+                            var expression = this.jsonata('$');
+                            var result = expression.evaluate("Hello JSONata!");
+                            "JSONata library loaded successfully (from this): " + result;
+                        } else {
+                            "JSONata library loaded but jsonata function not found in any context";
+                        }
+                    } catch (e) {
+                        "JSONata test error: " + e.message + " (Stack: " + (e.stack || "No stack") + ")";
+                    }
+                """.trimIndent(),
+                category = "JSONata"
+            ),
+
+            // JSONata Data Transformation Test
+            JSTestCase(
+                name = "JSONata Data Transformation",
+                description = "Test JSONata data transformation with sample JSON",
+                jsCode = """
+                    // Create global context for JSONata library
+                    var global = this;
+                    var window = this;
+                    var self = this;
+                    
+                    // Load JSONata library
+                    ${loadAssetFile("js/jsonata-es5.js")}
+                    
+                    // Test JSONata with sample data
+                    try {
+                        var jsonataFunc = jsonata || this.jsonata;
+                        
+                        if (jsonataFunc) {
+                            var sampleData = {
+                                "users": [
+                                    {"name": "Alice", "age": 30, "role": "developer"},
+                                    {"name": "Bob", "age": 25, "role": "designer"},
+                                    {"name": "Carol", "age": 35, "role": "manager"}
+                                ]
+                            };
+                            
+                            // Test JSONata expression to extract names
+                            var expression = jsonataFunc('users.name');
+                            var names = expression.evaluate(sampleData);
+                            
+                            // Test JSONata expression with filter
+                            var filterExpr = jsonataFunc('users[age > 30].name');
+                            var filteredNames = filterExpr.evaluate(sampleData);
+                            
+                            "Names: " + JSON.stringify(names) + ", Filtered: " + JSON.stringify(filteredNames);
+                        } else {
+                            "JSONata function not available in any context";
+                        }
+                    } catch (e) {
+                        "JSONata data transformation error: " + e.message + " (Stack: " + (e.stack || "No stack") + ")";
+                    }
+                """.trimIndent(),
+                category = "JSONata"
+            ),
+
             // Arrow Functions Tests
             JSTestCase(
                 name = "Basic Arrow Function",
