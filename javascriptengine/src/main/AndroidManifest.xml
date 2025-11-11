@@ -43,6 +43,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- WebView JavaScript Test Activity -->
+        <activity
+            android:name=".webview.WebViewJSTestActivity"
+            android:exported="true"
+            android:label="WebView JavaScript Tests"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
