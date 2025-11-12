@@ -8,18 +8,44 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 data class BridgeEventLog(
     val timestamp: Long,
     val message: String
 )
 
+data class JSONataTask(
+    val id: String,
+    val expression: String,
+    val data: String,
+    val status: TaskStatus = TaskStatus.PENDING,
+    val result: String? = null,
+    val error: String? = null,
+    val executionTime: Long = 0,
+    val startTime: Long = System.currentTimeMillis()
+)
+
+enum class TaskStatus {
+    PENDING, RUNNING, COMPLETED, FAILED
+}
+
 data class JSBridgeState(
     val isInitialized: Boolean = false,
     val eventLogs: List<BridgeEventLog> = emptyList(),
-    val error: String? = null
+    val error: String? = null,
+    val jsonataTasks: List<JSONataTask> = emptyList(),
+    val activeTaskCount: Int = 0,
+    val totalTasksProcessed: Int = 0
 )
 
 class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +55,10 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     private var webViewBridge: WebViewBridge? = null
     private var webView: WebView? = null
+
+    // Thread pool for parallel JSONata execution
+    private val jsonataExecutor = Executors.newFixedThreadPool(4)
+    private val taskIdCounter = AtomicInteger(0)
 
     fun initializeWebView(webView: WebView) {
         this.webView = webView
@@ -73,35 +103,66 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private fun registerCustomFunctions(bridge: WebViewBridge) {
-        // JSONata transformation function
+        // Enhanced JSONata transformation function with parallel support
         bridge.registerFunction("jsonataTransform") { params ->
             val expression = params.getString("expression", "")
             val dataJson = params.getString("data", "{}")
+            val parallel = params.getBoolean("parallel", false)
 
             if (expression.isBlank()) {
                 BridgeResult.error("Expression cannot be empty")
             } else {
                 try {
-                    // In a real implementation, you would use the JSONata library here
-                    // For demo purposes, we'll simulate some common transformations
-                    val result = when {
-                        expression.contains("users.name") -> """["Alice Johnson", "Bob Smith", "Carol Williams"]"""
-                        expression.contains("users[age >= 30]") -> """[{"name": "Alice Johnson", "age": 32}, {"name": "Carol Williams", "age": 28}]"""
-                        expression.contains("\$count") -> "15"
-                        expression.contains("price * quantity") -> "125.50"
-                        else -> """{"message": "Simulated JSONata result", "expression": "$expression"}"""
-                    }
+                    if (parallel) {
+                        // Execute in parallel (simulate)
+                        viewModelScope.launch {
+                            val tasks = listOf(expression to dataJson)
+                            executeParallelJSONata(tasks)
+                        }
 
-                    val resultData =
-                        """{"success": true, "result": $result, "expression": "$expression"}"""
-                    BridgeResult.success(
-                        kotlinx.serialization.json.Json.parseToJsonElement(
-                            resultData
-                        )
-                    )
+                        val resultData =
+                            """{"success": true, "message": "JSONata task queued for parallel execution", "expression": "$expression"}"""
+                        BridgeResult.success(Json.parseToJsonElement(resultData))
+                    } else {
+                        // Original synchronous execution
+                        val result = simulateJSONataExecution(expression, dataJson)
+                        val resultData =
+                            """{"success": true, "result": $result, "expression": "$expression"}"""
+                        BridgeResult.success(Json.parseToJsonElement(resultData))
+                    }
                 } catch (e: Exception) {
                     BridgeResult.error("JSONata transformation failed: ${e.message}")
                 }
+            }
+        }
+
+        // Parallel JSONata batch execution
+        bridge.registerFunction("jsonataParallelBatch") { params ->
+            try {
+                // Get arrays from parameters - need to parse as JSON strings for now
+                val expressionsJson = params.getString("expressions", "[]")
+                val dataJson = params.getString("data", "[]")
+
+                // Parse JSON arrays manually (simplified approach)
+                val expressions = parseJsonStringArray(expressionsJson)
+                val dataArray = parseJsonStringArray(dataJson)
+
+                if (expressions.size != dataArray.size) {
+                    BridgeResult.error("Expressions and data arrays must have the same length")
+                } else {
+                    val tasks = mutableListOf<Pair<String, String>>()
+                    for (i in expressions.indices) {
+                        tasks.add(Pair(expressions[i], dataArray[i]))
+                    }
+
+                    executeParallelJSONata(tasks)
+
+                    val resultData =
+                        """{"success": true, "message": "${tasks.size} JSONata tasks queued for parallel execution"}"""
+                    BridgeResult.success(Json.parseToJsonElement(resultData))
+                }
+            } catch (e: Exception) {
+                BridgeResult.error("Parallel batch execution failed: ${e.message}")
             }
         }
 
@@ -178,6 +239,61 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             }
 
             BridgeResult.success(kotlinx.serialization.json.Json.parseToJsonElement(systemInfo))
+        }
+
+        // Bridge functions for parallel execution demos
+        bridge.registerFunction("runJSONataStressTest") { params ->
+            runJSONataStressTest()
+            val resultData =
+                """{"success": true, "message": "JSONata stress test started with 8 parallel tasks"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        bridge.registerFunction("runThreadedJSONataTest") { params ->
+            runThreadedJSONataTest()
+            val resultData =
+                """{"success": true, "message": "Threaded JSONata test started with 4 tasks"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        bridge.registerFunction("clearCompletedTasks") { params ->
+            clearCompletedTasks()
+            val resultData = """{"success": true, "message": "Completed tasks cleared"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        // Get current parallel execution status
+        bridge.registerFunction("getParallelStatus") { params ->
+            val statusData = buildString {
+                append("{")
+                append("\"activeTaskCount\":${_state.value.activeTaskCount},")
+                append("\"totalTasksProcessed\":${_state.value.totalTasksProcessed},")
+                append("\"pendingTasks\":${_state.value.jsonataTasks.count { it.status == TaskStatus.PENDING }},")
+                append("\"runningTasks\":${_state.value.jsonataTasks.count { it.status == TaskStatus.RUNNING }},")
+                append("\"completedTasks\":${_state.value.jsonataTasks.count { it.status == TaskStatus.COMPLETED }},")
+                append("\"failedTasks\":${_state.value.jsonataTasks.count { it.status == TaskStatus.FAILED }}")
+                append("}")
+            }
+            BridgeResult.success(Json.parseToJsonElement(statusData))
+        }
+
+        // Storage operations
+        bridge.registerFunction("setPreference") { params ->
+            val key = params.getString("key", "")
+            val value = params.getString("value", "")
+
+            // Simulate storage operation
+            val resultData = """{"success": true, "message": "Preference saved: $key = $value"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        bridge.registerFunction("getPreference") { params ->
+            val key = params.getString("key", "")
+            val defaultValue = params.getString("defaultValue", "")
+
+            // Simulate storage operation
+            val resultData = """{"success": true, "data": "$defaultValue"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
         }
     }
 
@@ -515,8 +631,235 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         )
     }
 
+    // Execute multiple JSONata scripts in parallel
+    fun executeParallelJSONata(tasks: List<Pair<String, String>>) {
+        viewModelScope.launch {
+            addEventLog("Starting parallel execution of ${tasks.size} JSONata tasks")
+
+            val jsonataTasks = tasks.mapIndexed { index, (expression, data) ->
+                JSONataTask(
+                    id = "task_${taskIdCounter.incrementAndGet()}",
+                    expression = expression,
+                    data = data
+                )
+            }
+
+            // Update state with pending tasks
+            _state.value = _state.value.copy(
+                jsonataTasks = _state.value.jsonataTasks + jsonataTasks,
+                activeTaskCount = jsonataTasks.size
+            )
+
+            // Execute tasks in parallel using async
+            val deferredResults = jsonataTasks.map { task ->
+                async(Dispatchers.Default) {
+                    executeJSONataTask(task)
+                }
+            }
+
+            // Wait for all tasks to complete
+            val completedTasks = deferredResults.awaitAll()
+
+            // Update state with completed tasks
+            _state.value = _state.value.copy(
+                jsonataTasks = _state.value.jsonataTasks.map { existingTask ->
+                    completedTasks.find { it.id == existingTask.id } ?: existingTask
+                },
+                activeTaskCount = 0,
+                totalTasksProcessed = _state.value.totalTasksProcessed + completedTasks.size
+            )
+
+            val successCount = completedTasks.count { it.status == TaskStatus.COMPLETED }
+            val failureCount = completedTasks.count { it.status == TaskStatus.FAILED }
+
+            addEventLog("Parallel execution completed: $successCount successful, $failureCount failed")
+        }
+    }
+
+    // Execute JSONata with threading (using thread pool)
+    fun executeJSONataWithThreading(tasks: List<Pair<String, String>>) {
+        viewModelScope.launch {
+            addEventLog("Starting threaded execution of ${tasks.size} JSONata tasks")
+
+            val jsonataTasks = tasks.mapIndexed { index, (expression, data) ->
+                JSONataTask(
+                    id = "thread_task_${taskIdCounter.incrementAndGet()}",
+                    expression = expression,
+                    data = data
+                )
+            }
+
+            // Update state with pending tasks
+            _state.value = _state.value.copy(
+                jsonataTasks = _state.value.jsonataTasks + jsonataTasks,
+                activeTaskCount = jsonataTasks.size
+            )
+
+            // Execute using thread pool
+            withContext(Dispatchers.IO) {
+                val completedTasks = jsonataTasks.map { task ->
+                    async {
+                        // Simulate thread pool execution
+                        executeJSONataTaskOnThread(task)
+                    }
+                }.awaitAll()
+
+                // Update UI on main thread
+                withContext(Dispatchers.Main) {
+                    _state.value = _state.value.copy(
+                        jsonataTasks = _state.value.jsonataTasks.map { existingTask ->
+                            completedTasks.find { it.id == existingTask.id } ?: existingTask
+                        },
+                        activeTaskCount = 0,
+                        totalTasksProcessed = _state.value.totalTasksProcessed + completedTasks.size
+                    )
+
+                    val successCount = completedTasks.count { it.status == TaskStatus.COMPLETED }
+                    val failureCount = completedTasks.count { it.status == TaskStatus.FAILED }
+
+                    addEventLog("Threaded execution completed: $successCount successful, $failureCount failed")
+                }
+            }
+        }
+    }
+
+    private suspend fun executeJSONataTask(task: JSONataTask): JSONataTask {
+        return withContext(Dispatchers.Default) {
+            val startTime = System.currentTimeMillis()
+
+            // Update task status to running
+            updateTaskStatus(task.id, TaskStatus.RUNNING)
+
+            try {
+                // Simulate JSONata processing with variable delay
+                delay(Random.nextLong(500, 2000))
+
+                val result = simulateJSONataExecution(task.expression, task.data)
+                val executionTime = System.currentTimeMillis() - startTime
+
+                task.copy(
+                    status = TaskStatus.COMPLETED,
+                    result = result,
+                    executionTime = executionTime
+                )
+            } catch (e: Exception) {
+                val executionTime = System.currentTimeMillis() - startTime
+                task.copy(
+                    status = TaskStatus.FAILED,
+                    error = e.message,
+                    executionTime = executionTime
+                )
+            }
+        }
+    }
+
+    private suspend fun executeJSONataTaskOnThread(task: JSONataTask): JSONataTask {
+        return withContext(Dispatchers.IO) {
+            val startTime = System.currentTimeMillis()
+
+            // Update task status to running
+            updateTaskStatus(task.id, TaskStatus.RUNNING)
+
+            try {
+                // Simulate thread pool execution with different delay pattern
+                delay(Random.nextLong(300, 1500))
+
+                val result = simulateJSONataExecution(task.expression, task.data)
+                val executionTime = System.currentTimeMillis() - startTime
+
+                task.copy(
+                    status = TaskStatus.COMPLETED,
+                    result = result,
+                    executionTime = executionTime
+                )
+            } catch (e: Exception) {
+                val executionTime = System.currentTimeMillis() - startTime
+                task.copy(
+                    status = TaskStatus.FAILED,
+                    error = e.message,
+                    executionTime = executionTime
+                )
+            }
+        }
+    }
+
+    private fun updateTaskStatus(taskId: String, status: TaskStatus) {
+        _state.value = _state.value.copy(
+            jsonataTasks = _state.value.jsonataTasks.map { task ->
+                if (task.id == taskId) {
+                    task.copy(status = status)
+                } else {
+                    task
+                }
+            }
+        )
+    }
+
+    private fun simulateJSONataExecution(expression: String, data: String): String {
+        // Enhanced simulation with more realistic results
+        return when {
+            expression.contains("users.name") -> """["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown"]"""
+            expression.contains("users[age >= 30]") -> """[{"name": "Alice Johnson", "age": 32}, {"name": "Carol Williams", "age": 35}]"""
+            expression.contains("\$count") -> Random.nextInt(1, 50).toString()
+            expression.contains("\$sum") && expression.contains("salary") -> Random.nextInt(
+                100000,
+                500000
+            ).toString()
+
+            expression.contains("\$average") -> Random.nextInt(50000, 150000).toString()
+            expression.contains("department") -> """["Engineering", "Design", "Marketing"]"""
+            expression.contains("skills") -> """["JavaScript", "React", "Node.js", "Python", "Java", "Kotlin"]"""
+            expression.contains("projects") -> """["WebApp", "MobileAPI", "BackendAPI"]"""
+            else -> """{"message": "JSONata result for: $expression", "processed": true, "timestamp": ${System.currentTimeMillis()}}"""
+        }
+    }
+
+    // Clear completed tasks
+    fun clearCompletedTasks() {
+        _state.value = _state.value.copy(
+            jsonataTasks = _state.value.jsonataTasks.filter { it.status == TaskStatus.RUNNING || it.status == TaskStatus.PENDING }
+        )
+        addEventLog("Cleared completed tasks")
+    }
+
+    // Demo functions to test parallel execution
+    fun runJSONataStressTest() {
+        val testTasks = listOf(
+            "users.name" to """{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]}""",
+            "users[age >= 25]" to """{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}, {"name": "Carol", "age": 35}]}""",
+            "\$count(users)" to """{"users": [{"name": "Alice"}, {"name": "Bob"}, {"name": "Carol"}]}""",
+            "\$sum(employees.salary)" to """{"employees": [{"salary": 50000}, {"salary": 60000}, {"salary": 70000}]}""",
+            "\$average(employees.age)" to """{"employees": [{"age": 25}, {"age": 30}, {"age": 35}]}""",
+            "employees.department" to """{"employees": [{"department": "Engineering"}, {"department": "Design"}]}""",
+            "projects.name" to """{"projects": [{"name": "WebApp"}, {"name": "MobileAPI"}]}""",
+            "employees.skills[]" to """{"employees": [{"skills": ["JS", "React"]}, {"skills": ["Java", "Spring"]}]}"""
+        )
+
+        executeParallelJSONata(testTasks)
+    }
+
+    fun runThreadedJSONataTest() {
+        val testTasks = listOf(
+            "users.location.city" to """{"users": [{"location": {"city": "NYC"}}, {"location": {"city": "SF"}}]}""",
+            "products[price > 100]" to """{"products": [{"price": 150}, {"price": 50}, {"price": 200}]}""",
+            "\$distinct(orders.status)" to """{"orders": [{"status": "pending"}, {"status": "completed"}, {"status": "pending"}]}""",
+            "customers.{name: name, total: \$sum(orders.amount)}" to """{"customers": [{"name": "John", "orders": [{"amount": 100}]}]}"""
+        )
+
+        executeJSONataWithThreading(testTasks)
+    }
+
     override fun onCleared() {
         super.onCleared()
         webViewBridge?.cleanup()
+        jsonataExecutor.shutdown()
+    }
+}
+
+fun parseJsonStringArray(jsonString: String): List<String> {
+    return try {
+        Json.decodeFromString<List<String>>(jsonString)
+    } catch (e: Exception) {
+        listOf()
     }
 }

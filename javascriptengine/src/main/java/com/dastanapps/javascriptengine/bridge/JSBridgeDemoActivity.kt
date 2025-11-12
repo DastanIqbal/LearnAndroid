@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,7 +28,7 @@ import java.util.*
 /**
  * Demo Activity showcasing JavaScript & Android Bridge functionality
  * Demonstrates bidirectional communication between JavaScript and Android
- * Now uses ViewModel to handle WebView bridge functionality
+ * Now uses ViewModel to handle WebView bridge functionality with parallel JSONata execution
  */
 class JSBridgeDemoActivity : ComponentActivity() {
 
@@ -88,7 +89,7 @@ fun JSBridgeDemo(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Bidirectional communication between JavaScript and Android",
+                    text = "🚀 Parallel JSONata Execution with Coroutines & Threading",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -122,12 +123,58 @@ fun JSBridgeDemo(
             }
         }
 
+        // Parallel Execution Status
+        if (state.isInitialized) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "🚀 Parallel Execution Status",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Active: ${state.activeTaskCount} | Total Processed: ${state.totalTasksProcessed}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+
+                    Row {
+                        Button(
+                            onClick = { viewModel.runJSONataStressTest() },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("🔥 Stress Test")
+                        }
+
+                        Button(
+                            onClick = { viewModel.runThreadedJSONataTest() }
+                        ) {
+                            Text("🧵 Threading")
+                        }
+                    }
+                }
+            }
+        }
+
         // WebView
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .padding(vertical = 8.dp)
+                .padding(vertical = 4.dp)
         ) {
             webView?.let { view ->
                 AndroidView(
@@ -143,6 +190,42 @@ fun JSBridgeDemo(
                     text = "Loading WebView...",
                     modifier = Modifier.padding(top = 16.dp)
                 )
+            }
+        }
+
+        // JSONata Tasks Status
+        if (state.jsonataTasks.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "📊 JSONata Tasks (${state.jsonataTasks.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        TextButton(
+                            onClick = { viewModel.clearCompletedTasks() }
+                        ) {
+                            Text("Clear Completed")
+                        }
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.height(150.dp)
+                    ) {
+                        items(state.jsonataTasks.reversed()) { task ->
+                            JSONataTaskItem(task = task)
+                        }
+                    }
+                }
             }
         }
 
@@ -172,7 +255,7 @@ fun JSBridgeDemo(
                     }
 
                     LazyColumn(
-                        modifier = Modifier.height(120.dp),
+                        modifier = Modifier.height(100.dp),
                         reverseLayout = true
                     ) {
                         items(state.eventLogs.reversed()) { log ->
@@ -183,7 +266,9 @@ fun JSBridgeDemo(
                                 text = "[$timestamp] ${log.message}",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = FontFamily.Monospace,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -196,29 +281,88 @@ fun JSBridgeDemo(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 4.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "🔧 Debug Info",
+                        text = "🔧 Architecture Info",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "WebView bridge is managed by ViewModel",
+                        text = "✅ ViewModel-managed WebView bridge with parallel execution",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "All bridge functions and events are handled in the ViewModel scope",
+                        text = "⚡ Kotlin coroutines + thread pool for concurrent JSONata processing",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun JSONataTaskItem(task: JSONataTask) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = when (task.status) {
+                TaskStatus.PENDING -> MaterialTheme.colorScheme.surfaceVariant
+                TaskStatus.RUNNING -> Color(0xFFFFF3E0) // Light orange
+                TaskStatus.COMPLETED -> Color(0xFFE8F5E8) // Light green
+                TaskStatus.FAILED -> Color(0xFFFFEBEE) // Light red
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.id,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = task.expression,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (task.executionTime > 0) {
+                    Text(
+                        text = "⏱️ ${task.executionTime}ms",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Status indicator
+            val (statusIcon, statusColor) = when (task.status) {
+                TaskStatus.PENDING -> "⏳" to Color.Gray
+                TaskStatus.RUNNING -> "🔄" to Color(0xFFFF9800) // Orange
+                TaskStatus.COMPLETED -> "✅" to Color.Green
+                TaskStatus.FAILED -> "❌" to Color.Red
+            }
+
+            Text(
+                text = statusIcon,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
