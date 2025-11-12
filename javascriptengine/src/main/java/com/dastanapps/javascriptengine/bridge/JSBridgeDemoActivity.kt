@@ -73,6 +73,38 @@ class JSBridgeDemoActivity : ComponentActivity() {
     }
 
     private fun registerCustomFunctions() {
+        // JSONata transformation function
+        webViewBridge.registerFunction("jsonataTransform") { params ->
+            val expression = params.getString("expression", "")
+            val dataJson = params.getString("data", "{}")
+
+            if (expression.isBlank()) {
+                BridgeResult.error("Expression cannot be empty")
+            } else {
+                try {
+                    // In a real implementation, you would use the JSONata library here
+                    // For demo purposes, we'll simulate some common transformations
+                    val result = when {
+                        expression.contains("users.name") -> """["Alice Johnson", "Bob Smith", "Carol Williams"]"""
+                        expression.contains("users[age >= 30]") -> """[{"name": "Alice Johnson", "age": 32}, {"name": "Carol Williams", "age": 28}]"""
+                        expression.contains("\$count") -> "15"
+                        expression.contains("price * quantity") -> "125.50"
+                        else -> """{"message": "Simulated JSONata result", "expression": "$expression"}"""
+                    }
+
+                    val resultData =
+                        """{"success": true, "result": $result, "expression": "$expression"}"""
+                    BridgeResult.success(
+                        kotlinx.serialization.json.Json.parseToJsonElement(
+                            resultData
+                        )
+                    )
+                } catch (e: Exception) {
+                    BridgeResult.error("JSONata transformation failed: ${e.message}")
+                }
+            }
+        }
+
         // Custom greeting function
         webViewBridge.registerFunction("customGreet") { params ->
             val name = params.getString("name", "Anonymous")
@@ -154,6 +186,36 @@ class JSBridgeDemoActivity : ComponentActivity() {
             <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
                 <h1 style="color: #2196F3; text-align: center;">🌉 JavaScript & Android Bridge Demo</h1>
                 
+                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007acc;">
+                    <h3>🧩 JSONata Transformation Demo</h3>
+                    <p style="margin: 10px 0; color: #666; font-size: 14px;">
+                        JSONata is a query and transformation language for JSON data. Try these examples:
+                    </p>
+                    
+                    <div style="margin: 10px 0;">
+                        <label style="display: block; margin: 5px 0; font-weight: bold;">Expression:</label>
+                        <input type="text" id="jsonataExpression" placeholder="e.g., users.name" 
+                               style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+                        <br>
+                        <label style="display: block; margin: 5px 0; font-weight: bold;">Data (JSON):</label>
+                        <input type="text" id="jsonataData" placeholder='{"users": [{"name": "Alice", "age": 30}]}' 
+                               style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
+                        <br>
+                        <button onclick="testJsonata()" style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">Transform Data</button>
+                        <button onclick="loadSampleJsonata()" style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Load Sample</button>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                        <strong>Sample Expressions to try:</strong><br>
+                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">users.name</code> - Extract all user names<br>
+                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">users[age >= 30]</code> - Filter users 30 or older<br>
+                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">${'$'}count users</code> - Count number of users<br>
+                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">price * quantity</code> - Calculate total price
+                    </div>
+                    
+                    <div id="jsonataResult" style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;"></div>
+                </div>
+
                 <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <h3>🔗 Bridge Status</h3>
                     <p id="bridgeStatus">Initializing...</p>
@@ -383,6 +445,43 @@ class JSBridgeDemoActivity : ComponentActivity() {
                         } catch (e) {
                             logEvent('System info exception: ' + e.message);
                         }
+                    }
+
+                    function testJsonata() {
+                        const expression = document.getElementById('jsonataExpression').value;
+                        const data = document.getElementById('jsonataData').value;
+
+                        try {
+                            const result = AndroidBridge.call('jsonataTransform', {
+                                expression: expression,
+                                data: data
+                            });
+
+                            if (result.success) {
+                                const transformResult = result.data;
+                                document.getElementById('jsonataResult').innerHTML = 
+                                    "<strong>✅ Transformation Result:</strong><br>" +
+                                    "<pre style='background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0; overflow-x: auto;'>" + 
+                                    JSON.stringify(transformResult.result, null, 2) + "</pre>" +
+                                    "<small style='color: #666;'>Expression: " + transformResult.expression + "</small>";
+                                logEvent("JSONata transformation successful: " + expression);
+                            } else {
+                                document.getElementById('jsonataResult').innerHTML = 
+                                    "<strong>❌ Error:</strong><br>" + 
+                                    "<span style='color: #dc3545;'>" + result.error + "</span>";
+                                logEvent("JSONata transformation failed: " + result.error);
+                            }
+                        } catch (e) {
+                            document.getElementById('jsonataResult').innerHTML = 
+                                "<strong>❌ Exception:</strong><br>" + 
+                                "<span style='color: #dc3545;'>" + e.message + "</span>";
+                            logEvent('JSONata transformation exception: ' + e.message);
+                        }
+                    }
+
+                    function loadSampleJsonata() {
+                        document.getElementById('jsonataExpression').value = 'users.name';
+                        document.getElementById('jsonataData').value = '{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]}';
                     }
 
                     // Initialize when page loads

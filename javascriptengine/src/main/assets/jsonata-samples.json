@@ -1,0 +1,107 @@
+{
+  "users": [
+    {
+      "name": "Alice Johnson",
+      "age": 32,
+      "role": "developer",
+      "skills": [
+        "JavaScript",
+        "React",
+        "Node.js"
+      ],
+      "projects": [
+        "WebApp",
+        "MobileAPI"
+      ],
+      "salary": 75000
+    },
+    {
+      "name": "Bob Smith",
+      "age": 28,
+      "role": "designer",
+      "skills": [
+        "Photoshop",
+        "Figma",
+        "UI/UX"
+      ],
+      "projects": [
+        "WebApp",
+        "BrandingKit"
+      ],
+      "salary": 65000
+    },
+    {
+      "name": "Carol Williams",
+      "age": 35,
+      "role": "manager",
+      "skills": [
+        "Leadership",
+        "Strategy",
+        "Planning"
+      ],
+      "projects": [
+        "BackendAPI",
+        "Infrastructure"
+      ],
+      "salary": 85000
+    },
+    {
+      "name": "David Brown",
+      "age": 29,
+      "role": "developer",
+      "skills": [
+        "Python",
+        "Django",
+        "PostgreSQL"
+      ],
+      "projects": [
+        "CampaignX",
+        "BrandingKit"
+      ],
+      "salary": 70000
+    }
+  ],
+  "projects": [
+    {
+      "name": "WebApp",
+      "status": "active",
+      "budget": 50000,
+      "deadline": "2024-06-30"
+    },
+    {
+      "name": "MobileAPI",
+      "status": "completed",
+      "budget": 30000,
+      "deadline": "2024-03-15"
+    },
+    {
+      "name": "BrandingKit",
+      "status": "active",
+      "budget": 25000,
+      "deadline": "2024-05-20"
+    }
+  ],
+  "company": {
+    "name": "TechCorp",
+    "location": "San Francisco",
+    "employees": 4,
+    "founded": 2020
+  },
+  "products": [
+    {
+      "name": "Pro License",
+      "price": 99.99,
+      "quantity": 50
+    },
+    {
+      "name": "Basic License",
+      "price": 29.99,
+      "quantity": 120
+    },
+    {
+      "name": "Enterprise License",
+      "price": 299.99,
+      "quantity": 10
+    }
+  ]
+}
