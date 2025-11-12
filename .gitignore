@@ -12,3 +12,8 @@
 .externalNativeBuild
 mediaeffectswithopengles/build
 shadersNfilters/build
+
+# IDE-specific files that should not be tracked
+/.idea/ChatHistory_schema_v3.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/developer-tools.xml
