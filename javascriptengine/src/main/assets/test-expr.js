@@ -1,1 +1,1 @@
-$sum(products.price)
+(user.name)

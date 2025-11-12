@@ -2,7 +2,10 @@ package com.dastanapps.javascriptengine.bridge
 
 import android.R.attr.data
 import android.app.Application
+import android.util.Log
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.cancel
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -63,6 +67,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     private var webViewBridge: WebViewBridge? = null
     private var webView: WebView? = null
+    private var isJSONataReady = false
 
     // Thread pool for parallel JSONata execution
     private val jsonataExecutor = Executors.newFixedThreadPool(4)
@@ -85,6 +90,93 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                             domStorageEnabled = true
                             allowFileAccess = true
                             allowContentAccess = true
+                            setSupportZoom(true)
+                            builtInZoomControls = true
+                            displayZoomControls = false
+                            useWideViewPort = true
+                            loadWithOverviewMode = true
+                            scrollBarStyle = android.view.View.SCROLLBARS_INSIDE_OVERLAY
+                        }
+
+                        // Force enable scrolling with explicit settings
+                        isVerticalScrollBarEnabled = true
+                        isHorizontalScrollBarEnabled = true
+                        isScrollbarFadingEnabled = false
+
+                        // Disable nested scrolling completely
+                        isNestedScrollingEnabled = false
+
+                        // Override scroll settings
+                        overScrollMode = android.view.View.OVER_SCROLL_ALWAYS
+                        isScrollContainer = true
+
+                        // Touch and focus settings
+                        isClickable = true
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+                        isLongClickable = true
+
+                        // Remove any touch listener that might interfere
+                        setOnTouchListener(null)
+
+                        // Explicit scroll handling
+                        setOnScrollChangeListener { _, scrollX, scrollY, oldScrollX, oldScrollY ->
+                        }
+
+                        // Set WebViewClient to handle page loading properly
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageFinished(view: WebView?, url: String?) {
+                                super.onPageFinished(view, url)
+
+                                // Force scrolling settings after page load
+                                view?.apply {
+                                    isVerticalScrollBarEnabled = true
+                                    isHorizontalScrollBarEnabled = true
+                                    isNestedScrollingEnabled = false
+                                    isScrollContainer = true
+                                }
+
+                                // Inject JavaScript to ensure proper scrolling
+                                view?.evaluateJavascript(
+                                    """
+                                    (function() {
+                                        // Force scrolling styles
+                                        document.body.style.overflow = 'auto';
+                                        document.body.style.height = 'auto';
+                                        document.body.style.minHeight = '100vh';
+                                        document.body.style.touchAction = 'auto';
+                                        document.body.style.webkitOverflowScrolling = 'touch';
+                                        
+                                        document.documentElement.style.overflow = 'auto';
+                                        document.documentElement.style.height = 'auto';
+                                    })();
+                                """.trimIndent(), null
+                                )
+
+                                // Check JSONata availability after page load
+                                view?.evaluateJavascript("typeof jsonata !== 'undefined'") { result ->
+                                    val isReady = result?.trim('"')?.toBoolean() ?: false
+                                    if (isReady) {
+                                        addEventLog("✅ JSONata library is ready and available")
+                                        isJSONataReady = true
+                                    } else {
+                                        addEventLog("⏳ JSONata library still loading...")
+                                        // Check again after delay
+                                        view.postDelayed({
+                                            view.evaluateJavascript("typeof jsonata !== 'undefined'") { delayedResult ->
+                                                val isReadyDelayed =
+                                                    delayedResult?.trim('"')?.toBoolean() ?: false
+                                                if (isReadyDelayed) {
+                                                    addEventLog("✅ JSONata library loaded successfully (delayed)")
+                                                    isJSONataReady = true
+                                                } else {
+                                                    addEventLog("❌ JSONata library failed to load")
+                                                }
+                                            }
+                                        }, 3000)
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -126,11 +218,37 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    class MyBridge(private val webView: WebView) {
+
+        // Called by your Android code to evaluate JSONata
+        @JavascriptInterface
+        fun evaluateJsonata(json: String, expr: String) {
+            val safeJson = json.replace("'", "\\'")
+            val safeExpr = expr.replace("'", "\\'")
+            val js = "window.evaluateFromAndroid('$safeJson', '$safeExpr');"
+            webView.post {
+                webView.evaluateJavascript(js, null)
+            }
+        }
+
+        // This method will be called from JS with the result
+        @JavascriptInterface
+        fun onResult(resultJson: String) {
+            Log.d("JSONataResult", resultJson)
+            // You can handle the result here, e.g., update UI or send to your app
+        }
+    }
+
+
     /**
      * Load demo content from separate HTML file in assets
      */
+    private var AndroidBridge: MyBridge?=null
     private fun loadDemoContentFromAssets(bridge: WebViewBridge) {
         try {
+            AndroidBridge = MyBridge(webView!!)
+            webView?.settings?.javaScriptEnabled = true
+            webView?.addJavascriptInterface(MyBridge(webView!!), "AndroidBridge")
             // Load HTML from assets using WebView's loadUrl method
             webView?.loadUrl("file:///android_asset/real-jsonata-demo.html")
             addEventLog("Demo HTML content loaded from assets")
@@ -143,10 +261,15 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         val listener = object : BridgeEventListener {
             override fun onEvent(event: BridgeEvent) {
                 addEventLog("Event: ${event.name} - ${event.data}")
+                if (event.name == "jsonataReady") {
+                    isJSONataReady = true
+                    addEventLog("JSONata library is ready and available")
+                }
             }
         }
 
         bridge.addEventListener("counterProgress", listener)
+        bridge.addEventListener("jsonataReady", listener)
     }
 
     private fun registerCustomFunctions(bridge: WebViewBridge) {
@@ -157,7 +280,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             val parallel = params.getBoolean("parallel", false)
 
             if (expression.isBlank()) {
-                BridgeResult.error("Expression cannot be empty")
+                return@registerFunction BridgeResult.error("Expression cannot be empty")
             } else {
                 try {
                     if (parallel) {
@@ -169,17 +292,25 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
                         val resultData =
                             """{"success": true, "message": "JSONata task queued for parallel execution", "expression": "$expression"}"""
-                        BridgeResult.success(Json.parseToJsonElement(resultData))
+                        return@registerFunction BridgeResult.success(
+                            Json.parseToJsonElement(
+                                resultData
+                            )
+                        )
                     } else {
                         // Execute directly in WebView - this will be handled by the bridge
                         // The actual execution happens in JavaScript, so we return a placeholder
                         // The real result will be processed by the WebView
                         val resultData =
                             """{"success": true, "message": "JSONata execution delegated to WebView", "expression": "$expression", "data": $dataJson}"""
-                        BridgeResult.success(Json.parseToJsonElement(resultData))
+                        return@registerFunction BridgeResult.success(
+                            Json.parseToJsonElement(
+                                resultData
+                            )
+                        )
                     }
                 } catch (e: Exception) {
-                    BridgeResult.error("JSONata transformation failed: ${e.message}")
+                    return@registerFunction BridgeResult.error("JSONata transformation failed: ${e.message}")
                 }
             }
         }
@@ -194,7 +325,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 val dataArray = parseJsonStringArray(dataJson)
 
                 if (expressions.size != dataArray.size) {
-                    BridgeResult.error("Expressions and data arrays must have the same length")
+                    return@registerFunction BridgeResult.error("Expressions and data arrays must have the same length")
                 } else {
                     val tasks = mutableListOf<Pair<String, String>>()
                     for (i in expressions.indices) {
@@ -205,10 +336,10 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
                     val resultData =
                         """{"success": true, "message": "${tasks.size} JSONata tasks queued for parallel execution"}"""
-                    BridgeResult.success(Json.parseToJsonElement(resultData))
+                    return@registerFunction BridgeResult.success(Json.parseToJsonElement(resultData))
                 }
             } catch (e: Exception) {
-                BridgeResult.error("Parallel batch execution failed: ${e.message}")
+                return@registerFunction BridgeResult.error("Parallel batch execution failed: ${e.message}")
             }
         }
 
@@ -226,6 +357,15 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                     // Execute JSONata directly in WebView using JavaScript
                     val jsCode = """
                         (function() {
+                            if (typeof jsonata === 'undefined') {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: "JSONata library is not loaded",
+                                    expression: '$escapedExpression',
+                                    taskId: '$taskId'
+                                });
+                            }
+                            
                             try {
                                 const data = $dataJson;
                                 const expression = jsonata('$escapedExpression');
@@ -274,11 +414,11 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
         // Batch execute multiple JSONata expressions in WebView
         bridge.registerAsyncFunction("batchExecuteJSONataInWebView") { params, callback ->
-            val expressionsJson = params.getString("expressions", "[]")
-            val dataJson = params.getString("data", "[]")
-
             viewModelScope.launch {
                 try {
+                    val expressionsJson = params.getString("expressions", "[]")
+                    val dataJson = params.getString("data", "[]")
+
                     val expressions = parseJsonStringArray(expressionsJson)
                     val dataArray = parseJsonStringArray(dataJson)
 
@@ -299,6 +439,13 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                     // Execute all expressions in WebView
                     val jsCode = """
                         (function() {
+                            if (typeof jsonata === 'undefined') {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: "JSONata library is not loaded",
+                                    totalTests: ${expressions.size}
+                                });
+                            }
                             const expressions = $expressionsArrayJs;
                             const dataArray = $dataArrayJs;
                             const results = [];
@@ -429,16 +576,18 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
         // Bridge functions for parallel execution demos
         bridge.registerFunction("runJSONataStressTest") { params ->
+            addEventLog("🔥 Stress test requested - checking JSONata availability...")
             runJSONataStressTest()
             val resultData =
-                """{"success": true, "message": "JSONata stress test started with 8 parallel tasks"}"""
+                """{"success": true, "message": "JSONata stress test initiated - checking library availability first"}"""
             BridgeResult.success(Json.parseToJsonElement(resultData))
         }
 
         bridge.registerFunction("runThreadedJSONataTest") { params ->
+            addEventLog("🧵 Threaded test requested - checking JSONata availability...")
             runThreadedJSONataTest()
             val resultData =
-                """{"success": true, "message": "Threaded JSONata test started with 4 tasks"}"""
+                """{"success": true, "message": "Threaded JSONata test initiated - checking library availability first"}"""
             BridgeResult.success(Json.parseToJsonElement(resultData))
         }
 
@@ -491,7 +640,46 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 append("\"packageName\":\"${getApplication<Application>().packageName}\"")
                 append("}")
             }
+
             BridgeResult.success(Json.parseToJsonElement(deviceInfo))
+        }
+
+        // Debug function to manually check JSONata status
+        bridge.registerFunction("checkJSONataStatus") { params ->
+            viewModelScope.launch {
+                withContext(Dispatchers.Main) {
+                    webView?.evaluateJavascript("window.checkJSONataStatus()") { result ->
+                        addEventLog("Manual JSONata status check triggered")
+                    }
+                }
+            }
+            val resultData = """{"success": true, "message": "JSONata status check triggered"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        // Manual trigger for JSONata notification
+        bridge.registerFunction("triggerJSONataCheck") { params ->
+            viewModelScope.launch {
+                withContext(Dispatchers.Main) {
+                    webView?.evaluateJavascript("window.manualNotifyAndroid()") { result ->
+                        addEventLog("Manual JSONata notification triggered")
+                    }
+                }
+            }
+            val resultData =
+                """{"success": true, "message": "Manual JSONata notification triggered"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        bridge.registerFunction("onJSONataReady") { params ->
+            val ready = params.getBoolean("ready", false)
+            if (ready) {
+                isJSONataReady = true
+                addEventLog("🎉 JSONata library confirmed ready by WebView!")
+            }
+            val resultData =
+                """{"success": true, "message": "JSONata ready notification received"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
         }
 
         // Toast function
@@ -500,9 +688,269 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             val isLong = params.getBoolean("isLong", false)
 
             addEventLog("Toast: $message (${if (isLong) "long" else "short"})")
-
             val resultData = """{"success": true, "message": "Toast shown: $message"}"""
             BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        // Load test data and expression from assets
+        bridge.registerFunction("loadTestDataAndExpression") { params ->
+            try {
+                val testData = loadAssetFile("test-data.json")
+                val testExpression = loadAssetFile("test-expr.js")
+
+                val resultData = buildString {
+                    append("{")
+                    append("\"success\": true,")
+                    append("\"testData\": $testData,")
+                    append(
+                        "\"testExpression\": \"${
+                            testExpression.replace("\"", "\\\"").replace("\n", "\\n")
+                        }\","
+                    )
+                    append("\"message\": \"Test data and expression loaded successfully\"")
+                    append("}")
+                }
+
+                return@registerFunction BridgeResult.success(Json.parseToJsonElement(resultData))
+            } catch (e: Exception) {
+                addEventLog("Failed to load test files: ${e.message}")
+                return@registerFunction BridgeResult.error("Failed to load test files: ${e.message}")
+            }
+        }
+
+        // Execute the complex test expression with test data
+        bridge.registerAsyncFunction("executeComplexTestExpression") { params, callback ->
+            viewModelScope.launch {
+                try {
+                    val testData = loadAssetFile("test-data.json")
+
+                    val startTime = System.currentTimeMillis()
+
+                    // Create a working complex JSONata expression that demonstrates advanced features
+                    val workingComplexExpression = """
+                        {
+                          "familyInfo": {
+                            "head": {
+                              "name": data.family_head.fullNameEnglish,
+                              "nameArabic": data.family_head.fullNameArabic,
+                              "birth": data.family_head.birthDate,
+                              "age": ${'$'}floor((${'$'}millis() - ${'$'}toMillis(data.family_head.birthDate)) / (1000*60*60*24*365))
+                            },
+                            "wives": data.wives.{
+                              "name": fullNameEnglish,
+                              "nameArabic": fullNameArabic,
+                              "age": ${'$'}floor((${'$'}millis() - ${'$'}toMillis(birthDate)) / (1000*60*60*24*365)),
+                              "marriageDate": marriageDate,
+                              "dependentsCount": ${'$'}count(dependents)
+                            },
+                            "dependents": data.dependents.{
+                              "name": fullNameEnglish,
+                              "nameArabic": fullNameArabic,
+                              "gender": genderId = "1" ? "Male" : "Female",
+                              "age": ${'$'}floor((${'$'}millis() - ${'$'}(birthDate)) / (1000*60*60*24*365))
+                            },
+                            "sponsored": data.sponsored.{
+                              "name": fullNameEnglish,
+                              "nameArabic": fullNameArabic,
+                              "gender": genderId = "1" ? "Male" : "Female",
+                              "age": ${'$'}floor((${'$'}millis() - ${'$'}toMillis(birthDate)) / (1000*60*60*24*365))
+                            }
+                          },
+                          "statistics": {
+                            "totalMembers": ${'$'}count(data.wives) + ${'$'}count(data.dependents) + ${'$'}count(data.sponsored) + 1,
+                            "totalWives": ${'$'}count(data.wives),
+                            "totalDependents": ${'$'}count(data.dependents),
+                            "totalSponsored": ${'$'}count(data.sponsored),
+                            "femaleMembers": ${'$'}count(data.dependents[genderId = "2"]) + ${'$'}count(data.sponsored[genderId = "2"]),
+                            "maleMembers": ${'$'}count(data.dependents[genderId = "1"]) + ${'$'}count(data.sponsored[genderId = "1"]) + 1,
+                            "averageAge": ${'$'}average([
+                              ${'$'}floor((${'$'}millis() - ${'$'}toMillis(data.family_head.birthDate)) / (1000*60*60*24*365)),
+                              data.wives.${'$'}floor((${'$'}millis() - ${'$'}toMillis(birthDate)) / (1000*60*60*24*365)),
+                              data.dependents.${'$'}floor((${'$'}millis() - ${'$'}toMillis(birthDate)) / (1000*60*60*24*365)),
+                              data.sponsored.${'$'}floor((${'$'}millis() - ${'$'}toMillis(birthDate)) / (1000*60*60*24*365))
+                            ])
+                          }
+                        }
+                    """.trimIndent()
+
+                    // Use Base64 encoding for safe transport
+                    val expressionBase64 = java.util.Base64.getEncoder()
+                        .encodeToString(workingComplexExpression.toByteArray())
+
+                    val jsCode = """
+                        (function() {
+                            if (typeof jsonata === 'undefined') {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: "JSONata library is not loaded"
+                                });
+                            }
+                            
+                            try {
+                                const data = $testData;
+                                
+                                // Decode the complex expression from Base64
+                                const expressionText = atob('$expressionBase64');
+                                
+                                const expression = jsonata(expressionText);
+                                const result = expression.evaluate(data);
+                                
+                                return JSON.stringify({
+                                    success: true,
+                                    result: result,
+                                    executionTime: ${'$'}{System.currentTimeMillis() - startTime},
+                                    dataSize: JSON.stringify(data).length,
+                                    expressionLength: expressionText.length,
+                                    message: "Complex family data transformation completed successfully"
+                                });
+                            } catch (error) {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: error.message,
+                                    errorType: error.name || 'JSONataError',
+                                    message: "Complex expression execution failed"
+                                });
+                            }
+                        })();
+                    """.trimIndent()
+
+                    withContext(Dispatchers.Main) {
+                        webView?.evaluateJavascript(jsCode) { result ->
+                            try {
+                                val cleanResult =
+                                    result?.removeSurrounding("\"")?.replace("\\\"", "\"") ?: "{}"
+
+                                val jsonResult = Json.parseToJsonElement(cleanResult)
+                                callback.onSuccess(jsonResult)
+                                addEventLog("Complex test expression executed successfully")
+                            } catch (e: Exception) {
+                                // Create a simple error response if JSON parsing fails
+                                val errorResult = Json.parseToJsonElement(
+                                    """
+                                    {
+                                        "success": false, 
+                                        "error": "Failed to parse result: ${e.message}",
+                                        "rawResult": "${'$'}{cleanResult.take(200)}..."
+                                    }
+                                """.trimIndent()
+                                )
+                                callback.onSuccess(errorResult)
+                                addEventLog("Complex test execution had parsing issues: ${e.message}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    callback.onError("Complex test execution error: ${e.message}")
+                    addEventLog("Complex test execution error: ${e.message}")
+                }
+            }
+        }
+
+        // Test family data transformations
+        bridge.registerAsyncFunction("testFamilyDataTransformations") { params, callback ->
+            viewModelScope.launch {
+                try {
+                    val testData = loadAssetFile("test-data.json")
+
+                    val familyExpressions = listOf(
+                        "data.family_head.fullNameEnglish" to "Extract family head name",
+                        "data.wives[0].fullNameEnglish" to "Extract first wife name",
+                        "\$count(data.dependents)" to "Count dependents",
+                        "\$count(data.sponsored)" to "Count sponsored members",
+                        "data.dependents[genderId = \"2\"].fullNameEnglish" to "Extract female dependents",
+                        "data.sponsored.fullNameEnglish" to "Extract sponsored names",
+                        "data.family_head.{name: fullNameEnglish, birth: birthDate}" to "Transform family head data"
+                    )
+
+                    val startTime = System.currentTimeMillis()
+
+                    // Build JavaScript array manually to avoid JSON escaping issues
+                    val expressionsJsArray = familyExpressions.map { (expr, _) ->
+                        "\"${
+                            expr.replace("\"", "\\\"").replace("\\", "\\\\").replace("\n", "\\n")
+                        }\""
+                    }.joinToString(", ", "[", "]")
+
+                    val descriptionsJsArray = familyExpressions.map { (_, desc) ->
+                        "\"${
+                            desc.replace("\"", "\\\"").replace("\\", "\\\\").replace("\n", "\\n")
+                        }\""
+                    }.joinToString(", ", "[", "]")
+
+                    val jsCode = """
+                        (function() {
+                            if (typeof jsonata === 'undefined') {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: "JSONata library is not loaded",
+                                    totalTests: ${familyExpressions.size}
+                                });
+                            }
+                            
+                            try {
+                                const data = $testData;
+                                const expressions = $expressionsJsArray;
+                                const descriptions = $descriptionsJsArray;
+                                const results = [];
+                                
+                                for (let i = 0; i < expressions.length; i++) {
+                                    try {
+                                        const expression = jsonata(expressions[i]);
+                                        const result = expression.evaluate(data);
+                                        results.push({
+                                            success: true,
+                                            expression: expressions[i],
+                                            description: descriptions[i],
+                                            result: result,
+                                            index: i
+                                        });
+                                    } catch (error) {
+                                        results.push({
+                                            success: false,
+                                            expression: expressions[i],
+                                            description: descriptions[i],
+                                            error: error.message,
+                                            index: i
+                                        });
+                                    }
+                                }
+                                
+                                return JSON.stringify({
+                                    success: true,
+                                    results: results,
+                                    totalExecutionTime: ${System.currentTimeMillis() - startTime},
+                                    totalTests: expressions.length
+                                });
+                            } catch (error) {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: error.message,
+                                    totalTests: ${familyExpressions.size}
+                                });
+                            }
+                        })();
+                    """.trimIndent()
+
+                    withContext(Dispatchers.Main) {
+                        webView?.evaluateJavascript(jsCode) { result ->
+                            try {
+                                val cleanResult =
+                                    result?.removeSurrounding("\"")?.replace("\\\"", "\"") ?: "{}"
+                                val jsonResult = Json.parseToJsonElement(cleanResult)
+                                callback.onSuccess(jsonResult)
+
+                                addEventLog("Family data transformations completed: ${familyExpressions.size} expressions")
+                            } catch (e: Exception) {
+                                callback.onError("Failed to parse family test results: ${e.message}")
+                                addEventLog("Family data transformation failed: ${e.message}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    callback.onError("Family data transformation error: ${e.message}")
+                    addEventLog("Family data transformation error: ${e.message}")
+                }
+            }
         }
     }
 
@@ -637,6 +1085,15 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
             val jsCode = """
                 (function() {
+                    if (typeof jsonata === 'undefined') {
+                        return JSON.stringify({
+                            success: false,
+                            error: "JSONata library is not loaded",
+                            expression: '$expression',
+                            taskId: '$taskId'
+                        });
+                    }
+                    
                     try {
                         const data = $dataJson;
                         const expression = jsonata('$expression');
@@ -711,6 +1168,84 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     // Demo functions to test parallel execution
     fun runJSONataStressTest() {
+        viewModelScope.launch {
+//            AndroidBridge?.evaluateJsonata(
+//                """{"user":{"name":"Alice","age":30}}""",
+//                "user.name"
+//            )
+
+            val testData = loadAssetFile("test-data.json")
+            val testExpression = loadAssetFile("test-expr.js")
+            AndroidBridge?.evaluateJsonata(
+                testData,
+                testExpression
+            )
+            return@launch
+            addEventLog("🔥 Stress test initiated - checking JSONata readiness...")
+
+            // Check if JSONata is already ready
+            if (isJSONataReady) {
+                addEventLog("✅ JSONata already ready. Starting stress test immediately...")
+                executeStressTest()
+                return@launch
+            }
+
+            // Wait up to 10 seconds for JSONata to be ready
+            var attempts = 0
+            val maxAttempts = 20 // 20 attempts * 500ms = 10 seconds
+
+            while (!isJSONataReady && attempts < maxAttempts) {
+                delay(500)
+                attempts++
+
+                if (attempts % 4 == 0) { // Every 2 seconds
+                    addEventLog("⏳ Still waiting for JSONata library... (${attempts / 2}s)")
+                }
+            }
+
+            if (isJSONataReady) {
+                addEventLog("✅ JSONata library ready! Starting stress test...")
+                executeStressTest()
+            } else {
+                addEventLog("❌ JSONata library not ready after 10 seconds. Stress test cancelled.")
+            }
+        }
+    }
+
+    fun runThreadedJSONataTest() {
+        viewModelScope.launch {
+            addEventLog("🧵 Threaded test initiated - checking JSONata readiness...")
+
+            // Check if JSONata is already ready
+            if (isJSONataReady) {
+                addEventLog("✅ JSONata already ready. Starting threaded test immediately...")
+                executeThreadedTest()
+                return@launch
+            }
+
+            // Wait up to 10 seconds for JSONata to be ready
+            var attempts = 0
+            val maxAttempts = 20 // 20 attempts * 500ms = 10 seconds
+
+            while (!isJSONataReady && attempts < maxAttempts) {
+                delay(500)
+                attempts++
+
+                if (attempts % 4 == 0) { // Every 2 seconds
+                    addEventLog("⏳ Still waiting for JSONata library... (${attempts / 2}s)")
+                }
+            }
+
+            if (isJSONataReady) {
+                addEventLog("✅ JSONata library ready! Starting threaded test...")
+                executeThreadedTest()
+            } else {
+                addEventLog("❌ JSONata library not ready after 10 seconds. Threaded test cancelled.")
+            }
+        }
+    }
+
+    private fun executeStressTest() {
         val testTasks = listOf(
             "users.name" to """{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]}""",
             "users[age >= 25]" to """{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}, {"name": "Carol", "age": 35}]}""",
@@ -725,7 +1260,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         executeParallelJSONata(testTasks)
     }
 
-    fun runThreadedJSONataTest() {
+    private fun executeThreadedTest() {
         val testTasks = listOf(
             "users.location.city" to """{"users": [{"location": {"city": "NYC"}}, {"location": {"city": "SF"}}]}""",
             "products[price > 100]" to """{"products": [{"price": 150}, {"price": 50}, {"price": 200}]}""",
@@ -734,6 +1269,17 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         )
 
         executeJSONataWithThreading(testTasks)
+    }
+
+    private fun loadAssetFile(fileName: String): String {
+        return try {
+            getApplication<Application>().assets.open(fileName).bufferedReader().use {
+                it.readText()
+            }
+        } catch (e: Exception) {
+            addEventLog("Failed to load asset file $fileName: ${e.message}")
+            ""
+        }
     }
 
     override fun onCleared() {

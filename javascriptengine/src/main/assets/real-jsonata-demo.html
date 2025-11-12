@@ -1,362 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real JSONata Bridge Demo</title>
-    <!-- Use local JSONata library from assets -->
-    <script src="jsonata.min.js" onerror="loadJSONataFromCDN()"></script>
-    <script>
-        // Fallback to CDN if local file fails
-        function loadJSONataFromCDN() {
-            console.log('Loading JSONata from CDN as fallback');
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/jsonata@2.0.5/jsonata.min.js';
-            script.onerror = function() {
-                console.error('Failed to load JSONata from both local and CDN sources');
-                document.getElementById('jsonataStatus').innerHTML = '❌ Failed to load JSONata library';
-            };
-            document.head.appendChild(script);
-        }
-    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSONata Evaluator (Return Result to Android)</title>
+    <script src="jsonata.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f6f8fa; }
+        textarea, input { width: 100%; font-family: monospace; margin-top: 6px; }
+        textarea { height: 180px; padding: 8px; }
+        .section { margin-bottom: 20px; }
+        button { padding: 10px 20px; background-color: #0078d7; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; }
+        pre { background: #fff; border: 1px solid #ccc; padding: 10px; min-height: 80px; white-space: pre-wrap; }
+        #logs { background: #f0f0f0; border-left: 3px solid #0078d7; padding: 8px; font-size: 13px; color: #333; max-height: 200px; overflow-y: auto; }
+    </style>
 </head>
 <body>
-<div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
-    <h1 style="color: #2196F3; text-align: center;">🌉 Real JSONata WebView Demo</h1>
-    <h2 style="color: #FF5722; text-align: center;">🚀 End-to-End JSONata Execution!</h2>
-    <p style="text-align: center; color: #666; margin-bottom: 30px;">
-        <strong>Real JSONata library execution with ViewModel-managed WebView!</strong><br>
-        Parallel processing with coroutines and threading support.
-    </p>
+<h1>🧩 JSONata Evaluator (Return Result to Android)</h1>
 
-    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007acc;">
-        <h3>🧩 Real JSONata Transformation</h3>
-        <p style="margin: 10px 0; color: #666; font-size: 14px;">
-            Using the actual JSONata library for real transformations!
-        </p>
-
-        <div style="margin: 10px 0;">
-            <label style="display: block; margin: 5px 0; font-weight: bold;">Expression:</label>
-            <input type="text" id="jsonataExpression" placeholder="e.g., employees[age > 30].name"
-                   style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-            <br>
-            <label style="display: block; margin: 5px 0; font-weight: bold;">Data (JSON):</label>
-            <textarea id="jsonataData" rows="4"
-                      placeholder='{"employees": [{"name": "Alice", "age": 32}]}'
-                      style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-            <br>
-            <button onclick="testRealJsonata()"
-                    style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                🔥 Real Transform
-            </button>
-            <button onclick="testAsyncJsonata()"
-                    style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #FF5722; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                ⚡ Async Transform
-            </button>
-            <button onclick="loadRealSample()"
-                    style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                📝 Load Sample
-            </button>
-        </div>
-
-        <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-            <strong>Real JSONata Features:</strong><br>
-            ✅ <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">Actual
-            Library</code> - Real JSONata library execution<br>
-            🔥 <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">WebView
-            Engine</code> - Executed in WebView JavaScript context<br>
-            ⚡ <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">Async
-            Support</code> - Real async JSONata processing<br>
-            🚀 <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">Parallel
-            Batch</code> - Multiple expressions in parallel
-        </div>
-
-        <div id="jsonataResult"
-             style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; min-height: 60px;"></div>
-    </div>
-
-    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF9800;">
-        <h3>🚀 Real Parallel JSONata Execution</h3>
-        <button onclick="testRealBatchJsonata()"
-                style="padding: 10px 20px; margin: 5px; background: #FF5722; color: white; border: none; border-radius: 4px;">
-            🔥 Real Batch Test
-        </button>
-        <button onclick="AndroidBridge.call('runJSONataStressTest')"
-                style="padding: 10px 20px; margin: 5px; background: #9C27B0; color: white; border: none; border-radius: 4px;">
-            💪 Stress Test
-        </button>
-        <button onclick="AndroidBridge.call('clearCompletedTasks')"
-                style="padding: 10px 20px; margin: 5px; background: #607D8B; color: white; border: none; border-radius: 4px;">
-            🧹 Clear Tasks
-        </button>
-        <div id="batchResult"
-             style="margin-top: 10px; font-family: monospace; font-size: 12px; background: #fff; padding: 10px; border-radius: 4px; min-height: 40px;"></div>
-    </div>
-
-    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h3>🔗 JSONata Library Status</h3>
-        <p id="jsonataStatus">Checking JSONata library...</p>
-    </div>
-
-    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h3>📱 Device Info</h3>
-        <button onclick="testDeviceInfo()"
-                style="padding: 10px 20px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 4px;">
-            Get Device Info
-        </button>
-        <div id="deviceInfo"></div>
-    </div>
-
-    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h3>💬 Toast Messages</h3>
-        <button onclick="showSimpleToast()"
-                style="padding: 10px 20px; margin: 5px; background: #FF9800; color: white; border: none; border-radius: 4px;">
-            Simple Toast
-        </button>
-        <button onclick="showLongToast()"
-                style="padding: 10px 20px; margin: 5px; background: #FF9800; color: white; border: none; border-radius: 4px;">
-            Long Toast
-        </button>
-    </div>
-
-    <div style="background: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-        <h3>📝 Event Log</h3>
-        <button onclick="clearLog()"
-                style="padding: 8px 15px; margin: 5px; background: #666; color: white; border: none; border-radius: 4px;">
-            Clear Log
-        </button>
-        <div id="eventLog"
-             style="background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
-    </div>
-
-    <script>
-        // Check JSONata library availability
-        function checkJsonataLibrary() {
-            if (typeof jsonata !== 'undefined') {
-                document.getElementById('jsonataStatus').innerHTML = '✅ JSONata library loaded successfully! Version: ' + (jsonata.version || 'Unknown');
-                logEvent('JSONata library is available');
-                
-                // Test basic functionality
-                try {
-                    const expr = jsonata('$');
-                    const result = expr.evaluate('test');
-                    if (result === 'test') {
-                        logEvent('JSONata basic functionality test passed');
-                    }
-                } catch (e) {
-                    logEvent('JSONata basic test failed: ' + e.message);
-                }
-            } else {
-                document.getElementById('jsonataStatus').innerHTML = '❌ JSONata library not available';
-                logEvent('JSONata library not found');
-                setTimeout(checkJsonataLibrary, 1000);
-            }
-        }
-
-        // Bridge readiness check
-        function checkBridgeStatus() {
-            if (window.AndroidBridge) {
-                logEvent('AndroidBridge is ready for real JSONata execution');
-            } else {
-                setTimeout(checkBridgeStatus, 100);
-            }
-        }
-
-        // Event logging
-        function logEvent(message) {
-            const log = document.getElementById('eventLog');
-            const timestamp = new Date().toLocaleTimeString();
-            log.innerHTML += "[" + timestamp + "] " + message + "<br>";
-            log.scrollTop = log.scrollHeight;
-        }
-
-        function clearLog() {
-            document.getElementById('eventLog').innerHTML = '';
-        }
-
-        // Real JSONata transformation using WebView
-        function testRealJsonata() {
-            const expression = document.getElementById('jsonataExpression').value;
-            const data = document.getElementById('jsonataData').value;
-
-            if (!expression || !data) {
-                alert('Please enter both expression and data');
-                return;
-            }
-
-            try {
-                // Parse data to validate JSON
-                JSON.parse(data);
-                
-                // Execute JSONata directly in WebView
-                const expr = jsonata(expression);
-                const result = expr.evaluate(JSON.parse(data));
-                
-                document.getElementById('jsonataResult').innerHTML = 
-                    "<strong>✅ Real JSONata Result:</strong><br>" +
-                    "<pre style='background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0; overflow-x: auto;'>" + 
-                    JSON.stringify(result, null, 2) + "</pre>" +
-                    "<small style='color: #666;'>Expression: " + expression + "</small>";
-                
-                logEvent("Real JSONata executed: " + expression);
-            } catch (e) {
-                document.getElementById('jsonataResult').innerHTML = 
-                    "<strong>❌ JSONata Error:</strong><br>" + 
-                    "<span style='color: #dc3545;'>" + e.message + "</span>";
-                logEvent('JSONata execution failed: ' + e.message);
-            }
-        }
-
-        // Async JSONata execution via Android bridge
-        function testAsyncJsonata() {
-            const expression = document.getElementById('jsonataExpression').value;
-            const data = document.getElementById('jsonataData').value;
-
-            if (!expression || !data) {
-                alert('Please enter both expression and data');
-                return;
-            }
-
-            logEvent('Starting async JSONata execution...');
-            
-            AndroidBridge.callAsync('executeJSONataInWebView', {
-                expression: expression,
-                data: data,
-                taskId: 'async_' + Date.now()
-            }).then(result => {
-                if (result.success) {
-                    document.getElementById('jsonataResult').innerHTML = 
-                        "<strong>⚡ Async JSONata Result:</strong><br>" +
-                        "<pre style='background: #f0f8ff; padding: 10px; border-radius: 4px; margin: 5px 0; overflow-x: auto;'>" + 
-                        JSON.stringify(result.result, null, 2) + "</pre>" +
-                        "<small style='color: #666;'>Async execution time: " + result.executionTime + "ms</small>";
-                    logEvent("Async JSONata completed: " + expression);
-                } else {
-                    document.getElementById('jsonataResult').innerHTML = 
-                        "<strong>❌ Async Error:</strong><br>" + 
-                        "<span style='color: #dc3545;'>" + result.error + "</span>";
-                    logEvent('Async JSONata failed: ' + result.error);
-                }
-            }).catch(error => {
-                logEvent('Async JSONata exception: ' + error.message);
-            });
-        }
-
-        // Real batch JSONata execution
-        function testRealBatchJsonata() {
-            const expressions = [
-                'employees.name',
-                'employees[age > 30]',
-                '$count(employees)',
-                '$sum(employees.salary)',
-                '$average(employees.age)'
-            ];
-            
-            const sampleData = {
-                employees: [
-                    {name: "Alice", age: 32, salary: 75000},
-                    {name: "Bob", age: 28, salary: 65000},
-                    {name: "Carol", age: 35, salary: 85000},
-                    {name: "David", age: 29, salary: 70000}
-                ]
-            };
-            
-            const dataArray = expressions.map(() => JSON.stringify(sampleData));
-
-            logEvent('Starting real batch JSONata execution...');
-            
-            AndroidBridge.callAsync('batchExecuteJSONataInWebView', {
-                expressions: JSON.stringify(expressions),
-                data: JSON.stringify(dataArray)
-            }).then(result => {
-                if (result.success) {
-                    let resultHtml = "<strong>🚀 Batch JSONata Results:</strong><br>";
-                    result.results.forEach((res, index) => {
-                        if (res.success) {
-                            resultHtml += "<div style='margin: 5px 0; padding: 5px; background: #e8f5e8; border-radius: 3px;'>";
-                            resultHtml += "<strong>" + res.expression + ":</strong> " + JSON.stringify(res.result);
-                            resultHtml += "</div>";
-                        } else {
-                            resultHtml += "<div style='margin: 5px 0; padding: 5px; background: #ffebee; border-radius: 3px;'>";
-                            resultHtml += "<strong>Error in " + res.expression + ":</strong> " + res.error;
-                            resultHtml += "</div>";
-                        }
-                    });
-                    resultHtml += "<small style='color: #666;'>Total execution time: " + result.totalExecutionTime + "ms</small>";
-                    
-                    document.getElementById('batchResult').innerHTML = resultHtml;
-                    logEvent("Batch JSONata completed: " + result.totalTasks + " expressions");
-                } else {
-                    document.getElementById('batchResult').innerHTML = 
-                        "<strong>❌ Batch Error:</strong><br>" + result.error;
-                    logEvent('Batch JSONata failed: ' + result.error);
-                }
-            }).catch(error => {
-                logEvent('Batch JSONata exception: ' + error.message);
-            });
-        }
-
-        function loadRealSample() {
-            document.getElementById('jsonataExpression').value = 'employees[age > 30].{name: name, salary: salary}';
-            document.getElementById('jsonataData').value = JSON.stringify({
-                employees: [
-                    {name: "Alice Johnson", age: 32, salary: 75000, department: "Engineering"},
-                    {name: "Bob Smith", age: 27, salary: 65000, department: "Design"},
-                    {name: "Carol Williams", age: 35, salary: 85000, department: "Engineering"},
-                    {name: "David Brown", age: 29, salary: 70000, department: "Marketing"}
-                ]
-            }, null, 2);
-        }
-
-        // Device info test
-        function testDeviceInfo() {
-            try {
-                const result = AndroidBridge.call('getDeviceInfo');
-                if (result.success) {
-                    const info = result.data;
-                    document.getElementById('deviceInfo').innerHTML =
-                        "<strong>Model:</strong> " + info.manufacturer + " " + info.model + "<br>" +
-                        "<strong>Android:</strong> " + info.version + " (SDK " + info.sdk + ")<br>" +
-                        "<strong>Package:</strong> " + info.packageName;
-                    logEvent('Device info retrieved successfully');
-                } else {
-                    logEvent('Error getting device info: ' + result.error);
-                }
-            } catch (e) {
-                logEvent('Exception getting device info: ' + e.message);
-            }
-        }
-
-        // Toast functions
-        function showSimpleToast() {
-            const result = AndroidBridge.call('showToast', {
-                message: 'Hello from real JSONata WebView! 👋',
-                isLong: false
-            });
-            logEvent('Simple toast shown: ' + JSON.stringify(result));
-        }
-
-        function showLongToast() {
-            const result = AndroidBridge.call('showToast', {
-                message: 'Real end-to-end JSONata execution working! 🚀',
-                isLong: true
-            });
-            logEvent('Long toast shown: ' + JSON.stringify(result));
-        }
-
-        // Initialize when page loads
-        window.addEventListener('load', function() {
-            logEvent('=== Real End-to-End JSONata Demo Loaded ===');
-            logEvent('WebView is fully ViewModel-managed');
-            checkJsonataLibrary();
-            checkBridgeStatus();
-        });
-
-        // Log bridge initialization
-        if (window.AndroidBridge) {
-            logEvent('AndroidBridge ready for real JSONata execution');
-        }
-    </script>
+<div class="section">
+    <h3>Input JSON:</h3>
+    <textarea id="jsonInput"></textarea>
 </div>
+
+<div class="section">
+    <h3>JSONata Expression:</h3>
+    <input id="expressionInput" />
+</div>
+
+<button id="evaluateBtn">Evaluate</button>
+
+<div class="section">
+    <h3>Result:</h3>
+    <pre id="output">(result will appear here)</pre>
+</div>
+
+<div class="section">
+    <h3>Debug Log:</h3>
+    <div id="logs"></div>
+</div>
+
+<script>
+    const log = (msg) => {
+      const logs = document.getElementById("logs");
+      const time = new Date().toLocaleTimeString();
+      logs.innerText += `[${time}] ${msg}\n`;
+      logs.scrollTop = logs.scrollHeight;
+      console.log(msg);
+    };
+
+    async function evaluate(jsonText, exprText) {
+      const output = document.getElementById("output");
+      const logs = document.getElementById("logs");
+      logs.textContent = "";
+      output.textContent = "";
+
+      try {
+        log("Parsing JSON input...");
+        const data = JSON.parse(jsonText);
+        log("JSON parsed successfully.");
+
+        log("Compiling JSONata expression...");
+        const expr = jsonata(exprText);
+        log("Expression compiled: " + exprText);
+
+        log("Evaluating expression...");
+        const result = await expr.evaluate(data);
+
+        log("Raw JS result type: " + typeof result);
+        log("Raw result: " + JSON.stringify(result));
+
+        const resultStr = JSON.stringify(result, null, 2);
+        output.textContent = resultStr;
+        log("✅ Evaluation completed successfully.");
+
+        // Send result back to Android
+        if (window.AndroidBridge && AndroidBridge.onResult) {
+          AndroidBridge.onResult(resultStr);
+          log("📱 Result sent back to AndroidBridge");
+        }
+
+      } catch (err) {
+        output.textContent = "❌ Error: " + err.message;
+        log("❌ Error: " + err.stack);
+
+        if (window.AndroidBridge && AndroidBridge.onResult) {
+          AndroidBridge.onResult(JSON.stringify({ error: err.message }));
+          log("📱 Error sent back to AndroidBridge");
+        }
+      }
+    }
+
+    // Called from Android
+    window.evaluateFromAndroid = function (json, expr) {
+      log("📱 Called from AndroidBridge");
+      document.getElementById("jsonInput").value = json;
+      document.getElementById("expressionInput").value = expr;
+      evaluate(json, expr);
+    };
+
+    // Manual browser testing
+    document.getElementById("evaluateBtn").addEventListener("click", () => {
+      const json = document.getElementById("jsonInput").value.trim();
+      const expr = document.getElementById("expressionInput").value.trim();
+      evaluate(json, expr);
+    });
+</script>
 </body>
 </html>

@@ -361,7 +361,7 @@ class WebViewBridge(
 
             try {
                 val eventData = if (data != "null" && data.isNotBlank()) {
-                    kotlinx.serialization.json.Json.parseToJsonElement(data)
+                    Json.parseToJsonElement(data)
                 } else {
                     null
                 }
