@@ -1,6 +1,9 @@
 package com.dastanapps.javascriptengine
 
 import android.os.Bundle
+import android.content.Intent
+import com.dastanapps.javascriptengine.bridge.JSBridgeDemoActivity
+import com.dastanapps.javascriptengine.bridge.BridgeDebugActivity
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -67,18 +70,51 @@ class MainActivity : ComponentActivity() {
         setContent {
             LearnAndroidTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    JSEngineDemo(
-//                        jsEngine = jsEngine,
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                    JSonataDemo(
-//                        jsEngine = jsEngine,
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-                    JSonata4JavaDemo(
-                        jsEngine = jsEngine,
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                    ) {
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                val intent =
+                                    Intent(this@MainActivity, JSBridgeDemoActivity::class.java)
+                                startActivity(intent)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Text("Launch JS Bridge Demo")
+                        }
+                        androidx.compose.material3.Button(
+                            onClick = {
+                                val intent =
+                                    Intent(this@MainActivity, BridgeDebugActivity::class.java)
+                                startActivity(intent)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            Text("Launch Bridge Debug Activity")
+                        }
+                        // Uncomment the demo you want to display below
+//                        JSEngineDemo(
+//                            jsEngine = jsEngine,
+//                            modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
+//                        )
+//                        JSonataDemo(
+//                            jsEngine = jsEngine,
+//                            modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
+//                        )
+                        JSonata4JavaDemo(
+                            jsEngine = jsEngine,
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .weight(1f)
+                        )
+                    }
                 }
             }
         }

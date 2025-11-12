@@ -55,6 +55,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- JavaScript & Android Bridge Demo Activity -->
+        <activity
+            android:name=".bridge.JSBridgeDemoActivity"
+            android:exported="true"
+            android:label="JavaScript &amp; Android Bridge Demo"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Bridge Debug Activity -->
+        <activity
+            android:name=".bridge.BridgeDebugActivity"
+            android:exported="true"
+            android:label="Bridge Debug Test"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

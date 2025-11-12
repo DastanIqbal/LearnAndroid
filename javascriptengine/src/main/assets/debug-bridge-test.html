@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        #log { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 15px; 
+            height: 300px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+<h1>🌉 JavaScript & Android Bridge Debug Test</h1>
+
+<div id="bridgeStatus" class="status info">Checking bridge status...</div>
+
+<div>
+    <button onclick="testBasicBridge()">Test Basic Bridge</button>
+    <button onclick="testDeviceInfo()">Test Device Info</button>
+    <button onclick="testToast()">Test Toast</button>
+    <button onclick="clearLog()">Clear Log</button>
+</div>
+
+<h3>Debug Log:</h3>
+<div id="log"></div>
+
+<script>
+
+    // Debug logging function
+    function debugLog(message) {
+        const log = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString();
+        log.textContent += `[${timestamp}] ${message}\n`;
+        log.scrollTop = log.scrollHeight;
+        console.log(message);
+    }
+
+    function clearLog() {
+        document.getElementById('log').textContent = '';
+    }
+
+    // Check bridge status
+    function checkBridgeStatus() {
+        debugLog('=== Checking Bridge Status ===');
+
+        // Check if AndroidInterface exists
+        const hasAndroidInterface = typeof AndroidInterface !== 'undefined';
+        debugLog(`AndroidInterface available: ${hasAndroidInterface}`);
+
+        if (hasAndroidInterface) {
+            debugLog(`AndroidInterface methods: ${Object.getOwnPropertyNames(AndroidInterface)}`);
+        }
+
+        // Check if AndroidBridge exists
+        const hasAndroidBridge = typeof AndroidBridge !== 'undefined';
+        debugLog(`AndroidBridge available: ${hasAndroidBridge}`);
+
+        if (hasAndroidBridge) {
+            debugLog(`AndroidBridge methods: ${Object.keys(AndroidBridge)}`);
+        }
+
+        // Update status display
+        const statusEl = document.getElementById('bridgeStatus');
+        if (hasAndroidInterface && hasAndroidBridge) {
+            statusEl.textContent = '✅ Bridge is ready!';
+            statusEl.className = 'status success';
+        } else if (hasAndroidInterface) {
+            statusEl.textContent = '⚠️ AndroidInterface found, but AndroidBridge not initialized';
+            statusEl.className = 'status error';
+        } else {
+            statusEl.textContent = '❌ Bridge not available';
+            statusEl.className = 'status error';
+        }
+    }
+
+    // Test basic bridge functionality
+    function testBasicBridge() {
+        debugLog('=== Testing Basic Bridge ===');
+
+        try {
+            if (typeof AndroidInterface === 'undefined') {
+                debugLog('ERROR: AndroidInterface not available');
+                return;
+            }
+
+            if (typeof AndroidInterface.callBridgeFunction !== 'function') {
+                debugLog('ERROR: callBridgeFunction method not available');
+                return;
+            }
+
+            // Test direct AndroidInterface call
+            debugLog('Testing direct AndroidInterface call...');
+            const testParams = JSON.stringify({test: 'value'});
+            const result = AndroidInterface.callBridgeFunction('getDeviceInfo', testParams);
+            debugLog(`Direct call result: ${result}`);
+
+            // Parse result
+            try {
+                const parsed = JSON.parse(result);
+                debugLog(`Parsed result: ${JSON.stringify(parsed, null, 2)}`);
+            } catch (e) {
+                debugLog(`ERROR parsing result: ${e.message}`);
+            }
+
+        } catch (error) {
+            debugLog(`ERROR in testBasicBridge: ${error.message}`);
+        }
+    }
+
+    // Test device info
+    function testDeviceInfo() {
+        debugLog('=== Testing Device Info ===');
+
+        try {
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge.getDeviceInfo) {
+                const result = AndroidBridge.getDeviceInfo();
+                debugLog(`Device info result: ${JSON.stringify(result, null, 2)}`);
+            } else {
+                debugLog('AndroidBridge.getDeviceInfo not available, trying direct call...');
+                testBasicBridge();
+            }
+        } catch (error) {
+            debugLog(`ERROR in testDeviceInfo: ${error.message}`);
+        }
+    }
+
+    // Test toast
+    function testToast() {
+        debugLog('=== Testing Toast ===');
+
+        try {
+            if (typeof AndroidBridge !== 'undefined' && AndroidBridge.showToast) {
+                const result = AndroidBridge.showToast('Hello from Debug Test!');
+                debugLog(`Toast result: ${JSON.stringify(result, null, 2)}`);
+            } else {
+                debugLog('AndroidBridge.showToast not available, trying direct call...');
+                if (typeof AndroidInterface !== 'undefined') {
+                    const params = JSON.stringify({message: 'Hello from Debug Test!', long: false});
+                    const result = AndroidInterface.callBridgeFunction('showToast', params);
+                    debugLog(`Direct toast result: ${result}`);
+                }
+            }
+        } catch (error) {
+            debugLog(`ERROR in testToast: ${error.message}`);
+        }
+    }
+
+    // Enhanced error handling
+    window.onerror = function(msg, url, line, col, error) {
+        debugLog(`JavaScript Error: ${msg} at ${url}:${line}:${col}`);
+        return false;
+    };
+
+    window.addEventListener('unhandledrejection', function(event) {
+        debugLog(`Unhandled Promise Rejection: ${event.reason}`);
+    });
+
+    // Initialize when page loads
+    window.addEventListener('load', function() {
+        debugLog('Page loaded, initializing bridge test...');
+        setTimeout(checkBridgeStatus, 100);
+    });
+
+    // Also check immediately
+    debugLog('Script loaded, checking initial state...');
+    checkBridgeStatus();
+</script>
+</body>
+</html>
