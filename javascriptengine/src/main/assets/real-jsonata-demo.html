@@ -50,6 +50,9 @@
     };
 
     async function evaluate(jsonText, exprText) {
+      document.getElementById("jsonInput").value = jsonText;
+      document.getElementById("expressionInput").value = exprText;
+
       const output = document.getElementById("output");
       const logs = document.getElementById("logs");
       logs.textContent = "";
@@ -66,45 +69,32 @@
 
         log("Evaluating expression...");
         const result = await expr.evaluate(data);
+        const resultStr = JSON.stringify(result);
 
         log("Raw JS result type: " + typeof result);
-        log("Raw result: " + JSON.stringify(result));
+        log("Raw result: " + resultStr);
 
-        const resultStr = JSON.stringify(result, null, 2);
         output.textContent = resultStr;
         log("✅ Evaluation completed successfully.");
 
         // Send result back to Android
-        if (window.AndroidBridge && AndroidBridge.onResult) {
-          AndroidBridge.onResult(resultStr);
-          log("📱 Result sent back to AndroidBridge");
+        if (window.AndroidBridge1 && AndroidBridge1.evaluateJsonata) {
+          log("📱 Result sent back to AndroidBridge1");
+          AndroidBridge1.evaluateJsonata(jsonText, exprText,resultStr);
+          log("📱 Result sent back to AndroidBridge1");
         }
-
+        return resultStr;
       } catch (err) {
         output.textContent = "❌ Error: " + err.message;
         log("❌ Error: " + err.stack);
-
-        if (window.AndroidBridge && AndroidBridge.onResult) {
-          AndroidBridge.onResult(JSON.stringify({ error: err.message }));
-          log("📱 Error sent back to AndroidBridge");
+        if (window.AndroidBridge1 && AndroidBridge1.evaluateJsonata) {
+            log("📱 Error sent back to AndroidBridge1");
+          AndroidBridge1.evaluateJsonata(jsonText,exprText,JSON.stringify({ jsError: err.message }));
+          log("📱 Error sent back to AndroidBridge1");
         }
+        return JSON.stringify({ error: err.message });
       }
     }
-
-    // Called from Android
-    window.evaluateFromAndroid = function (json, expr) {
-      log("📱 Called from AndroidBridge");
-      document.getElementById("jsonInput").value = json;
-      document.getElementById("expressionInput").value = expr;
-      evaluate(json, expr);
-    };
-
-    // Manual browser testing
-    document.getElementById("evaluateBtn").addEventListener("click", () => {
-      const json = document.getElementById("jsonInput").value.trim();
-      const expr = document.getElementById("expressionInput").value.trim();
-      evaluate(json, expr);
-    });
 </script>
 </body>
 </html>

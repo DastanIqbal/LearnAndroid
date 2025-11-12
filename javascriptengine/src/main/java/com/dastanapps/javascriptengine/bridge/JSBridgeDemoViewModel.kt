@@ -220,35 +220,36 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     class MyBridge(private val webView: WebView) {
 
-        // Called by your Android code to evaluate JSONata
         @JavascriptInterface
-        fun evaluateJsonata(json: String, expr: String) {
-            val safeJson = json.replace("'", "\\'")
-            val safeExpr = expr.replace("'", "\\'")
-            val js = "window.evaluateFromAndroid('$safeJson', '$safeExpr');"
-            webView.post {
-                webView.evaluateJavascript(js, null)
+        suspend fun evaluateJsonata(json: String, expr: String, result: String?): String =
+            suspendCancellableCoroutine { cont ->
+                if (result != null) {
+                    cont.resume(result)
+                    return@suspendCancellableCoroutine
+                }
+                val safeJson = json.replace("'", "\\'")
+                val safeExpr = expr.replace("'", "\\'")
+                val js =
+                    "(async () => { return await evaluate('$safeJson', '$safeExpr'); })();"
+                webView.post {
+                    webView.evaluateJavascript(js) { result ->
+                        val cleanResult = result?.let { it.trim('"').replace("\\\"", "\"") } ?: ""
+                        cont.resume(cleanResult)
+                    }
+                }
             }
-        }
-
-        // This method will be called from JS with the result
-        @JavascriptInterface
-        fun onResult(resultJson: String) {
-            Log.d("JSONataResult", resultJson)
-            // You can handle the result here, e.g., update UI or send to your app
-        }
     }
 
 
     /**
      * Load demo content from separate HTML file in assets
      */
-    private var AndroidBridge: MyBridge?=null
+    private var AndroidBridge: MyBridge? = null
     private fun loadDemoContentFromAssets(bridge: WebViewBridge) {
         try {
             AndroidBridge = MyBridge(webView!!)
             webView?.settings?.javaScriptEnabled = true
-            webView?.addJavascriptInterface(MyBridge(webView!!), "AndroidBridge")
+            webView?.addJavascriptInterface(MyBridge(webView!!), "AndroidBridge1")
             // Load HTML from assets using WebView's loadUrl method
             webView?.loadUrl("file:///android_asset/real-jsonata-demo.html")
             addEventLog("Demo HTML content loaded from assets")
@@ -1072,7 +1073,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     private fun simulateJSONataExecution(expression: String, data: String): String {
         // Deprecated, use executeJSONataTaskWithWebView for real execution
-        return """ { "message": "JSONata simulated result for: $expression", "processed": false, "timestamp": ${ System.currentTimeMillis() } }"""
+        return """ { "message": "JSONata simulated result for: $expression", "processed": false, "timestamp": ${System.currentTimeMillis()} }"""
     }
 
     private suspend fun executeJSONataTaskWithWebView(task: JSONataTask): JSONataTask {
@@ -1176,10 +1177,12 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
             val testData = loadAssetFile("test-data.json")
             val testExpression = loadAssetFile("test-expr.js")
-            AndroidBridge?.evaluateJsonata(
+            val result = AndroidBridge?.evaluateJsonata(
                 testData,
-                testExpression
+                testExpression,
+                null
             )
+            addEventLog("🔥 Jsonata test data result: $result")
             return@launch
             addEventLog("🔥 Stress test initiated - checking JSONata readiness...")
 
