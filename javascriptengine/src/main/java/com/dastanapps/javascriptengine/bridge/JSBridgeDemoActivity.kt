@@ -1,7 +1,6 @@
 package com.dastanapps.javascriptengine.bridge
 
 import android.os.Bundle
-import android.webkit.WebView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -60,19 +58,6 @@ fun JSBridgeDemo(
 ) {
     // Collect ViewModel state
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    // WebView reference
-    var webView: WebView? by remember { mutableStateOf(null) }
-
-    // Initialize WebView when first created
-    LaunchedEffect(Unit) {
-        if (webView == null) {
-            webView = WebView(context).apply {
-                viewModel.initializeWebView(this)
-            }
-        }
-    }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Header
@@ -84,12 +69,12 @@ fun JSBridgeDemo(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "🌉 JavaScript & Android Bridge Demo",
+                    text = "🌉 Real End-to-End JSONata Demo",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "🚀 Parallel JSONata Execution with Coroutines & Threading",
+                    text = "🏗️ ViewModel-Managed WebView with Real JSONata Library",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -102,7 +87,7 @@ fun JSBridgeDemo(
                     val statusColor =
                         if (state.isInitialized) Color.Green else Color(0xFFFFA500) // Orange
                     val statusText =
-                        if (state.isInitialized) "✅ Bridge Ready" else "⏳ Initializing..."
+                        if (state.isInitialized) "✅ Real JSONata Ready" else "⏳ Loading JSONata Library..."
 
                     Text(
                         text = statusText,
@@ -119,6 +104,16 @@ fun JSBridgeDemo(
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
+                }
+
+                // Show WebView status
+                if (state.webView != null) {
+                    Text(
+                        text = "📱 WebView: Loaded from assets/real-jsonata-demo.html",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
             }
         }
@@ -169,16 +164,16 @@ fun JSBridgeDemo(
             }
         }
 
-        // WebView
+        // WebView from ViewModel State
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(vertical = 4.dp)
         ) {
-            webView?.let { view ->
+            state.webView?.let { webView ->
                 AndroidView(
-                    factory = { view },
+                    factory = { webView },
                     modifier = Modifier.fillMaxSize()
                 )
             } ?: Box(
@@ -186,10 +181,20 @@ fun JSBridgeDemo(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
-                Text(
-                    text = "Loading WebView...",
-                    modifier = Modifier.padding(top = 16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "🏗️ Initializing ViewModel WebView...",
+                        modifier = Modifier.padding(top = 16.dp),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "Complete separation of concerns",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 

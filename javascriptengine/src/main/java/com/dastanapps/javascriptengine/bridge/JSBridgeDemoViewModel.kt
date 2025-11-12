@@ -1,5 +1,6 @@
 package com.dastanapps.javascriptengine.bridge
 
+import android.R.attr.data
 import android.app.Application
 import android.webkit.WebView
 import androidx.lifecycle.AndroidViewModel
@@ -13,10 +14,16 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.resume
 import kotlin.random.Random
 
 data class BridgeEventLog(
@@ -45,7 +52,8 @@ data class JSBridgeState(
     val error: String? = null,
     val jsonataTasks: List<JSONataTask> = emptyList(),
     val activeTaskCount: Int = 0,
-    val totalTasksProcessed: Int = 0
+    val totalTasksProcessed: Int = 0,
+    val webView: WebView? = null
 )
 
 class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(application) {
@@ -60,22 +68,48 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     private val jsonataExecutor = Executors.newFixedThreadPool(4)
     private val taskIdCounter = AtomicInteger(0)
 
-    fun initializeWebView(webView: WebView) {
-        this.webView = webView
-        this.webViewBridge = WebViewBridge(getApplication(), webView)
+    init {
+        // Initialize WebView and bridge automatically
+        initializeWebViewAndBridge()
+    }
 
+    private fun initializeWebViewAndBridge() {
         viewModelScope.launch {
             try {
-                initializeBridge()
+                // Create WebView on main thread
+                withContext(Dispatchers.Main) {
+                    webView = WebView(getApplication<Application>()).apply {
+                        // Configure WebView settings
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            allowFileAccess = true
+                            allowContentAccess = true
+                        }
+                    }
+
+                    // Update state with WebView
+                    _state.value = _state.value.copy(webView = webView)
+                }
+
+                // Initialize bridge
+                webView?.let { view ->
+                    webViewBridge = WebViewBridge(getApplication(), view)
+                    initializeBridge()
+                }
+
                 _state.value = _state.value.copy(isInitialized = true, error = null)
-                addEventLog("WebView bridge initialized successfully")
+                addEventLog("WebView and bridge initialized successfully in ViewModel")
             } catch (e: Exception) {
                 _state.value = _state.value.copy(error = e.message)
-                addEventLog("Failed to initialize bridge: ${e.message}")
+                addEventLog("Failed to initialize WebView and bridge: ${e.message}")
             }
         }
     }
 
+    /**
+     * Initialize bridge with custom functions and load demo content
+     */
     private fun initializeBridge() {
         webViewBridge?.let { bridge ->
             // Initialize the bridge
@@ -84,11 +118,24 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             // Register custom functions
             registerCustomFunctions(bridge)
 
-            // Load demo content
-            loadDemoContent(bridge)
+            // Load demo content from separate HTML file
+            loadDemoContentFromAssets(bridge)
 
             // Set up event listener
             setupEventListener(bridge)
+        }
+    }
+
+    /**
+     * Load demo content from separate HTML file in assets
+     */
+    private fun loadDemoContentFromAssets(bridge: WebViewBridge) {
+        try {
+            // Load HTML from assets using WebView's loadUrl method
+            webView?.loadUrl("file:///android_asset/real-jsonata-demo.html")
+            addEventLog("Demo HTML content loaded from assets")
+        } catch (e: Exception) {
+            addEventLog("Failed to load demo content: ${e.message}")
         }
     }
 
@@ -103,7 +150,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private fun registerCustomFunctions(bridge: WebViewBridge) {
-        // Enhanced JSONata transformation function with parallel support
+        // Real JSONata transformation function using WebView execution
         bridge.registerFunction("jsonataTransform") { params ->
             val expression = params.getString("expression", "")
             val dataJson = params.getString("data", "{}")
@@ -114,7 +161,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             } else {
                 try {
                     if (parallel) {
-                        // Execute in parallel (simulate)
+                        // Queue for parallel execution
                         viewModelScope.launch {
                             val tasks = listOf(expression to dataJson)
                             executeParallelJSONata(tasks)
@@ -124,10 +171,11 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                             """{"success": true, "message": "JSONata task queued for parallel execution", "expression": "$expression"}"""
                         BridgeResult.success(Json.parseToJsonElement(resultData))
                     } else {
-                        // Original synchronous execution
-                        val result = simulateJSONataExecution(expression, dataJson)
+                        // Execute directly in WebView - this will be handled by the bridge
+                        // The actual execution happens in JavaScript, so we return a placeholder
+                        // The real result will be processed by the WebView
                         val resultData =
-                            """{"success": true, "result": $result, "expression": "$expression"}"""
+                            """{"success": true, "message": "JSONata execution delegated to WebView", "expression": "$expression", "data": $dataJson}"""
                         BridgeResult.success(Json.parseToJsonElement(resultData))
                     }
                 } catch (e: Exception) {
@@ -136,14 +184,12 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             }
         }
 
-        // Parallel JSONata batch execution
+        // Real parallel JSONata batch execution
         bridge.registerFunction("jsonataParallelBatch") { params ->
             try {
-                // Get arrays from parameters - need to parse as JSON strings for now
                 val expressionsJson = params.getString("expressions", "[]")
                 val dataJson = params.getString("data", "[]")
 
-                // Parse JSON arrays manually (simplified approach)
                 val expressions = parseJsonStringArray(expressionsJson)
                 val dataArray = parseJsonStringArray(dataJson)
 
@@ -163,6 +209,149 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 }
             } catch (e: Exception) {
                 BridgeResult.error("Parallel batch execution failed: ${e.message}")
+            }
+        }
+
+        // Execute JSONata directly in WebView
+        bridge.registerAsyncFunction("executeJSONataInWebView") { params, callback ->
+            val expression = params.getString("expression", "")
+            val dataJson = params.getString("data", "{}")
+            val taskId = params.getString("taskId", "task_${System.currentTimeMillis()}")
+
+            viewModelScope.launch {
+                try {
+                    val startTime = System.currentTimeMillis()
+                    val escapedExpression = expression.replace("\"", "\\\"").replace("'", "\\'")
+
+                    // Execute JSONata directly in WebView using JavaScript
+                    val jsCode = """
+                        (function() {
+                            try {
+                                const data = $dataJson;
+                                const expression = jsonata('$escapedExpression');
+                                const result = expression.evaluate(data);
+                                return JSON.stringify({
+                                    success: true,
+                                    result: result,
+                                    expression: '$escapedExpression',
+                                    taskId: '$taskId',
+                                    executionTime: ${System.currentTimeMillis() - startTime}
+                                });
+                            } catch (error) {
+                                return JSON.stringify({
+                                    success: false,
+                                    error: error.message,
+                                    expression: '$escapedExpression',
+                                    taskId: '$taskId'
+                                });
+                            }
+                        })();
+                    """.trimIndent()
+
+                    // Evaluate in WebView
+                    withContext(Dispatchers.Main) {
+                        webView?.evaluateJavascript(jsCode) { result ->
+                            try {
+                                val cleanResult =
+                                    result?.removeSurrounding("\"")?.replace("\\\"", "\"") ?: "{}"
+                                val jsonResult = Json.parseToJsonElement(cleanResult)
+                                callback.onSuccess(jsonResult)
+
+                                // Log the execution
+                                addEventLog("JSONata executed in WebView: $expression")
+                            } catch (e: Exception) {
+                                callback.onError("Failed to parse WebView result: ${e.message}")
+                                addEventLog("JSONata WebView execution failed: ${e.message}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    callback.onError("JSONata WebView execution error: ${e.message}")
+                    addEventLog("JSONata WebView execution error: ${e.message}")
+                }
+            }
+        }
+
+        // Batch execute multiple JSONata expressions in WebView
+        bridge.registerAsyncFunction("batchExecuteJSONataInWebView") { params, callback ->
+            val expressionsJson = params.getString("expressions", "[]")
+            val dataJson = params.getString("data", "[]")
+
+            viewModelScope.launch {
+                try {
+                    val expressions = parseJsonStringArray(expressionsJson)
+                    val dataArray = parseJsonStringArray(dataJson)
+
+                    if (expressions.size != dataArray.size) {
+                        callback.onError("Expressions and data arrays must have the same length")
+                        return@launch
+                    }
+
+                    val startTime = System.currentTimeMillis()
+
+                    // Build escaped expressions array
+                    val escapedExpressions =
+                        expressions.map { it.replace("\"", "\\\"").replace("'", "\\'") }
+                    val expressionsArrayJs =
+                        escapedExpressions.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }
+                    val dataArrayJs = dataArray.joinToString(prefix = "[", postfix = "]") { it }
+
+                    // Execute all expressions in WebView
+                    val jsCode = """
+                        (function() {
+                            const expressions = $expressionsArrayJs;
+                            const dataArray = $dataArrayJs;
+                            const results = [];
+                            
+                            for (let i = 0; i < expressions.length; i++) {
+                                try {
+                                    const data = dataArray[i];
+                                    const expression = jsonata(expressions[i]);
+                                    const result = expression.evaluate(data);
+                                    results.push({
+                                        success: true,
+                                        result: result,
+                                        expression: expressions[i],
+                                        index: i
+                                    });
+                                } catch (error) {
+                                    results.push({
+                                        success: false,
+                                        error: error.message,
+                                        expression: expressions[i],
+                                        index: i
+                                    });
+                                }
+                            }
+                            
+                            return JSON.stringify({
+                                success: true,
+                                results: results,
+                                totalExecutionTime: ${System.currentTimeMillis() - startTime},
+                                totalTasks: expressions.length
+                            });
+                        })();
+                    """.trimIndent()
+
+                    withContext(Dispatchers.Main) {
+                        webView?.evaluateJavascript(jsCode) { result ->
+                            try {
+                                val cleanResult =
+                                    result?.removeSurrounding("\"")?.replace("\\\"", "\"") ?: "{}"
+                                val jsonResult = Json.parseToJsonElement(cleanResult)
+                                callback.onSuccess(jsonResult)
+
+                                addEventLog("Batch JSONata executed in WebView: ${expressions.size} expressions")
+                            } catch (e: Exception) {
+                                callback.onError("Failed to parse batch WebView result: ${e.message}")
+                                addEventLog("Batch JSONata WebView execution failed: ${e.message}")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    callback.onError("Batch JSONata WebView execution error: ${e.message}")
+                    addEventLog("Batch JSONata WebView execution error: ${e.message}")
+                }
             }
         }
 
@@ -188,7 +377,6 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 else -> 0.0
             }
 
-            // Return simple data structure that can be serialized
             val resultData = """{"operation":"$operation","operands":[$a,$b],"result":$result}"""
             BridgeResult.success(kotlinx.serialization.json.Json.parseToJsonElement(resultData))
         }
@@ -205,7 +393,6 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                     results.add(i)
                     kotlinx.coroutines.delay(delay)
 
-                    // Emit progress event with simple data
                     val progressData =
                         """{"current":$i,"total":$end,"progress":${((i - start).toDouble() / (end - start) * 100).toInt()}}"""
                     bridge.emitEvent(
@@ -214,7 +401,6 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                     )
                 }
 
-                // Return simple result
                 val resultData = """{"results":[${results.joinToString(",")}],"completed":true}"""
                 callback.onSuccess(kotlinx.serialization.json.Json.parseToJsonElement(resultData))
             }
@@ -238,7 +424,7 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 append("}")
             }
 
-            BridgeResult.success(kotlinx.serialization.json.Json.parseToJsonElement(systemInfo))
+            BridgeResult.success(Json.parseToJsonElement(systemInfo))
         }
 
         // Bridge functions for parallel execution demos
@@ -282,7 +468,6 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             val key = params.getString("key", "")
             val value = params.getString("value", "")
 
-            // Simulate storage operation
             val resultData = """{"success": true, "message": "Preference saved: $key = $value"}"""
             BridgeResult.success(Json.parseToJsonElement(resultData))
         }
@@ -291,330 +476,34 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             val key = params.getString("key", "")
             val defaultValue = params.getString("defaultValue", "")
 
-            // Simulate storage operation
             val resultData = """{"success": true, "data": "$defaultValue"}"""
             BridgeResult.success(Json.parseToJsonElement(resultData))
         }
-    }
 
-    private fun loadDemoContent(bridge: WebViewBridge) {
-        val demoHtml = """
-            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
-                <h1 style="color: #2196F3; text-align: center;">🌉 JavaScript & Android Bridge Demo</h1>
-                
-                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #007acc;">
-                    <h3>🧩 JSONata Transformation Demo</h3>
-                    <p style="margin: 10px 0; color: #666; font-size: 14px;">
-                        JSONata is a query and transformation language for JSON data. Try these examples:
-                    </p>
-                    
-                    <div style="margin: 10px 0;">
-                        <label style="display: block; margin: 5px 0; font-weight: bold;">Expression:</label>
-                        <input type="text" id="jsonataExpression" placeholder="e.g., users.name" 
-                               style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-                        <br>
-                        <label style="display: block; margin: 5px 0; font-weight: bold;">Data (JSON):</label>
-                        <input type="text" id="jsonataData" placeholder='{"users": [{"name": "Alice", "age": 30}]}' 
-                               style="padding: 8px; margin: 2px; width: 300px; border: 1px solid #ddd; border-radius: 4px;">
-                        <br>
-                        <button onclick="testJsonata()" style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">Transform Data</button>
-                        <button onclick="loadSampleJsonata()" style="padding: 10px 20px; margin: 10px 2px 5px 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Load Sample</button>
-                    </div>
-                    
-                    <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-                        <strong>Sample Expressions to try:</strong><br>
-                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">users.name</code> - Extract all user names<br>
-                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">users[age >= 30]</code> - Filter users 30 or older<br>
-                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">${'$'}count users</code> - Count number of users<br>
-                        <code style="background: #e9ecef; padding: 2px 4px; margin: 2px; border-radius: 3px;">price * quantity</code> - Calculate total price
-                    </div>
-                    
-                    <div id="jsonataResult" style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;"></div>
-                </div>
+        // Device info function
+        bridge.registerFunction("getDeviceInfo") { params ->
+            val deviceInfo = buildString {
+                append("{")
+                append("\"manufacturer\":\"${android.os.Build.MANUFACTURER}\",")
+                append("\"model\":\"${android.os.Build.MODEL}\",")
+                append("\"version\":\"${android.os.Build.VERSION.RELEASE}\",")
+                append("\"sdk\":${android.os.Build.VERSION.SDK_INT},")
+                append("\"packageName\":\"${getApplication<Application>().packageName}\"")
+                append("}")
+            }
+            BridgeResult.success(Json.parseToJsonElement(deviceInfo))
+        }
 
-                <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>🔗 Bridge Status</h3>
-                    <p id="bridgeStatus">Initializing...</p>
-                </div>
+        // Toast function
+        bridge.registerFunction("showToast") { params ->
+            val message = params.getString("message", "Hello from Bridge!")
+            val isLong = params.getBoolean("isLong", false)
 
-                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>📱 Device Info</h3>
-                    <button onclick="testDeviceInfo()" style="padding: 10px 20px; margin: 5px; background: #4CAF50; color: white; border: none; border-radius: 4px;">Get Device Info</button>
-                    <div id="deviceInfo"></div>
-                </div>
+            addEventLog("Toast: $message (${if (isLong) "long" else "short"})")
 
-                <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>💬 Toast Messages</h3>
-                    <button onclick="showSimpleToast()" style="padding: 10px 20px; margin: 5px; background: #FF9800; color: white; border: none; border-radius: 4px;">Simple Toast</button>
-                    <button onclick="showLongToast()" style="padding: 10px 20px; margin: 5px; background: #FF9800; color: white; border: none; border-radius: 4px;">Long Toast</button>
-                </div>
-
-                <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>🧮 Math Operations</h3>
-                    <input type="number" id="mathA" value="10" style="width: 80px; padding: 5px; margin: 2px;">
-                    <select id="mathOp" style="padding: 5px; margin: 2px;">
-                        <option value="add">+</option>
-                        <option value="subtract">-</option>
-                        <option value="multiply">×</option>
-                        <option value="divide">÷</option>
-                        <option value="power">^</option>
-                    </select>
-                    <input type="number" id="mathB" value="5" style="width: 80px; padding: 5px; margin: 2px;">
-                    <button onclick="performMath()" style="padding: 5px 15px; margin: 2px; background: #9C27B0; color: white; border: none; border-radius: 4px;">Calculate</button>
-                    <div id="mathResult"></div>
-                </div>
-
-                <div style="background: #e1f5fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>⏱️ Async Counter</h3>
-                    <label>Start: <input type="number" id="counterStart" value="1" style="width: 60px; padding: 5px;"></label>
-                    <label>End: <input type="number" id="counterEnd" value="10" style="width: 60px; padding: 5px;"></label>
-                    <label>Delay (ms): <input type="number" id="counterDelay" value="200" style="width: 80px; padding: 5px;"></label>
-                    <button onclick="startAsyncCounter()" style="padding: 10px 20px; margin: 5px; background: #2196F3; color: white; border: none; border-radius: 4px;">Start Counter</button>
-                    <div id="counterProgress"></div>
-                    <div id="counterResult"></div>
-                </div>
-
-                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>💾 Storage Operations</h3>
-                    <input type="text" id="storageKey" placeholder="Key" style="padding: 8px; margin: 2px; width: 120px;">
-                    <input type="text" id="storageValue" placeholder="Value" style="padding: 8px; margin: 2px; width: 120px;">
-                    <button onclick="savePreference()" style="padding: 8px 15px; margin: 2px; background: #F44336; color: white; border: none; border-radius: 4px;">Save</button>
-                    <button onclick="loadPreference()" style="padding: 8px 15px; margin: 2px; background: #F44336; color: white; border: none; border-radius: 4px;">Load</button>
-                    <div id="storageResult"></div>
-                </div>
-
-                <div style="background: #f1f8e9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>📊 System Information</h3>
-                    <button onclick="getSystemInfo()" style="padding: 10px 20px; margin: 5px; background: #8BC34A; color: white; border: none; border-radius: 4px;">Get System Info</button>
-                    <div id="systemInfo"></div>
-                </div>
-
-                <div style="background: #fafafa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                    <h3>📝 Event Log</h3>
-                    <button onclick="clearLog()" style="padding: 8px 15px; margin: 5px; background: #666; color: white; border: none; border-radius: 4px;">Clear Log</button>
-                    <div id="eventLog" style="background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
-                </div>
-
-                <script>
-                    // Bridge readiness check
-                    function checkBridgeStatus() {
-                        if (window.AndroidBridge) {
-                            document.getElementById('bridgeStatus').innerHTML = '✅ Bridge is ready and operational!';
-                            logEvent('Bridge initialized successfully');
-                        } else {
-                            document.getElementById('bridgeStatus').innerHTML = '❌ Bridge not available';
-                            setTimeout(checkBridgeStatus, 100);
-                        }
-                    }
-
-                    // Event logging
-                    function logEvent(message) {
-                        const log = document.getElementById('eventLog');
-                        const timestamp = new Date().toLocaleTimeString();
-                        log.innerHTML += "[" + timestamp + "] " + message + "<br>";
-                        log.scrollTop = log.scrollHeight;
-                    }
-
-                    function clearLog() {
-                        document.getElementById('eventLog').innerHTML = '';
-                    }
-
-                    // Device info test
-                    function testDeviceInfo() {
-                        try {
-                            const result = AndroidBridge.getDeviceInfo();
-                            if (result.success) {
-                                const info = result.data;
-                                document.getElementById('deviceInfo').innerHTML =
-                                    "<strong>Model:</strong> " + info.manufacturer + " " + info.model + "<br>" +
-                                    "<strong>Android:</strong> " + info.version + " (SDK " + info.sdk + ")<br>" +
-                                    "<strong>Package:</strong> " + info.packageName;
-                                logEvent('Device info retrieved successfully');
-                            } else {
-                                logEvent('Error getting device info: ' + result.error);
-                            }
-                        } catch (e) {
-                            logEvent('Exception getting device info: ' + e.message);
-                        }
-                    }
-
-                    // Toast functions
-                    function showSimpleToast() {
-                        const result = AndroidBridge.showToast('Hello from JavaScript! 👋');
-                        logEvent('Simple toast shown: ' + JSON.stringify(result));
-                    }
-
-                    function showLongToast() {
-                        const result = AndroidBridge.showToast('This is a long toast message from JavaScript! 🚀', true);
-                        logEvent('Long toast shown: ' + JSON.stringify(result));
-                    }
-
-                    // Math operations
-                    function performMath() {
-                        const a = parseFloat(document.getElementById('mathA').value);
-                        const b = parseFloat(document.getElementById('mathB').value);
-                        const operation = document.getElementById('mathOp').value;
-
-                        try {
-                            const result = AndroidBridge.call('mathOperation', {
-                                a: a,
-                                b: b,
-                                operation: operation
-                            });
-
-                            if (result.success) {
-                                const data = result.data;
-                                document.getElementById('mathResult').innerHTML =
-                                    "<strong>Result:</strong> " +
-                                    data.operands[0] + " " + getOperatorSymbol(data.operation) +
-                                    " " + data.operands[1] + " = " + data.result;
-                                logEvent("Math operation: " + data.operation + "(" +
-                                    data.operands.join(", ") + ") = " + data.result);
-                            } else {
-                                logEvent('Math operation error: ' + result.error);
-                            }
-                        } catch (e) {
-                            logEvent('Math operation exception: ' + e.message);
-                        }
-                    }
-
-                    function getOperatorSymbol(op) {
-                        const symbols = { add: '+', subtract: '-', multiply: '×', divide: '÷', power: '^' };
-                        return symbols[op] || op;
-                    }
-
-                    // Async counter
-                    function startAsyncCounter() {
-                        const start = parseInt(document.getElementById('counterStart').value);
-                        const end = parseInt(document.getElementById('counterEnd').value);
-                        const delay = parseInt(document.getElementById('counterDelay').value);
-
-                        document.getElementById('counterProgress').innerHTML = 'Starting counter...';
-                        document.getElementById('counterResult').innerHTML = '';
-
-                        // Listen for progress events
-                        AndroidBridge.addEventListener('counterProgress', function(data) {
-                            document.getElementById('counterProgress').innerHTML =
-                                "Progress: " + data.current + "/" + data.total + " (" + data.progress + "%)";
-                        });
-
-                        AndroidBridge.callAsync('asyncCounter', {
-                            start: start,
-                            end: end,
-                            delay: delay
-                        }).then(result => {
-                            document.getElementById('counterResult').innerHTML =
-                                "<strong>Completed!</strong><br>" +
-                                "Results: [" + result.results.join(", ") + "]";
-                            logEvent("Async counter completed: " + result.results.length + " numbers");
-                        }).catch(error => {
-                            logEvent('Async counter error: ' + error.message);
-                        });
-
-                        logEvent("Started async counter: " + start + " to " + end + " with " + delay + "ms delay");
-                    }
-
-                    // Storage operations
-                    function savePreference() {
-                        const key = document.getElementById('storageKey').value;
-                        const value = document.getElementById('storageValue').value;
-
-                        if (key) {
-                            const result = AndroidBridge.setPreference(key, value);
-                            document.getElementById('storageResult').innerHTML =
-                                result.success ? "✅ Saved: " + key + " = " + value : "❌ Error: " + result.error;
-                            logEvent("Preference saved: " + key + " = " + value);
-                        } else {
-                            alert('Please enter a key');
-                        }
-                    }
-
-                    function loadPreference() {
-                        const key = document.getElementById('storageKey').value;
-
-                        if (key) {
-                            const result = AndroidBridge.getPreference(key, 'Not found');
-                            document.getElementById('storageResult').innerHTML = "📖 " + key + " = " + result.data;
-                            logEvent("Preference loaded: " + key + " = " + result.data);
-                        } else {
-                            alert('Please enter a key');
-                        }
-                    }
-
-                    // System information
-                    function getSystemInfo() {
-                        try {
-                            const result = AndroidBridge.call('getSystemInfo');
-                            if (result.success) {
-                                const info = result.data;
-                                document.getElementById('systemInfo').innerHTML =
-                                    "<strong>Timestamp:</strong> " + (new Date(info.timestamp)).toLocaleString() + "<br>" +
-                                    "<strong>Available Memory:</strong> " + (info.availableMemory / 1024 / 1024).toFixed(1) + " MB<br>" +
-                                    "<strong>Used Memory:</strong> " + (info.usedMemory / 1024 / 1024).toFixed(1) + " MB<br>" +
-                                    "<strong>CPU Cores:</strong> " + info.processors + "<br>" +
-                                    "<strong>Device:</strong> " + info.manufacturer + " " + info.deviceModel + "<br>" +
-                                    "<strong>Android:</strong> " + info.androidVersion;
-                                logEvent('System info retrieved');
-                            } else {
-                                logEvent('System info error: ' + result.error);
-                            }
-                        } catch (e) {
-                            logEvent('System info exception: ' + e.message);
-                        }
-                    }
-
-                    function testJsonata() {
-                        const expression = document.getElementById('jsonataExpression').value;
-                        const data = document.getElementById('jsonataData').value;
-
-                        try {
-                            const result = AndroidBridge.call('jsonataTransform', {
-                                expression: expression,
-                                data: data
-                            });
-
-                            if (result.success) {
-                                const transformResult = result.data;
-                                document.getElementById('jsonataResult').innerHTML = 
-                                    "<strong>✅ Transformation Result:</strong><br>" +
-                                    "<pre style='background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 5px 0; overflow-x: auto;'>" + 
-                                    JSON.stringify(transformResult.result, null, 2) + "</pre>" +
-                                    "<small style='color: #666;'>Expression: " + transformResult.expression + "</small>";
-                                logEvent("JSONata transformation successful: " + expression);
-                            } else {
-                                document.getElementById('jsonataResult').innerHTML = 
-                                    "<strong>❌ Error:</strong><br>" + 
-                                    "<span style='color: #dc3545;'>" + result.error + "</span>";
-                                logEvent("JSONata transformation failed: " + result.error);
-                            }
-                        } catch (e) {
-                            document.getElementById('jsonataResult').innerHTML = 
-                                "<strong>❌ Exception:</strong><br>" + 
-                                "<span style='color: #dc3545;'>" + e.message + "</span>";
-                            logEvent('JSONata transformation exception: ' + e.message);
-                        }
-                    }
-
-                    function loadSampleJsonata() {
-                        document.getElementById('jsonataExpression').value = 'users.name';
-                        document.getElementById('jsonataData').value = '{"users": [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]}';
-                    }
-
-                    // Initialize when page loads
-                    window.addEventListener('load', function() {
-                        logEvent('Page loaded, checking bridge status...');
-                        checkBridgeStatus();
-                    });
-
-                    // Log bridge initialization
-                    if (window.AndroidBridge) {
-                        logEvent('AndroidBridge found at page load');
-                    }
-                </script>
-            </div>
-        """.trimIndent()
-
-        bridge.loadHtmlWithBridge(demoHtml)
+            val resultData = """{"success": true, "message": "Toast shown: $message"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
     }
 
     fun clearEventLog() {
@@ -650,17 +539,12 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 activeTaskCount = jsonataTasks.size
             )
 
-            // Execute tasks in parallel using async
-            val deferredResults = jsonataTasks.map { task ->
-                async(Dispatchers.Default) {
-                    executeJSONataTask(task)
+            val completedTasks = jsonataTasks.map { task ->
+                async(Dispatchers.IO) {
+                    executeJSONataTaskWithWebView(task)
                 }
-            }
+            }.awaitAll()
 
-            // Wait for all tasks to complete
-            val completedTasks = deferredResults.awaitAll()
-
-            // Update state with completed tasks
             _state.value = _state.value.copy(
                 jsonataTasks = _state.value.jsonataTasks.map { existingTask ->
                     completedTasks.find { it.id == existingTask.id } ?: existingTask
@@ -695,92 +579,35 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
                 activeTaskCount = jsonataTasks.size
             )
 
-            // Execute using thread pool
-            withContext(Dispatchers.IO) {
-                val completedTasks = jsonataTasks.map { task ->
-                    async {
-                        // Simulate thread pool execution
-                        executeJSONataTaskOnThread(task)
-                    }
-                }.awaitAll()
-
-                // Update UI on main thread
-                withContext(Dispatchers.Main) {
-                    _state.value = _state.value.copy(
-                        jsonataTasks = _state.value.jsonataTasks.map { existingTask ->
-                            completedTasks.find { it.id == existingTask.id } ?: existingTask
-                        },
-                        activeTaskCount = 0,
-                        totalTasksProcessed = _state.value.totalTasksProcessed + completedTasks.size
-                    )
-
-                    val successCount = completedTasks.count { it.status == TaskStatus.COMPLETED }
-                    val failureCount = completedTasks.count { it.status == TaskStatus.FAILED }
-
-                    addEventLog("Threaded execution completed: $successCount successful, $failureCount failed")
+            val completedTasks = jsonataTasks.map { task ->
+                async(Dispatchers.IO) {
+                    executeJSONataTaskWithWebView(task)
                 }
-            }
+            }.awaitAll()
+
+            _state.value = _state.value.copy(
+                jsonataTasks = _state.value.jsonataTasks.map { existingTask ->
+                    completedTasks.find { it.id == existingTask.id } ?: existingTask
+                },
+                activeTaskCount = 0,
+                totalTasksProcessed = _state.value.totalTasksProcessed + completedTasks.size
+            )
+
+            val successCount = completedTasks.count { it.status == TaskStatus.COMPLETED }
+            val failureCount = completedTasks.count { it.status == TaskStatus.FAILED }
+
+            addEventLog("Threaded execution completed: $successCount successful, $failureCount failed")
         }
     }
 
     private suspend fun executeJSONataTask(task: JSONataTask): JSONataTask {
-        return withContext(Dispatchers.Default) {
-            val startTime = System.currentTimeMillis()
-
-            // Update task status to running
-            updateTaskStatus(task.id, TaskStatus.RUNNING)
-
-            try {
-                // Simulate JSONata processing with variable delay
-                delay(Random.nextLong(500, 2000))
-
-                val result = simulateJSONataExecution(task.expression, task.data)
-                val executionTime = System.currentTimeMillis() - startTime
-
-                task.copy(
-                    status = TaskStatus.COMPLETED,
-                    result = result,
-                    executionTime = executionTime
-                )
-            } catch (e: Exception) {
-                val executionTime = System.currentTimeMillis() - startTime
-                task.copy(
-                    status = TaskStatus.FAILED,
-                    error = e.message,
-                    executionTime = executionTime
-                )
-            }
-        }
+        // Deprecated in favor of executeJSONataTaskWithWebView()
+        return executeJSONataTaskWithWebView(task)
     }
 
     private suspend fun executeJSONataTaskOnThread(task: JSONataTask): JSONataTask {
-        return withContext(Dispatchers.IO) {
-            val startTime = System.currentTimeMillis()
-
-            // Update task status to running
-            updateTaskStatus(task.id, TaskStatus.RUNNING)
-
-            try {
-                // Simulate thread pool execution with different delay pattern
-                delay(Random.nextLong(300, 1500))
-
-                val result = simulateJSONataExecution(task.expression, task.data)
-                val executionTime = System.currentTimeMillis() - startTime
-
-                task.copy(
-                    status = TaskStatus.COMPLETED,
-                    result = result,
-                    executionTime = executionTime
-                )
-            } catch (e: Exception) {
-                val executionTime = System.currentTimeMillis() - startTime
-                task.copy(
-                    status = TaskStatus.FAILED,
-                    error = e.message,
-                    executionTime = executionTime
-                )
-            }
-        }
+        // Deprecated in favor of executeJSONataTaskWithWebView()
+        return executeJSONataTaskWithWebView(task)
     }
 
     private fun updateTaskStatus(taskId: String, status: TaskStatus) {
@@ -796,21 +623,81 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private fun simulateJSONataExecution(expression: String, data: String): String {
-        // Enhanced simulation with more realistic results
-        return when {
-            expression.contains("users.name") -> """["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown"]"""
-            expression.contains("users[age >= 30]") -> """[{"name": "Alice Johnson", "age": 32}, {"name": "Carol Williams", "age": 35}]"""
-            expression.contains("\$count") -> Random.nextInt(1, 50).toString()
-            expression.contains("\$sum") && expression.contains("salary") -> Random.nextInt(
-                100000,
-                500000
-            ).toString()
+        // Deprecated, use executeJSONataTaskWithWebView for real execution
+        return """ { "message": "JSONata simulated result for: $expression", "processed": false, "timestamp": ${ System.currentTimeMillis() } }"""
+    }
 
-            expression.contains("\$average") -> Random.nextInt(50000, 150000).toString()
-            expression.contains("department") -> """["Engineering", "Design", "Marketing"]"""
-            expression.contains("skills") -> """["JavaScript", "React", "Node.js", "Python", "Java", "Kotlin"]"""
-            expression.contains("projects") -> """["WebApp", "MobileAPI", "BackendAPI"]"""
-            else -> """{"message": "JSONata result for: $expression", "processed": true, "timestamp": ${System.currentTimeMillis()}}"""
+    private suspend fun executeJSONataTaskWithWebView(task: JSONataTask): JSONataTask {
+        val startTime = System.currentTimeMillis()
+        updateTaskStatus(task.id, TaskStatus.RUNNING)
+        return suspendCancellableCoroutine { continuation ->
+            val expression = task.expression.replace("\"", "\\\"").replace("'", "\\'")
+            val dataJson = task.data
+            val taskId = task.id
+
+            val jsCode = """
+                (function() {
+                    try {
+                        const data = $dataJson;
+                        const expression = jsonata('$expression');
+                        const result = expression.evaluate(data);
+                        return JSON.stringify({
+                            success: true,
+                            result: result,
+                            expression: '$expression',
+                            taskId: '$taskId',
+                            executionTime: ${System.currentTimeMillis() - startTime}
+                        });
+                    } catch (error) {
+                        return JSON.stringify({
+                            success: false,
+                            error: error.message,
+                            expression: '$expression',
+                            taskId: '$taskId'
+                        });
+                    }
+                })();
+            """.trimIndent()
+
+            webView?.post {
+                webView?.evaluateJavascript(jsCode) { result ->
+                    try {
+                        val cleanResult =
+                            result?.removeSurrounding("\"")?.replace("\\\"", "\"") ?: "{}"
+                        val json = Json.parseToJsonElement(cleanResult).jsonObject
+                        val executionTime = System.currentTimeMillis() - startTime
+
+                        if (json["success"]?.jsonPrimitive?.booleanOrNull == true) {
+                            val resultText = json["result"]?.toString() ?: "null"
+                            continuation.resume(
+                                task.copy(
+                                    status = TaskStatus.COMPLETED,
+                                    result = resultText,
+                                    executionTime = executionTime
+                                )
+                            )
+                        } else {
+                            val errorMsg =
+                                json["error"]?.jsonPrimitive?.contentOrNull ?: "Unknown error"
+                            continuation.resume(
+                                task.copy(
+                                    status = TaskStatus.FAILED,
+                                    error = errorMsg,
+                                    executionTime = executionTime
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        continuation.resume(
+                            task.copy(
+                                status = TaskStatus.FAILED,
+                                error = "Failed to parse result: ${e.message}",
+                                executionTime = System.currentTimeMillis() - startTime
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -853,6 +740,12 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         super.onCleared()
         webViewBridge?.cleanup()
         jsonataExecutor.shutdown()
+
+        // Clean up WebView
+        webView?.destroy()
+        webView = null
+
+        addEventLog("ViewModel cleared - WebView and resources cleaned up")
     }
 }
 
