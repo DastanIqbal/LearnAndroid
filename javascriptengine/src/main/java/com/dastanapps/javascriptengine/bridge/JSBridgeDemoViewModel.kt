@@ -1,13 +1,12 @@
 package com.dastanapps.javascriptengine.bridge
 
-import android.R.attr.data
 import android.app.Application
-import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -28,7 +28,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.resume
-import kotlin.random.Random
 
 data class BridgeEventLog(
     val timestamp: Long,
@@ -220,26 +219,123 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
 
     class MyBridge(private val webView: WebView) {
 
-        @JavascriptInterface
-        suspend fun evaluateJsonata(json: String, expr: String, result: String?): String =
-            suspendCancellableCoroutine { cont ->
-                if (result != null) {
-                    cont.resume(result)
-                    return@suspendCancellableCoroutine
-                }
-                val safeJson = json.replace("'", "\\'")
-                val safeExpr = expr.replace("'", "\\'")
-                val js =
-                    "(async () => { return await evaluate('$safeJson', '$safeExpr'); })();"
-                webView.post {
-                    webView.evaluateJavascript(js) { result ->
-                        val cleanResult = result?.let { it.trim('"').replace("\\\"", "\"") } ?: ""
-                        cont.resume(cleanResult)
+        // Map of pending calls with thread-safe access
+        private val pendingResults = mutableMapOf<String, CompletableDeferred<String>>()
+        private val lock = Any()
+
+        private fun generateId(): String = java.util.UUID.randomUUID().toString()
+
+        suspend fun evaluateJsonata(json: String, expr: String): String =
+            withTimeout(30000) { // 30 second timeout
+            val callId = generateId()
+            val deferred = CompletableDeferred<String>()
+
+            // Register pending result
+            synchronized(lock) {
+                pendingResults[callId] = deferred
+            }
+
+            // Escape strings properly for JavaScript
+            val safeJson = json.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+                .replace("\r", "\\r")
+            val safeExpr = expr.replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
+                .replace("\r", "\\r")
+
+            val js = """
+                (async function() {
+                    try {
+                        console.log('Starting JSONata evaluation for callId: $callId');
+                        
+                        if (typeof jsonata === 'undefined') {
+                            throw new Error('JSONata library is not available');
+                        }
+                        
+                        const data = JSON.parse('$safeJson');
+                        const expression = jsonata('$safeExpr');
+                        const result = expression.evaluate(data);
+                        
+                        console.log('JSONata evaluation successful for callId: $callId');
+                        AndroidBridge1.onResult('$callId', JSON.stringify({
+                            success: true,
+                            result: result
+                        }));
+                    } catch(error) {
+                        console.error('JSONata evaluation failed for callId: $callId', error);
+                        AndroidBridge1.onResult('$callId', JSON.stringify({
+                            success: false,
+                            error: error.message || 'Unknown error'
+                        }));
+                    }
+                })();
+            """.trimIndent()
+
+            // Execute JavaScript on main thread
+            withContext(Dispatchers.Main) {
+                // Log the JavaScript for debugging
+                println("MyBridge.evaluateJsonata - Generated JS for $callId:")
+                println(js)
+
+                webView.evaluateJavascript(js) { evaluationResult ->
+                    // This callback indicates the JS was executed, not the result
+                    println("MyBridge.evaluateJsonata - JS execution callback for $callId: $evaluationResult")
+                    if (evaluationResult == null) {
+                        // JavaScript execution failed
+                        val pendingDeferred = synchronized(lock) {
+                            pendingResults.remove(callId)
+                        }
+                        pendingDeferred?.complete("ERROR: JavaScript execution failed")
                     }
                 }
             }
-    }
 
+            // Wait for the result with proper cleanup
+            try {
+                deferred.await()
+            } catch (e: Exception) {
+                // Clean up on timeout or cancellation
+                synchronized(lock) {
+                    pendingResults.remove(callId)
+                }
+                throw e
+            }
+        }
+
+        @JavascriptInterface
+        fun onResult(callId: String, result: String) {
+            val deferred = synchronized(lock) {
+                pendingResults.remove(callId)
+            }
+
+            if (deferred != null) {
+                try {
+                    // Log the raw result for debugging
+                    println("MyBridge.onResult - Raw result for $callId: $result")
+
+                    // Parse the result to extract the actual data
+                    val resultJson = Json.parseToJsonElement(result).jsonObject
+                    val success = resultJson["success"]?.jsonPrimitive?.booleanOrNull ?: false
+
+                    if (success) {
+                        val actualResult = resultJson["result"]?.toString() ?: "null"
+                        println("MyBridge.onResult - Success result for $callId: $actualResult")
+                        deferred.complete(actualResult)
+                    } else {
+                        val error =
+                            resultJson["error"]?.jsonPrimitive?.contentOrNull ?: "Unknown error"
+                        println("MyBridge.onResult - Error result for $callId: $error")
+                        deferred.complete("ERROR: $error")
+                    }
+                } catch (e: Exception) {
+                    // If JSON parsing fails, return the raw result
+                    println("MyBridge.onResult - JSON parsing failed for $callId: ${e.message}, raw result: $result")
+                    deferred.complete(result)
+                }
+            } else {
+                // Log orphaned results for debugging
+                println("Received result for unknown callId: $callId - Result: $result")
+            }
+        }
+    }
 
     /**
      * Load demo content from separate HTML file in assets
@@ -247,14 +343,69 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     private var AndroidBridge: MyBridge? = null
     private fun loadDemoContentFromAssets(bridge: WebViewBridge) {
         try {
-            AndroidBridge = MyBridge(webView!!)
-            webView?.settings?.javaScriptEnabled = true
-            webView?.addJavascriptInterface(MyBridge(webView!!), "AndroidBridge1")
+            // Initialize MyBridge first
+            webView?.let { view ->
+                AndroidBridge = MyBridge(view)
+                view.settings.javaScriptEnabled = true
+                view.addJavascriptInterface(AndroidBridge!!, "AndroidBridge1")
+                addEventLog("✅ AndroidBridge1 interface registered successfully")
+            }
+
             // Load HTML from assets using WebView's loadUrl method
             webView?.loadUrl("file:///android_asset/real-jsonata-demo.html")
             addEventLog("Demo HTML content loaded from assets")
+
+            // Test the bridge after a short delay to ensure WebView is ready
+            viewModelScope.launch {
+                delay(2000) // Wait 2 seconds for WebView to fully load
+                testAndroidBridge()
+            }
         } catch (e: Exception) {
             addEventLog("Failed to load demo content: ${e.message}")
+        }
+    }
+
+    /**
+     * Test the AndroidBridge to ensure it's working properly
+     */
+    private suspend fun testAndroidBridge() {
+        try {
+            addEventLog("🧪 Testing AndroidBridge connectivity...")
+
+            val testResult = AndroidBridge?.evaluateJsonata(
+                """{"test": "Hello World", "number": 42}""",
+                "test"
+            )
+
+            if (testResult != null) {
+                addEventLog("✅ AndroidBridge test successful: $testResult")
+            } else {
+                addEventLog("❌ AndroidBridge test failed: received null result")
+            }
+        } catch (e: Exception) {
+            addEventLog("❌ AndroidBridge test failed with exception: ${e.message}")
+        }
+    }
+
+    /**
+     * Simple "Hello World" JSONata test for basic functionality
+     */
+    private suspend fun testSimpleJsonata() {
+        try {
+            addEventLog("👋 Testing simple JSONata Hello World...")
+
+            val testResult = AndroidBridge?.evaluateJsonata(
+                """{"greeting": "Hello World"}""",
+                "greeting"
+            )
+
+            if (testResult != null) {
+                addEventLog("✅ Simple JSONata test successful: $testResult")
+            } else {
+                addEventLog("❌ Simple JSONata test failed: received null result")
+            }
+        } catch (e: Exception) {
+            addEventLog("❌ Simple JSONata test failed with exception: ${e.message}")
         }
     }
 
@@ -672,6 +823,33 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
             BridgeResult.success(Json.parseToJsonElement(resultData))
         }
 
+        // Test AndroidBridge connection
+        bridge.registerFunction("testAndroidBridge") { params ->
+            viewModelScope.launch {
+                testAndroidBridge()
+            }
+            val resultData = """{"success": true, "message": "AndroidBridge test initiated"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        // Simple JSONata Hello World test
+        bridge.registerFunction("testSimpleJsonata") { params ->
+            viewModelScope.launch {
+                testSimpleJsonata()
+            }
+            val resultData = """{"success": true, "message": "Simple JSONata test initiated"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
+        // Basic JSONata test without file dependencies
+        bridge.registerFunction("testBasicJsonata") { params ->
+            viewModelScope.launch {
+                testBasicJsonata()
+            }
+            val resultData = """{"success": true, "message": "Basic JSONata test initiated"}"""
+            BridgeResult.success(Json.parseToJsonElement(resultData))
+        }
+
         bridge.registerFunction("onJSONataReady") { params ->
             val ready = params.getBoolean("ready", false)
             if (ready) {
@@ -959,6 +1137,43 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
         _state.value = _state.value.copy(eventLogs = emptyList())
     }
 
+    /**
+     * Public function to test very basic JSONata without file dependencies
+     */
+    fun testBasicJsonata() {
+        viewModelScope.launch {
+            try {
+                addEventLog("🧪 Testing basic JSONata with simple data...")
+
+                val simpleResult = AndroidBridge?.evaluateJsonata(
+                    """{"message": "Hello World", "number": 42, "active": true}""",
+                    "message"
+                )
+
+                addEventLog("Basic JSONata result: $simpleResult")
+
+                // Test a number extraction
+                val numberResult = AndroidBridge?.evaluateJsonata(
+                    """{"message": "Hello World", "number": 42, "active": true}""",
+                    "number"
+                )
+
+                addEventLog("Number extraction result: $numberResult")
+
+                // Test boolean extraction
+                val boolResult = AndroidBridge?.evaluateJsonata(
+                    """{"message": "Hello World", "number": 42, "active": true}""",
+                    "active"
+                )
+
+                addEventLog("Boolean extraction result: $boolResult")
+
+            } catch (e: Exception) {
+                addEventLog("❌ Basic JSONata test failed with exception: ${e.message}")
+            }
+        }
+    }
+
     private fun addEventLog(message: String) {
         val newLog = BridgeEventLog(
             timestamp = System.currentTimeMillis(),
@@ -1170,47 +1385,48 @@ class JSBridgeDemoViewModel(application: Application) : AndroidViewModel(applica
     // Demo functions to test parallel execution
     fun runJSONataStressTest() {
         viewModelScope.launch {
-//            AndroidBridge?.evaluateJsonata(
-//                """{"user":{"name":"Alice","age":30}}""",
-//                "user.name"
-//            )
+            try {
+                addEventLog("🔥 Starting JSONata stress test...")
 
-            val testData = loadAssetFile("test-data.json")
-            val testExpression = loadAssetFile("test-expr.js")
-            val result = AndroidBridge?.evaluateJsonata(
-                testData,
-                testExpression,
-                null
-            )
-            addEventLog("🔥 Jsonata test data result: $result")
-            return@launch
-            addEventLog("🔥 Stress test initiated - checking JSONata readiness...")
+                val testData = loadAssetFile("test-data.json")
+                val testExpression = loadAssetFile("test-expr.js")
 
-            // Check if JSONata is already ready
-            if (isJSONataReady) {
-                addEventLog("✅ JSONata already ready. Starting stress test immediately...")
-                executeStressTest()
-                return@launch
-            }
-
-            // Wait up to 10 seconds for JSONata to be ready
-            var attempts = 0
-            val maxAttempts = 20 // 20 attempts * 500ms = 10 seconds
-
-            while (!isJSONataReady && attempts < maxAttempts) {
-                delay(500)
-                attempts++
-
-                if (attempts % 4 == 0) { // Every 2 seconds
-                    addEventLog("⏳ Still waiting for JSONata library... (${attempts / 2}s)")
+                if (testData.isEmpty() || testExpression.isEmpty()) {
+                    addEventLog("❌ Failed to load test data or expression files")
+                    return@launch
                 }
-            }
 
-            if (isJSONataReady) {
-                addEventLog("✅ JSONata library ready! Starting stress test...")
-                executeStressTest()
-            } else {
-                addEventLog("❌ JSONata library not ready after 10 seconds. Stress test cancelled.")
+                addEventLog("📁 Test files loaded successfully")
+                addEventLog("📊 Test data size: ${testData.length} characters")
+                addEventLog("📝 Test expression size: ${testExpression.length} characters")
+
+                // Execute the JSONata evaluation and wait for result
+                addEventLog("🔄 Executing JSONata evaluation...")
+                val result = try {
+                    AndroidBridge?.evaluateJsonata(testData, testExpression)
+                } catch (e: Exception) {
+                    addEventLog("❌ JSONata evaluation failed with exception: ${e.message}")
+                    return@launch
+                }
+
+                // Process the result
+                if (result != null) {
+                    if (result.startsWith("ERROR:")) {
+                        addEventLog("❌ JSONata evaluation failed: ${result.substring(6)}")
+                    } else {
+                        addEventLog("✅ JSONata evaluation successful!")
+                        addEventLog("📋 Result preview: ${result.take(200)}${if (result.length > 200) "..." else ""}")
+
+                        // Now proceed with the original stress test
+                        addEventLog("🔄 Proceeding with parallel stress test...")
+                        executeStressTest()
+                    }
+                } else {
+                    addEventLog("❌ JSONata evaluation returned null result")
+                }
+
+            } catch (e: Exception) {
+                addEventLog("💥 Stress test failed with exception: ${e.message}")
             }
         }
     }

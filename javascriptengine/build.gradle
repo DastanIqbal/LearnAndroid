@@ -47,6 +47,10 @@ dependencies {
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'androidx.activity:activity:1.12.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
@@ -76,6 +80,8 @@ dependencies {
     // JSONata implementations (keeping existing for separate use)
     implementation("com.ibm.jsonata4java:JSONata4Java:2.4.5")
     implementation("com.fasterxml.jackson.core:jackson-core:2.13.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
+
 
     // ViewModel and Compose integration
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.9.4'
@@ -83,4 +89,9 @@ dependencies {
     // Alternative JS engines (commented out for reference)
     // implementation("org.graalvm.js:js:21.0.0")               // GraalVM JS - desktop only
     // implementation("org.graalvm.js:js-scriptengine:21.0.0")  // GraalVM JS ScriptEngine
+
+    // Test dependencies
+    testImplementation("com.ibm.jsonata4java:JSONata4Java:2.4.5")
+    testImplementation("com.fasterxml.jackson.core:jackson-core:2.13.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
 }

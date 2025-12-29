@@ -78,20 +78,10 @@
         log("✅ Evaluation completed successfully.");
 
         // Send result back to Android
-        if (window.AndroidBridge1 && AndroidBridge1.evaluateJsonata) {
-          log("📱 Result sent back to AndroidBridge1");
-          AndroidBridge1.evaluateJsonata(jsonText, exprText,resultStr);
-          log("📱 Result sent back to AndroidBridge1");
-        }
         return resultStr;
       } catch (err) {
         output.textContent = "❌ Error: " + err.message;
         log("❌ Error: " + err.stack);
-        if (window.AndroidBridge1 && AndroidBridge1.evaluateJsonata) {
-            log("📱 Error sent back to AndroidBridge1");
-          AndroidBridge1.evaluateJsonata(jsonText,exprText,JSON.stringify({ jsError: err.message }));
-          log("📱 Error sent back to AndroidBridge1");
-        }
         return JSON.stringify({ error: err.message });
       }
     }
