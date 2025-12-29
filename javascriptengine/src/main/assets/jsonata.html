@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/jsonata/jsonata.min.js"></script>
+</head>
+<body>
+<div id="result" style="white-space:pre-wrap; font-family:monospace; padding:12px; border:1px solid #ddd; margin:12px;">JSONata result will appear here</div>
+<script>
+    // Expose a function the Android side can call with JSON string and jsonata expression
+    window.evaluateJsonata = async function(jsonString, exprString) {
+        const show = function(s) {
+            var el = document.getElementById('result');
+            if (el) el.innerText = s;
+            if (window.Android && Android.showResult) Android.showResult(s);
+        };
+        
+        await evaluateJsonataInternal(jsonString, exprString, show);
+    };
+    
+    // Version with callback support for returning result directly
+    window.evaluateJsonataWithCallback = async function(jsonString, exprString, callId) {
+        const show = function(s) {
+            var el = document.getElementById('result');
+            if (el) el.innerText = s;
+            if (window.Android && Android.onResultWithCallback) {
+                Android.onResultWithCallback(callId, s);
+            }
+        };
+        
+        await evaluateJsonataInternal(jsonString, exprString, show);
+    };
+    
+    // Internal evaluation logic
+    async function evaluateJsonataInternal(jsonString, exprString, show) {
+
+        try {
+            var data = JSON.parse(jsonString);
+        } catch (e) {
+            show('JSON parse error: ' + e.message);
+            return;
+        }
+
+        try {
+            // Ensure jsonata library is loaded; poll for up to ~2 seconds
+            if (typeof window.jsonata === 'undefined') {
+                await new Promise(resolve => {
+                    let attempts = 0;
+                    const check = () => {
+                        if (typeof window.jsonata !== 'undefined' || attempts++ > 40) return resolve();
+                        setTimeout(check, 50);
+                    };
+                    check();
+                });
+            }
+
+            if (typeof window.jsonata === 'undefined') {
+                show('Error: jsonata library not loaded');
+                return;
+            }
+
+            var expr = jsonata(exprString);
+            var result = await expr.evaluate(data);
+            var out = (typeof result === 'object') ? JSON.stringify(result, null, 2) : String(result);
+            show(out);
+            // Force a repaint to ensure WebView displays updated content immediately on some devices
+            const el = document.getElementById('result');
+            if (el) {
+                el.style.display = 'none';
+                // Accessing offsetHeight forces reflow
+                void el.offsetHeight;
+                el.style.display = '';
+            }
+        } catch (err) {
+            console.error(err);
+            show('Error: ' + err.message);
+        }
+    }
+</script>
+</body>
+</html>

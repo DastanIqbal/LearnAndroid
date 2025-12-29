@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -8,6 +10,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.LearnAndroid">
+        <activity
+            android:name=".jsonata.activity.JsonataActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LearnAndroid">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -18,9 +28,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- JS-JSONata Integration Demo Activity -->
+        </activity> <!-- JS-JSONata Integration Demo Activity -->
         <activity
             android:name=".integration.IntegrationDemoActivity"
             android:exported="true"
@@ -28,11 +36,10 @@
             android:theme="@style/Theme.LearnAndroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- ES6 Promise Test Activity -->
+        </activity> <!-- ES6 Promise Test Activity -->
         <activity
             android:name=".es6promises.ES6PromiseTestActivity"
             android:exported="true"
@@ -40,11 +47,10 @@
             android:theme="@style/Theme.LearnAndroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- WebView JavaScript Test Activity -->
+        </activity> <!-- WebView JavaScript Test Activity -->
         <activity
             android:name=".webview.WebViewJSTestActivity"
             android:exported="true"
@@ -52,11 +58,10 @@
             android:theme="@style/Theme.LearnAndroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- JavaScript & Android Bridge Demo Activity -->
+        </activity> <!-- JavaScript & Android Bridge Demo Activity -->
         <activity
             android:name=".bridge.JSBridgeDemoActivity"
             android:exported="true"
@@ -64,11 +69,10 @@
             android:theme="@style/Theme.LearnAndroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Bridge Debug Activity -->
+        </activity> <!-- Bridge Debug Activity -->
         <activity
             android:name=".bridge.BridgeDebugActivity"
             android:exported="true"
@@ -76,6 +80,7 @@
             android:theme="@style/Theme.LearnAndroid">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
