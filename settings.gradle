@@ -59,4 +59,5 @@ dependencyResolutionManagement {
 //include ':socketio'
 //include ':fontfamily'
 //include ':compose-animations'
-include ':javascriptengine'
+//include ':javascriptengine'
+include ':flexlayout'

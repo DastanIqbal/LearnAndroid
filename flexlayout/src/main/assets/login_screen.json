@@ -1,0 +1,126 @@
+{
+  "type": "column",
+  "style": {
+    "fillMaxSize": true,
+    "justifyContent": "center",
+    "alignItems": "center",
+    "padding": 24,
+    "backgroundColor": "#FFFFFF"
+  },
+  "children": [
+    {
+      "type": "text",
+      "text": "Welcome Back",
+      "style": {
+        "fontSize": 28,
+        "fontWeight": "bold",
+        "color": "#1A1A1A",
+        "marginBottom": 8
+      }
+    },
+    {
+      "type": "text",
+      "text": "Please sign in to continue",
+      "style": {
+        "fontSize": 16,
+        "color": "#757575",
+        "marginBottom": 32
+      }
+    },
+    {
+      "type": "column",
+      "style": {
+        "width": "fillMaxWidth",
+        "marginBottom": 16
+      },
+      "children": [
+        {
+          "type": "text",
+          "text": "Email Address",
+          "style": {
+            "fontSize": 14,
+            "color": "#424242",
+            "fontWeight": "medium",
+            "marginBottom": 8,
+            "alignSelf": "start"
+          }
+        },
+        {
+          "type": "input",
+          "placeholder": "name@example.com",
+          "style": {
+             "width": "fillMaxWidth"
+          }
+        }
+      ]
+    },
+    {
+      "type": "column",
+      "style": {
+        "width": "fillMaxWidth",
+        "marginBottom": 24
+      },
+      "children": [
+        {
+          "type": "text",
+          "text": "Password",
+          "style": {
+            "fontSize": 14,
+            "color": "#424242",
+            "fontWeight": "medium",
+            "marginBottom": 8,
+            "alignSelf": "start"
+          }
+        },
+        {
+          "type": "input",
+          "placeholder": "Enter your password",
+          "inputType": "password",
+          "style": {
+             "width": "fillMaxWidth"
+          }
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "text": "Sign In",
+      "onClick": "login",
+      "style": {
+        "width": "fillMaxWidth",
+        "height": 48,
+        "backgroundColor": "#2196F3",
+        "textColor": "#FFFFFF",
+        "borderRadius": 8
+      }
+    },
+     {
+      "type": "row",
+      "style": {
+        "marginTop": 24,
+        "justifyContent": "center",
+        "alignItems": "center"
+      },
+      "children": [
+        {
+            "type": "text",
+            "text": "Don't have an account? ",
+             "style": {
+                "fontSize": 14,
+                "color": "#757575"
+              }
+        },
+        {
+            "type": "text",
+            "text": "Sign Up",
+             "style": {
+                "fontSize": 14,
+                "color": "#2196F3",
+                "fontWeight": "bold",
+                "marginLeft": 4
+              }
+        }
+      ]
+    }
+  ]
+}
