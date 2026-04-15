@@ -1,8 +1,6 @@
 package com.dastanapps.sdk
 
-import android.content.Context
 import com.dastanapps.hilt.GreetingModule
-import com.dastanapps.hilt.MainFragment
 import dagger.Component
 import javax.inject.Singleton
 
@@ -11,10 +9,9 @@ import javax.inject.Singleton
 interface SdkComponent {
     fun getGreeting(): String
     fun getViewModelFactory(): SdkViewModelFactory
-    fun getFragmentFactory(): SdkFragmentFactory
-    
-    fun inject(fragment: MainFragment)
-    
+
+    fun inject(activity: SdkActivity)
+
     companion object {
         fun create(): SdkComponent = DaggerSdkComponent.create()
     }
@@ -34,9 +31,5 @@ object SdkMiddleware {
             init()
         }
         return component!!
-    }
-
-    fun launchMainFragment(context: Context) {
-        SdkActivity.launch(context)
     }
 }

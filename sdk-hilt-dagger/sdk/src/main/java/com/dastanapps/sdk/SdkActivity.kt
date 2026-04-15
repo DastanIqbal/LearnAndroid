@@ -1,45 +1,35 @@
 package com.dastanapps.sdk
 
-import android.R
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.FrameLayout
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.dastanapps.hilt.MainFragment
+import androidx.lifecycle.ViewModelProvider
+import com.dastanapps.hilt.MainViewModel
+import com.dastanapps.hilt.databinding.FragmentMainBinding
+import javax.inject.Inject
 
 /**
- * Intermediate Activity that hosts fragments for the SDK.
- * Uses FragmentFactory to manually instantiate fragments with Dagger dependencies.
- * Works in both Hilt and non-Hilt applications.
+ * Activity that displays SDK content.
+ * Injection is handled by SdkComponent.
  */
 class SdkActivity : AppCompatActivity() {
 
+    @Inject
+    lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    private val viewModel: MainViewModel by viewModels { viewModelFactory }
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Init SDK
-        SdkMiddleware.init()
-        
-        // Install Manual Fragment Registry
-        supportFragmentManager.fragmentFactory = SdkMiddleware.getComponent().getFragmentFactory()
+        // Inject dependencies
+        SdkMiddleware.getComponent().inject(this)
 
         super.onCreate(savedInstanceState)
-        
-        val container = FrameLayout(this).apply {
-            id = R.id.content
-        }
-        setContentView(container)
+        val binding = FragmentMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        if (savedInstanceState == null) {
-            // Instantiate via factory
-            val fragment = supportFragmentManager.fragmentFactory.instantiate(
-                classLoader,
-                MainFragment::class.java.name
-            )
-            
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.content, fragment)
-                .commitNow()
-        }
+        binding.greetingText.text = viewModel.greeting
     }
 
     companion object {

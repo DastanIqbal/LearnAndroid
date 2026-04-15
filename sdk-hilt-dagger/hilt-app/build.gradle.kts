@@ -1,15 +1,16 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("dagger.hilt.android.plugin")
     id("org.jetbrains.kotlin.kapt")
 }
 
 android {
-    namespace = "com.dastanapps.integrated_app"
+    namespace = "com.dastanapps.hilt_app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.dastanapps.integrated_app"
+        applicationId = "com.dastanapps.hilt_app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -41,6 +42,10 @@ android {
 
 dependencies {
     implementation(project(":sdk-hilt-dagger:sdk"))
+
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-compiler:2.51.1")
 
     // Navigation
     implementation("androidx.navigation:navigation-fragment-ktx:2.8.1")

@@ -1,0 +1,14 @@
+# Kotlin
+*.class
+
+# Mobile Tools for Java (requires Gradle)
+.idea/dependencies
+
+# Android studio 3.5+ automatically adds this, ignore it
+.gradle/
+
+# Crashlytics plugin
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+/build
