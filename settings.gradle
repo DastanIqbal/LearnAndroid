@@ -21,6 +21,9 @@ dependencyResolutionManagement {
 
     }
 }
+
+rootProject.name = "LearnAndroid"
+
 //include ':androidp'
 //include ':shadersNfilters'
 //include ':mediaeffectswithopengles',
@@ -64,8 +67,9 @@ dependencyResolutionManagement {
 //include ':compose-animations'
 //include ':javascriptengine'
 //include ':flexlayout'
-include ':sdk-hilt-dagger'
-include ':sdk-hilt-dagger:sdk'
-include ':sdk-hilt-dagger:hilt'
-include ':sdk-hilt-dagger:integrated-app'
-include ':sdk-hilt-dagger:hilt-app'
+//include ':sdk-hilt-dagger'
+//include ':sdk-hilt-dagger:sdk'
+//include ':sdk-hilt-dagger:hilt'
+//include ':sdk-hilt-dagger:integrated-app'
+//include ':sdk-hilt-dagger:hilt-app'
+include ':ondeviceai'
