@@ -18,6 +18,7 @@ dependencyResolutionManagement {
         mavenCentral()
         maven {url  "https://repo1.maven.org/maven2/"}
         maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url "https://jitpack.io" }
 
     }
 }
@@ -72,4 +73,5 @@ rootProject.name = "LearnAndroid"
 //include ':sdk-hilt-dagger:hilt'
 //include ':sdk-hilt-dagger:integrated-app'
 //include ':sdk-hilt-dagger:hilt-app'
-include ':ondeviceai'
+//include ':ondeviceai'
+include ':terminal'
